@@ -3,23 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Web Chat with Storage</title>
-    <!-- Include Ably Library for real-time peer-to-peer communication -->
-    <script src="https://ably.com"></script>
+    <title>Working Phone Chat</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
         body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
         .chat-container { width: 100%; max-width: 450px; height: 80vh; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
-        .chat-header { background: #007bff; color: white; padding: 15px; font-size: 1.2rem; text-align: center; font-weight: bold; position: relative; }
-        .clear-btn { position: absolute; right: 15px; top: 12px; background: #ff4d4d; border: none; padding: 6px 10px; color: white; border-radius: 5px; font-size: 0.8rem; cursor: pointer; }
+        .chat-header { background: #25d366; color: white; padding: 15px; font-size: 1.2rem; text-align: center; font-weight: bold; position: relative; }
+        .clear-btn { position: absolute; right: 15px; top: 12px; background: #ea003a; border: none; padding: 6px 10px; color: white; border-radius: 5px; font-size: 0.8rem; cursor: pointer; }
         .setup-screen { padding: 20px; display: flex; flex-direction: column; gap: 10px; justify-content: center; height: 100%; }
         .setup-screen input, .chat-input-area input { padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
-        .setup-screen button, .chat-input-area button { padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
-        .setup-screen button:hover, .chat-input-area button:hover { background: #0056b3; }
+        .setup-screen button, .chat-input-area button { padding: 12px; background: #25d366; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
         .chat-screen { display: none; flex-direction: column; height: 100%; }
         .messages-display { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #efeae2; }
         .msg { max-width: 75%; padding: 10px 14px; border-radius: 15px; font-size: 0.95rem; word-break: break-word; }
-        .msg.sender { background: #d9fdd3; align-self: flex-end; border-top-right-radius: 0; }
+        .msg.sender { background: #e1ffc7; align-self: flex-end; border-top-right-radius: 0; }
         .msg.receiver { background: white; align-self: flex-start; border-top-left-radius: 0; }
         .msg .username { font-size: 0.75rem; font-weight: bold; color: #555; margin-bottom: 3px; display: block; }
         .chat-input-area { display: flex; gap: 10px; background: #f0f2f5; padding: 10px; }
@@ -30,18 +27,16 @@
 
 <div class="chat-container">
     <div class="chat-header">
-        🌐 Saved Local Chat
-        <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+        📲 Phone-Saved Chat
+        <button class="clear-btn" onclick="clearHistory()">Clear</button>
     </div>
     
-    <!-- Step 1: Login Screen -->
     <div id="setupScreen" class="setup-screen">
-        <label for="usernameInput">Enter your name to start chatting:</label>
+        <label>Enter your name to start:</label>
         <input type="text" id="usernameInput" placeholder="Your Name..." autocomplete="off">
-        <button onclick="startChat()">Join Chatroom</button>
+        <button onclick="startChat()">Join Chat</button>
     </div>
 
-    <!-- Step 2: Main Chat Box -->
     <div id="chatScreen" class="chat-screen">
         <div id="messagesDisplay" class="messages-display"></div>
         <div class="chat-input-area">
@@ -52,69 +47,59 @@
 </div>
 
 <script>
-    const ABLY_KEY = 'xVLy9A.s_b9OQ:-HhP_z7Z6bA06SgS6-Oat0YgZ2Cq_2lE2VdG9-gq9g8'; 
-    let ably, channel, myUsername = "";
-    let chatHistory = [];
-
-    // Load history from phone storage immediately when the page loads
-    if (localStorage.getItem('localChatHistory')) {
-        chatHistory = JSON.parse(localStorage.getItem('localChatHistory'));
-    }
+    let socket, myUsername = "";
+    let chatHistory = JSON.parse(localStorage.getItem('phoneChatHistory')) || [];
 
     function startChat() {
         const nameInput = document.getElementById('usernameInput').value.trim();
-        if (!nameInput) return alert("Please enter a valid name.");
+        if (!nameInput) return alert("Please type a name.");
         
         myUsername = nameInput;
         document.getElementById('setupScreen').style.display = 'none';
         document.getElementById('chatScreen').style.display = 'flex';
 
-        // Load and display all previously saved messages onto the screen
-        chatHistory.forEach(msg => displayMessageOnScreen(msg.user, msg.text));
+        // Show past chats saved on phone storage
+        chatHistory.forEach(msg => displayMessage(msg.user, msg.text));
 
-        // Connect to online broker
-        ably = new Ably.Realtime({ key: ABLY_KEY });
-        channel = ably.channels.get('global-chat-room');
+        // Connect to a completely free public chat pipeline
+        socket = new WebSocket('wss://://piesocket.com');
 
-        // Listen for new messages
-        channel.subscribe('message', (msg) => {
-            saveAndDisplayMessage(msg.data.user, msg.data.text);
-        });
+        // Listen for new messages coming over the internet
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.user && data.text) {
+                // Save immediately to phone memory
+                chatHistory.push({ user: data.user, text: data.text });
+                localStorage.setItem('phoneChatHistory', JSON.stringify(chatHistory));
+                displayMessage(data.user, data.text);
+            }
+        };
     }
 
     function sendMessage() {
         const msgInput = document.getElementById('messageInput');
         const text = msgInput.value.trim();
-        if (!text) return;
+        if (!text || !socket) return;
 
-        channel.publish('message', { user: myUsername, text: text });
+        // Broadcast to the other person
+        socket.send(JSON.stringify({ user: myUsername, text: text }));
         msgInput.value = ''; 
     }
 
-    // Step 1: Save the new message to local storage array
-    function saveAndDisplayMessage(user, text) {
-        chatHistory.push({ user: user, text: text });
-        localStorage.setItem('localChatHistory', JSON.stringify(chatHistory));
-        displayMessageOnScreen(user, text);
-    }
-
-    // Step 2: Put the message element into the UI
-    function displayMessageOnScreen(user, text) {
+    function displayMessage(user, text) {
         const container = document.getElementById('messagesDisplay');
         const msgDiv = document.createElement('div');
-        
         const isMe = (user === myUsername);
-        msgDiv.className = `msg ${isMe ? 'sender' : 'receiver'}`;
         
+        msgDiv.className = `msg ${isMe ? 'sender' : 'receiver'}`;
         msgDiv.innerHTML = `<span class="username">${isMe ? 'You' : user}</span>${escapeHTML(text)}`;
         container.appendChild(msgDiv);
         container.scrollTop = container.scrollHeight; 
     }
 
-    // Wipe out phone history data when clicking "Clear History"
     function clearHistory() {
-        if (confirm("Do you want to delete all chat history from your phone storage?")) {
-            localStorage.removeItem('localChatHistory');
+        if (confirm("Delete history from your phone?")) {
+            localStorage.removeItem('phoneChatHistory');
             chatHistory = [];
             document.getElementById('messagesDisplay').innerHTML = '';
         }
