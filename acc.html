@@ -1,4 +1,101 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Background Changer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            /* Default background style properties */
+            background-color: #f0f2f5;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            transition: background 0.3s ease;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .btn-reset {
+            margin-top: 10px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="control-panel">
+        <h2>Change Your Background</h2>
+        <!-- The file input allows you to choose an image from your computer -->
+        <input type="file" id="bgPicker" accept="image/*">
+        <br>
+        <button class="btn-reset" id="resetBtn">Reset Default</button>
+    </div>
+
+    <script>
+        const bgPicker = document.getElementById('bgPicker');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // 1. Check if an image was previously saved in the browser memory
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedBg = localStorage.getItem('userBackground');
+            if (savedBg) {
+                document.body.style.backgroundImage = `url('${savedBg}')`;
+            }
+        });
+
+        // 2. Handle when the user selects a new local file
+        bgPicker.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                
+                // Convert the local image file into a reusable string URL (Base64)
+                reader.onload = function(e) {
+                    const imageBase64 = e.target.result;
+                    
+                    // Apply it to the page immediately
+                    document.body.style.backgroundImage = `url('${imageBase64}')`;
+                    
+                    // Save the image string directly into localStorage to keep it saved
+                    try {
+                        localStorage.setItem('userBackground', imageBase64);
+                    } catch (error) {
+                        alert("The file might be too large to save! Try a smaller image under 2MB.");
+                    }
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 3. Optional reset button to clear saved preferences
+        resetBtn.addEventListener('click', () => {
+            localStorage.removeItem('userBackground');
+            document.body.style.backgroundImage = 'none';
+        });
+    </script>
 
 <html>
 <head>
@@ -8,19 +105,17 @@
 <body>
   <button onclick="history.back()" style="font-size:20px; ">←Back</button>
   <style>
-   @media screen and (min-width: 768px) {
     textarea{
       font-size:20px;
       height: 400px; 
-      width: 500px;
+      width: 300px;
       border-radius:10px;
     }
      button{
-       width:500px;
+       width:300px;
        height:50px;
        border-radius:100px;
      }
-  }
   </style>
   <h1>Note</h1>
 <textarea type="text" id="note"></textarea><br>
