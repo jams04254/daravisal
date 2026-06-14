@@ -3,22 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Working Phone Chat</title>
+    <title>Direct Phone-to-Phone Chat</title>
+    <!-- Connect directly to other phones using PeerJS library -->
+    <script src="https://unpkg.com"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
-        .chat-container { width: 100%; max-width: 450px; height: 80vh; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
-        .chat-header { background: #25d366; color: white; padding: 15px; font-size: 1.2rem; text-align: center; font-weight: bold; position: relative; }
-        .clear-btn { position: absolute; right: 15px; top: 12px; background: #ea003a; border: none; padding: 6px 10px; color: white; border-radius: 5px; font-size: 0.8rem; cursor: pointer; }
-        .setup-screen { padding: 20px; display: flex; flex-direction: column; gap: 10px; justify-content: center; height: 100%; }
-        .setup-screen input, .chat-input-area input { padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
-        .setup-screen button, .chat-input-area button { padding: 12px; background: #25d366; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
-        .chat-screen { display: none; flex-direction: column; height: 100%; }
-        .messages-display { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #efeae2; }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #e5ddd5; }
+        .chat-container { width: 100%; max-width: 450px; height: 90vh; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header { background: #075e54; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; }
+        .screen { padding: 20px; display: flex; flex-direction: column; gap: 15px; height: 100%; justify-content: center; }
+        .id-box { background: #f0f0f0; padding: 12px; border-radius: 5px; text-align: center; font-size: 1.2rem; font-weight: bold; color: #075e54; border: 2px dashed #075e54; }
+        input { padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
+        button { padding: 12px; background: #128c7e; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        button:hover { background: #075e54; }
+        #chatScreen { display: none; padding: 0; }
+        .messages-display { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #efeae2; height: 100%; }
         .msg { max-width: 75%; padding: 10px 14px; border-radius: 15px; font-size: 0.95rem; word-break: break-word; }
-        .msg.sender { background: #e1ffc7; align-self: flex-end; border-top-right-radius: 0; }
+        .msg.sender { background: #d9fdd3; align-self: flex-end; border-top-right-radius: 0; }
         .msg.receiver { background: white; align-self: flex-start; border-top-left-radius: 0; }
-        .msg .username { font-size: 0.75rem; font-weight: bold; color: #555; margin-bottom: 3px; display: block; }
         .chat-input-area { display: flex; gap: 10px; background: #f0f2f5; padding: 10px; }
         .chat-input-area input { flex: 1; }
     </style>
@@ -26,89 +28,97 @@
 <body>
 
 <div class="chat-container">
-    <div class="chat-header">
-        📲 Phone-Saved Chat
-        <button class="clear-btn" onclick="clearHistory()">Clear</button>
-    </div>
+    <div class="chat-header">📱 Direct Phone Chat</div>
     
-    <div id="setupScreen" class="setup-screen">
-        <label>Enter your name to start:</label>
-        <input type="text" id="usernameInput" placeholder="Your Name..." autocomplete="off">
-        <button onclick="startChat()">Join Chat</button>
+    <!-- Step 1: Setup Screen -->
+    <div id="setupScreen" class="screen">
+        <p style="text-align:center; color:#555;">Your unique Phone ID number is:</p>
+        <div id="myIdDisplay" class="id-box">Loading ID...</div>
+        
+        <hr style="border:0; border-top:1px solid #ccc; margin:10px 0;">
+        
+        <label for="friendIdInput">Enter your friend's ID number:</label>
+        <input type="text" id="friendIdInput" placeholder="Paste Friend's ID here..." autocomplete="off">
+        <button onclick="connectToFriend()">Connect & Chat</button>
     </div>
 
-    <div id="chatScreen" class="chat-screen">
+    <!-- Step 2: Chat Screen -->
+    <div id="chatScreen" class="screen">
         <div id="messagesDisplay" class="messages-display"></div>
         <div class="chat-input-area">
-            <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
+            <input type="text" id="messageInput" placeholder="Type a message...">
             <button onclick="sendMessage()">Send</button>
         </div>
     </div>
 </div>
 
 <script>
-    let socket, myUsername = "";
-    let chatHistory = JSON.parse(localStorage.getItem('phoneChatHistory')) || [];
+    let peer = new Peer(); // Generates a completely free cloud connection link
+    let conn = null;
+    let chatHistory = JSON.parse(localStorage.getItem('p2pChatHistory')) || [];
 
-    function startChat() {
-        const nameInput = document.getElementById('usernameInput').value.trim();
-        if (!nameInput) return alert("Please type a name.");
+    // 1. Get your unique ID and display it
+    peer.on('open', (id) => {
+        document.getElementById('myIdDisplay').innerText = id;
+    });
+
+    // 2. Listen for your friend connecting to you
+    peer.on('connection', (connection) => {
+        conn = connection;
+        setupChatSession();
+    });
+
+    // 3. Connect to your friend using their ID
+    function connectToFriend() {
+        const friendId = document.getElementById('friendIdInput').value.trim();
+        if (!friendId) return alert("Please enter your friend's ID code!");
         
-        myUsername = nameInput;
+        conn = peer.connect(friendId);
+        setupChatSession();
+    }
+
+    // 4. Start the chat setup
+    function setupChatSession() {
         document.getElementById('setupScreen').style.display = 'none';
         document.getElementById('chatScreen').style.display = 'flex';
+        
+        // Load past history saved inside this specific phone's memory
+        chatHistory.forEach(msg => displayMessage(msg.type, msg.text));
 
-        // Show past chats saved on phone storage
-        chatHistory.forEach(msg => displayMessage(msg.user, msg.text));
-
-        // Connect to a completely free public chat pipeline
-        socket = new WebSocket('wss://://piesocket.com');
-
-        // Listen for new messages coming over the internet
-        socket.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            if (data.user && data.text) {
-                // Save immediately to phone memory
-                chatHistory.push({ user: data.user, text: data.text });
-                localStorage.setItem('phoneChatHistory', JSON.stringify(chatHistory));
-                displayMessage(data.user, data.text);
-            }
-        };
+        // Catch incoming messages over the direct link
+        conn.on('data', (data) => {
+            saveAndDisplayMessage('receiver', data);
+        });
     }
 
+    // 5. Send message out to your friend
     function sendMessage() {
-        const msgInput = document.getElementById('messageInput');
-        const text = msgInput.value.trim();
-        if (!text || !socket) return;
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        if (!text || !conn) return;
 
-        // Broadcast to the other person
-        socket.send(JSON.stringify({ user: myUsername, text: text }));
-        msgInput.value = ''; 
+        conn.send(text); // Send directly to their screen
+        saveAndDisplayMessage('sender', text);
+        input.value = '';
     }
 
-    function displayMessage(user, text) {
+    // 6. Save data locally onto the phone storage
+    function saveAndDisplayMessage(type, text) {
+        chatHistory.push({ type: type, text: text });
+        localStorage.setItem('p2pChatHistory', JSON.stringify(chatHistory));
+        displayMessage(type, text);
+    }
+
+    function displayMessage(type, text) {
         const container = document.getElementById('messagesDisplay');
         const msgDiv = document.createElement('div');
-        const isMe = (user === myUsername);
-        
-        msgDiv.className = `msg ${isMe ? 'sender' : 'receiver'}`;
-        msgDiv.innerHTML = `<span class="username">${isMe ? 'You' : user}</span>${escapeHTML(text)}`;
+        msgDiv.className = `msg ${type}`;
+        msgDiv.innerText = text;
         container.appendChild(msgDiv);
-        container.scrollTop = container.scrollHeight; 
+        container.scrollTop = container.scrollHeight;
     }
 
-    function clearHistory() {
-        if (confirm("Delete history from your phone?")) {
-            localStorage.removeItem('phoneChatHistory');
-            chatHistory = [];
-            document.getElementById('messagesDisplay').innerHTML = '';
-        }
-    }
-
-    function escapeHTML(str) {
-        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
+    // Enter key support
     document.getElementById('messageInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') sendMessage();
     });
