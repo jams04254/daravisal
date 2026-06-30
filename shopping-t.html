@@ -53,6 +53,31 @@
             cursor: pointer;
         }
 
+        /* Header actions layout */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Login Button Styles */
+        .btn-login {
+            background: transparent;
+            color: #1e90ff;
+            border: 2px solid #1e90ff;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-login:hover {
+            background: #1e90ff;
+            color: white;
+        }
+
         .cart-icon {
             position: relative;
             font-size: 24px;
@@ -201,13 +226,20 @@
             padding: 20px 0;
         }
 
-        /* Mobile responsiveness for search bar */
+        /* Mobile responsiveness */
         @media (max-width: 600px) {
             #search-bar {
                 max-width: 150px;
             }
             header {
                 padding: 20px 15px;
+            }
+            .header-actions {
+                gap: 10px;
+            }
+            .btn-login {
+                padding: 6px 12px;
+                font-size: 13px;
             }
         }
     </style>
@@ -219,11 +251,14 @@
         
         <input type="text" id="search-bar" placeholder="Search for products..." onkeyup="searchProducts()">
         
-        <button onclick="toggleSettings()">
-            <div class="cart-icon">
-                🛒 <span id="cart-count">0</span>
-            </div>
-        </button>
+        <div class="header-actions">
+            <button class="btn-login" id="login-btn" onclick="handleAuth()">Log In</button>
+            <button onclick="toggleSettings()">
+                <div class="cart-icon">
+                    🛒 <span id="cart-count">0</span>
+                </div>
+            </button>
+        </div>
     </header>
 
     <div id="settingsBox" style="display: none; border: 1px solid black; padding: 10px; margin-top: 10px;">
@@ -237,14 +272,16 @@
             </div>
             
             <center>
-                <form action="https://api.web3forms.com/submit" method="POST">
+                <form action="https://api.web3forms.com/submit" method="POST" onsubmit="return handleCheckoutSubmit(event)">
                     <input type="hidden" name="access_key" value="0333555b-f17b-4fa0-ae5b-0675529af72d">
                     <br>
-                    <input type="text" id="address" name="address" placeholder="Address" required><br><br>
-                    <input type="text" id="username-input" name="name" placeholder="Name" required><br><br>
+                    <input type="text" id="address" name="address" placeholder="Address" required>
+                    
+                    <input type="hidden" id="username-input" name="name" placeholder="Name (Requires Login)" required readonly><br><br>
+                    
                     <input type="text" id="phone-input" name="Phone Number" placeholder="Phone Number" required><br><br>
                     <input type="text" id="goods-id-input" name="Goods id" placeholder="" required readonly><br><br>
-                    <button type="submit" class="btn-checkout" onclick="checkout()">Buy now</button>
+                    <button type="submit" class="btn-checkout">Buy now</button>
                 </form>
             </center>
         </div>
@@ -288,17 +325,72 @@
             </div>
         </div>
     </div>
+    
     <script>
-        // Load cart from local storage or start fresh
+        // State Management
         let cart = JSON.parse(localStorage.getItem('app_cart')) || [];
+        let currentUser = localStorage.getItem('app_user') || null;
 
         // Elements
         const cartCountEl = document.getElementById('cart-count');
         const cartItemsContainer = document.getElementById('cart-items-container');
         const cartTotalPriceEl = document.getElementById('cart-total-price');
         const goodsIdInput = document.getElementById('goods-id-input');
+        const loginBtn = document.getElementById('login-btn');
+        const usernameInput = document.getElementById('username-input');
 
-        // Initialize App UI
+        // Authentication Controller
+        function checkAuthState() {
+            if (currentUser) {
+                loginBtn.textContent = `Log Out (${currentUser})`;
+                if (usernameInput) usernameInput.value = currentUser;
+            } else {
+                loginBtn.textContent = "Log In";
+                if (usernameInput) usernameInput.value = "";
+            }
+        }
+
+        function handleAuth() {
+            if (currentUser) {
+                if (confirm("Are you sure you want to log out?")) {
+                    localStorage.removeItem('app_user');
+                    currentUser = null;
+                    checkAuthState();
+                }
+            } else {
+                const username = prompt("Enter your name to log in:");
+                if (username && username.trim() !== "") {
+                    currentUser = username.trim();
+                    localStorage.setItem('app_user', currentUser);
+                    checkAuthState();
+                    alert(`Welcome, ${currentUser}!`);
+                }
+            }
+        }
+
+        // Intercept API Email Submission to Validate Login & Cart state
+        function handleCheckoutSubmit(event) {
+            // 1. Block action if cart is empty
+            if (cart.length === 0) {
+                alert("Your cart is empty!");
+                event.preventDefault();
+                return false;
+            }
+
+            // 2. Recommend and force log in if guest user
+            if (!currentUser) {
+                alert("You must be logged in to complete a purchase. Please log in now.");
+                event.preventDefault(); // Stop form submission
+                handleAuth();           // Launch login prompt
+                return false;
+            }
+
+            // Everything is verified, let it push data to Web3Forms
+            alert("Order verified! Submitting checkout details...");
+            return true;
+        }
+
+        // Initialize App UI Add Click Listeners
         document.querySelectorAll('.btn-add').forEach(button => {
             button.addEventListener('click', (e) => {
                 const card = e.target.closest('.product-card');
@@ -341,17 +433,15 @@
         }
 
         function renderCart() {
-            // 1. Update Cart Badge Count
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             cartCountEl.textContent = totalItems;
 
-            // 2. Render List Items
             cartItemsContainer.innerHTML = '';
             
             if (cart.length === 0) {
                 cartItemsContainer.innerHTML = '<p class="empty">Your cart is empty.</p>';
                 cartTotalPriceEl.textContent = '$0.00';
-                if (goodsIdInput) goodsIdInput.value = ''; // Clear input if empty
+                if (goodsIdInput) goodsIdInput.value = ''; 
                 return;
             }
 
@@ -377,26 +467,14 @@
                 cartItemsContainer.appendChild(itemRow);
             });
 
-            // 3. Update Total Price Display
             cartTotalPriceEl.textContent = `$${totalCost.toFixed(2)}`;
 
-            // 4. DYNAMIC UPDATE: Updates the Goods ID string inside the text form field
             if (goodsIdInput) {
                 goodsIdInput.value = cart.map(item => `${item.id}(x${item.quantity})`).join(', ');
             }
         }
 
-        function checkout() {
-            if(cart.length === 0) {
-                alert("Your cart is empty!");
-                return;
-            }
-            alert("Click ok");
-        }
-
-        /* IMPROVED SEARCH FUNCTIONALITY */
         function searchProducts() {
-            // .trim() removes any accidental spaces from the beginning or end of your search
             const searchQuery = document.getElementById('search-bar').value.toLowerCase().trim();
             const products = document.querySelectorAll('.product-card');
 
@@ -404,8 +482,6 @@
                 const productName = product.dataset.name.toLowerCase();
                 const productId = product.dataset.id.toLowerCase(); 
                 
-                // If the search bar is empty, show everything.
-                // Otherwise, check if the product name or the product ID matches what you typed.
                 if (searchQuery === "" || productName.includes(searchQuery) || productId === searchQuery) {
                     product.style.display = "flex"; 
                 } else {
@@ -414,6 +490,9 @@
             });
         }
 
-        // Initial setup run on page load
+        // Run functions immediately on page launch
+        checkAuthState();
         renderCart();
     </script>
+</body>
+</html>
