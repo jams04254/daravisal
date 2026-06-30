@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All-in-One Searchable Image Dropdown</title>
+    <style>
+        h2 {
+            font-size: 20px;
+            color: #333333;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* Dropdown input wrapper position */
+        .dropdown-container {
+            position: relative;
+            width: 100%;
+        }
+
+        /* The actual searchable text input bar */
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #007bff;
+        }
+
+        /* Floating options popup menu */
+        .options-menu {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-height: 240px;
+            overflow-y: auto;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: none; /* Hidden until field is focused */
+            z-index: 999;
+        }
+
+        /* Row item inside the menu */
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+            transition: background 0.15s;
+        }
+
+        .option-item:last-child {
+            border-bottom: none;
+        }
+
+        .option-item:hover {
+            background-color: #f1f7ff;
+        }
+
+        /* Thumbnail sizes inside the choices dropdown panel */
+        .option-item img {
+            width: 38px;
+            height: 38px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-right: 12px;
+        }
+
+        .option-item span {
+            font-size: 15px;
+            color: #444444;
+            font-weight: 500;
+        }
+
+        /* Big target image display layout below */
+        .display-area {
+            margin-top: 25px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .display-area img {
+            max-width: 100%;
+            max-height: 220px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            display: none; /* Hidden until item is active */
+        }
+           * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .cart-icon {
+            position: relative;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        #cart-count {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff4757;
+            color: white;
+            font-size: 12px;
+            padding: 3px 7px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .product-price {
+            color: #2ed573;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .btn-add {
+            background: #1e90ff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-add:hover {
+            background: #3742fa;
+        }
+
+        /* Cart Sidebar */
+        .cart-sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item-details h4 {
+            font-size: 14px;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .btn-qty {
+            background: #e4e7eb;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .cart-item-price {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .cart-total {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+        }
+
+        .btn-checkout {
+            display: block;
+            width: 100%;
+            background: #2ed573;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .btn-checkout:hover {
+            background: #26af5f;
+        }
+
+        .empty-message {
+            color: #888;
+            text-align: center;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2>GadgetStore</h2>
+        <div class="cart-icon">
+            🛒 <span id="cart-count">0</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="products-grid">
+            <div class="product-card" data-id="1" data-name="Shirt" data-price="10">
+                <h3>Shirt</h3>
+                 <img class="option-item" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4_Eys-mzE5S3MTQXuFH6win11yVrj124-UA&s">
+                <p class="product-price">$10.00</p>
+                <button class="btn-add">Add to Cart</button>
+            </div>
+            <div class="product-card" data-id="1" data-name="Shirt" data-price="9">
+                <h3>Shirt</h3>
+                 <img class="option-item" src="https://www.beyours.in/products/the-iron-grey-classic-shirt?srsltid=AfmBOooYM7lS4_jS3zq6lhO0b4J-z42Vnb3XfiNiMglDEkt9M_IkVqVw">
+                <p class="product-price">$9.00</p>
+                <button class="btn-add">Add to Cart</button>
+            </div>
+            <div class="product-card" data-id="2" data-name="Smart Watch" data-price="149">
+                <h3>Smart Watch</h3>
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRD8mQdoeX71pEhcGUMvcq2H9VMbCp4dhwIZA&s">
+                <p class="product-price">$149.00</p>
+                <button class="btn-add">Add to Cart</button>
+            </div>
+            <div class="product-card" data-id="3" data-name="Mechanical Keyboard" data-price="89">
+                <h3>Mechanical Keyboard</h3>
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSz-poJ4pNFtoCOzLq0uYkv_22obsic8Tm8fA&s">
+                <p class="product-price">$89.00</p>
+                <button class="btn-add">Add to Cart</button>
+            </div>
+        </div>
+
+        <div class="cart-sidebar">
+            <h3>Your Cart</h3>
+            <div id="cart-items-container">
+                </div>
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+             <center><form action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="0333555b-f17b-4fa0-ae5b-0675529af72d">
+        <input type="address" id="address" name="address" placeholder="Address" required>
+        <input type="text" id="username-input" name="name" placeholder="Name" required>
+        <input type="text" id="username-input" name="name" placeholder="Put your own id name" required>
+            <button type="submit" class="btn-checkout" onclick="checkout()">Proceed to Checkout</button>
+        </div>
+    </div>
+
+<script>
+    // Grab DOM Element References
+    const customSearch = document.getElementById('customSearch');
+    const optionsList = document.getElementById('optionsList');
+    const items = optionsList.getElementsByClassName('option-item');
+    const imageViewer = document.getElementById('imageViewer');
+
+    // 1. Reveal menu immediately upon clicking or entering the text element area
+    customSearch.addEventListener('focus', () => {
+        optionsList.style.display = 'block';
+    });
+
+    // 2. Real-time dynamic typing filter script logic engine
+    customSearch.addEventListener('input', function() {
+        const queryText = this.value.toLowerCase().trim();
+        optionsList.style.display = 'block';
+        let matchCounter = 0;
+
+        for (let i = 0; i < items.length; i++) {
+            const currentName = items[i].getAttribute('data-name').toLowerCase();
+            
+            if (currentName.includes(queryText)) {
+                items[i].style.display = 'flex'; // Keeping row structure alignment visible
+                matchCounter++;
+            } else {
+                items[i].style.display = 'none'; // Clear mismatch choices layout
+            }
+        }
+        
+        // Fully collapse popup panel container if zero matches occur
+        if (matchCounter === 0) {
+            optionsList.style.display = 'none';
+        }
+    });
+
+    // 3. Selection action handlers for matching dataset records item row click
+    for (let i = 0; i < items.length; i++) {
+        items[i].addEventListener('click', function() {
+            const selectedTextName = this.getAttribute('data-name');
+            const targetImageSrcUrl = this.getAttribute('data-img');
+
+            customSearch.value = selectedTextName; // Push string name to active search field box
+            imageViewer.src = targetImageSrcUrl; // Switch targeted main large layout viewer content source 
+            imageViewer.style.display = 'block'; // Unhide active loaded asset image layout
+            optionsList.style.display = 'none'; // Close list view overlay popup window panel box
+        });
+    }
+
+    // 4. Force dropdown overlay closure if user clicks layout regions outside input wrap
+    document.addEventListener('click', function(event) {
+        if (!customSearch.contains(event.target) && !optionsList.contains(event.target)) {
+            optionsList.style.display = 'none';
+        }
+    });
+      // Load cart from local storage or start fresh
+        let cart = JSON.parse(localStorage.getItem('app_cart')) || [];
+
+        // Elements
+        const cartCountEl = document.getElementById('cart-count');
+        const cartItemsContainer = document.getElementById('cart-items-container');
+        const cartTotalPriceEl = document.getElementById('cart-total-price');
+
+        // Initialize App UI
+        document.querySelectorAll('.btn-add').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const card = e.target.closest('.product-card');
+                const id = card.dataset.id;
+                const name = card.dataset.name;
+                const price = parseFloat(card.dataset.price);
+                
+                addToCart(id, name, price);
+            });
+        });
+
+        function addToCart(id, name, price) {
+            // Check if item already exists in cart
+            const existingItem = cart.find(item => item.id === id);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ id, name, price, quantity: 1 });
+            }
+
+            saveAndRender();
+        }
+
+        function changeQuantity(id, change) {
+            const item = cart.find(item => item.id === id);
+            if (!item) return;
+
+            item.quantity += change;
+
+            // If quantity drops to 0, remove it entirely
+            if (item.quantity <= 0) {
+                cart = cart.filter(item => item.id !== id);
+            }
+
+            saveAndRender();
+        }
+
+        function saveAndRender() {
+            // Save state to browser storage
+            localStorage.setItem('app_cart', JSON.stringify(cart));
+            renderCart();
+        }
+
+        function renderCart() {
+            // 1. Update Cart Badge Count
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCountEl.textContent = totalItems;
+
+            // 2. Render List Items
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="empty</p>';
+                cartTotalPriceEl.textContent = '$0.00';
+                return;
+            }
+
+            let totalCost = 0;
+
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                totalCost += itemTotal;
+
+                const itemRow = document.createElement('div');
+                itemRow.className = 'cart-item';
+                itemRow.innerHTML = `
+                    <div class="cart-item-details">
+                        <h4>${item.name}</h4>
+                        <div class="quantity-controls">
+                            <button class="btn-qty" onclick="changeQuantity('${item.id}', -1)">-</button>
+                            <span>${item.quantity}</span>
+                            <button class="btn-qty" onclick="changeQuantity('${item.id}', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="cart-item-price">$${itemTotal.toFixed(2)}</div>
+                `;
+                cartItemsContainer.appendChild(itemRow);
+            });
+
+            // 3. Update Total Price Display
+            cartTotalPriceEl.textContent = `$${totalCost.toFixed(2)}`;
+        }
+
+        function checkout() {
+            if(cart.length === 0) {
+                alert("Your cart is empty!");
+                return;
+            }
+            alert("Proceeding to payment gateway with data: " + JSON.stringify(cart));
+            // Here you would typically route to Stripe, PayPal, or your own server API.
+        }
+
+        // Initial setup run on page load
+        renderCart();
+</script>
+
+</body>
+</html>
