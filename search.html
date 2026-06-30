@@ -181,56 +181,71 @@
 <body>
 
     <header>
-        <h2>GadgetStore</h2>
-        <div class="cart-icon">
-            🛒 <span id="cart-count">0</span>
-        </div>
+        <h2>Shopping-t</h2>
+        <button onclick="toggleSettings()">
+            <button onclick="history.back()">⬅️</button>
+            <div class="cart-icon">
+                🛒 <span id="cart-count">0</span>
+            </div>
+        </button>
     </header>
-
+<!-- The Settings Box (Hidden by default) -->
+<div id="settingsBox" style="display: none; border: 1px solid black; padding: 10px; margin-top: 10px;">
+  <h3>Cart</h3>
+        <div  class="cart-sidebar">
+            <h3>Your Cart</h3>
+            <div id="cart-items-container">
+                </div>
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+             <center><form action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="0333555b-f17b-4fa0-ae5b-0675529af72d">
+        <input type="address" id="address" name="address" placeholder="Address" required><br><br>
+        <input type="text" id="username-input" name="name" placeholder="Name" required><br><br>
+        <input type="text" id="id-input" name="id" placeholder="Put your own id name" required><br><br>
+        <input type="text" id="goods-id-input" name="Goods id" placeholder="Goods ID" required><br><br>
+            <button type="submit" class="btn-checkout" onclick="checkout()">Proceed to Checkout</button>
+        </div>
+    </div>
+<script>
+  function toggleSettings() {
+    let box = document.getElementById("settingsBox");
+    
+    // If hidden, show it. If showing, hide it.
+    if (box.style.display === "none") {
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+</script><br><br>
     <div class="container">
         <div class="products-grid">
-            <div class="product-card" data-id="1" data-name="Wireless Headphones" data-price="99">
+            <div class="product-card" data-id="1" data-name="Wireless Headphones" data-price="10">
                 <h3>Wireless Headphones</h3>
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGijQnltCMSQzDopr8skpcSl3DNpu7E_2A0A&s">
-                <p class="product-price">$99.00</p>
+                <h2>ID: 1</h2>
+                <img src="https://m.media-amazon.com/images/I/61RahTQtAqL._AC_UF894,1000_QL80_.jpg">
+                <p class="product-price">$10.00</p>
                 <button class="btn-add">Add to Cart</button>
             </div>
             <div class="product-card" data-id="2" data-name="Smart Watch" data-price="149">
                 <h3>Smart Watch</h3>
-                <img src="https://www.amazon.com/Samsung-Galaxy-Watch-Smartwatch-Detection/dp/B096BK7W5M".
+                 <h2>ID: 2</h2>
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQo0pApl5ofZ3KmEIxwP0VYTd1it_65iuXjiQ&s">
                 <p class="product-price">$149.00</p>
                 <button class="btn-add">Add to Cart</button>
             </div>
-            <div class="product-card" data-id="3" data-name="Mechanical Keyboard" data-price="89">
+            <div class="product-card" data-id="3" data-name="Mechanical Keyboard" data-price="30">
                 <h3>Mechanical Keyboard</h3>
-                <p class="product-price">$89.00</p>
+                 <h2>ID: 3</h2>
+                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSz-poJ4pNFtoCOzLq0uYkv_22obsic8Tm8fA&s">
+                <p class="product-price">$30.00</p>
                 <button class="btn-add">Add to Cart</button>
             </div>
         </div><br><br><br>
-        <center><form action="https://api.web3forms.com/submit" method="POST">
-        <input type="hidden" name="access_key" value="0333555b-f17b-4fa0-ae5b-0675529af72d">
-            <input type="hidden" name="Cart Items" id="hidden-cart-items">
-<input type="hidden" name="Total Price" id="hidden-total-price">
-        <div name="cart" class="cart-sidebar" required>
-            <h3 name="cart" required>Your Cart</h3>
-            <div name="cart" id="cart-items-container" required>
-                </div>
-            <div name="total" class="cart-total" required>
-                <span name="total" required>Total:</span>
-                <span name="total" id="cart-total-price" required>$0.00</span>
-            </div>
-        <input type="address" id="address" name="address" placeholder="Address" required><br><br>
-        <input type="text" id="username-input" name="name" placeholder="Name" required><br><br>
-        <input type="text" id="id-input" name="id" placeholder="Put your own id name" required><br><br>
-            <button type="submit" class="btn-checkout" onclick="checkout()">Proceed to Checkout</button>
-        </div>
-    </div>
-
     <script>
-        // Example logic to add to your existing script
-document.getElementById('hidden-cart-items').value = JSON.stringify(cartArray); 
-document.getElementById('hidden-total-price').value = totalAmount;
-        
         // Load cart from local storage or start fresh
         let cart = JSON.parse(localStorage.getItem('app_cart')) || [];
 
@@ -338,4 +353,3 @@ document.getElementById('hidden-total-price').value = totalAmount;
     </script>
 </body>
 </html>
-
