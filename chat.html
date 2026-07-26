@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Pro</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #e5e5f7; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+
+    /* Modals */
+    .modal-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-box { background: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+    .modal-box h2 { margin-bottom: 20px; color: #333; }
+    .auth-form { display: flex; flex-direction: column; gap: 15px; }
+    .auth-form input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+    .btn { padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-secondary { background: #e9ecef; color: #333; margin-top: 10px; width: 100%; }
+    .google-btn { background: #4285F4; color: white; width: 100%; margin-top: 15px; }
+    .toggle-text { margin-top: 15px; font-size: 14px; color: #555; }
+    .toggle-text span { color: #007bff; cursor: pointer; font-weight: bold; }
+    
+    #profile-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 10px auto; display: block; border: 2px solid #007bff; }
+
+    /* Chat Container */
+    .chat-container { width: 100%; max-width: 600px; height: 92vh; background: white; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 10px 20px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+
+    /* Header */
+    .chat-header { background: #007bff; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; gap: 10px; flex-shrink: 0; }
+    
+    /* Search Bar Area */
+    .search-container { position: relative; flex: 1; max-width: 220px; }
+    #user-search { width: 100%; padding: 8px 12px; border-radius: 20px; border: none; outline: none; font-size: 14px; }
+    .search-results { position: absolute; top: 40px; left: 0; background: white; width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 200px; overflow-y: auto; display: none; flex-direction: column; color: black; z-index: 100; }
+    .search-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+    .search-item img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+    .search-item:hover { background: #f8f9fa; }
+
+    .chat-info { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; }
+    .back-btn { background: white; color: #007bff; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; display: none; }
+
+    /* User Profile & Logout */
+    .user-profile { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px; border-radius: 5px; }
+    .user-profile:hover { background: rgba(255,255,255,0.2); }
+    .user-profile img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    #logout-btn { background: transparent; color: white; border: 1px solid white; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+
+    /* Messages Area */
+    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; min-height: 0; }
+    .message-wrapper { display: flex; gap: 10px; max-width: 85%; }
+    .message-wrapper img.avatar { width: 30px; height: 30px; border-radius: 50%; align-self: flex-end; object-fit: cover; }
+    .message-content { display: flex; flex-direction: column; }
+    .sender-name { font-size: 11px; color: #666; margin-bottom: 3px; }
+    .message { padding: 10px 15px; border-radius: 15px; word-wrap: break-word; }
+    .message img.chat-image { max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; }
+    
+    .delete-icon { background: none; border: none; font-size: 14px; cursor: pointer; opacity: 0.5; padding: 5px; }
+    .delete-icon:hover { opacity: 1; color: red; }
+
+    .message-wrapper.sent { align-self: flex-end; flex-direction: row-reverse; }
+    .message-wrapper.sent .message { background: #007bff; color: white; border-bottom-right-radius: 2px; }
+    .message-wrapper.sent .sender-name { display: none; }
+    .message-wrapper.received { align-self: flex-start; }
+    .message-wrapper.received .message { background: #e9ecef; color: black; border-bottom-left-radius: 2px; }
+    .message-row { display: flex; align-items: center; gap: 5px; }
+    .message-wrapper.sent .message-row { flex-direction: row-reverse; }
+
+    /* Input Area */
+    .chat-input-area { display: flex; padding: 12px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 10px; position: relative; flex-shrink: 0; }
+    .chat-input-area input[type="text"] { flex: 1; padding: 10px 15px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 15px; }
+    .icon-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #555; }
+    .send-btn { background: #007bff; color: white; border: none; padding: 10px 18px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+    
+    emoji-picker { position: absolute; bottom: 65px; left: 10px; z-index: 100; }
+  </style>
+</head>
+<body>
+
+  <!-- Login / Register Screen -->
+  <div id="auth-screen" class="modal-screen">
+    <div class="modal-box">
+      <h2 id="auth-title">Login</h2>
+      <form id="login-form" class="auth-form">
+        <input type="email" id="login-email" placeholder="Email" required>
+        <input type="password" id="login-password" placeholder="Password" required>
+        <button type="submit" class="btn btn-primary">Log In</button>
+      </form>
+      <form id="register-form" class="auth-form" style="display: none;">
+        <input type="text" id="reg-name" placeholder="Your Name" required>
+        <input type="email" id="reg-email" placeholder="Email" required>
+        <input type="password" id="reg-password" placeholder="Password (min 6 chars)" required minlength="6">
+        <button type="submit" class="btn btn-primary">Register</button>
+      </form>
+      <button id="google-btn" class="btn google-btn">Sign in with Google</button>
+      <div class="toggle-text" id="toggle-to-register">Don't have an account? <span>Register here</span></div>
+      <div class="toggle-text" id="toggle-to-login" style="display: none;">Already have an account? <span>Log in</span></div>
+    </div>
+  </div>
+
+  <!-- Profile Screen -->
+  <div id="profile-modal" class="modal-screen" style="display: none;">
+    <div class="modal-box">
+      <h2>Edit Profile</h2>
+      <img id="profile-preview" src="https://via.placeholder.com/100?text=+" alt="Preview">
+      <input type="file" id="profile-upload" accept="image/*" style="display: none;">
+      <button class="btn btn-primary" onclick="document.getElementById('profile-upload').click()">Choose Picture</button>
+      <button id="save-profile-btn" class="btn btn-primary" style="display: none; margin-top: 10px; width:100%;">Save Profile</button>
+      <button id="close-profile-btn" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+
+  <!-- Chat UI -->
+  <div class="chat-container">
+    <header class="chat-header">
+      <div class="search-container">
+        <input type="text" id="user-search" placeholder="🔍 Search user to DM...">
+        <div id="search-results" class="search-results"></div>
+      </div>
+
+      <div class="chat-info">
+        <span id="room-label">Global</span>
+        <button id="back-btn" class="back-btn">Back to Global</button>
+      </div>
+      
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <div id="user-profile" class="user-profile" style="display: none;" title="Click to change profile">
+          <img id="user-pic" src="" alt="Profile">
+        </div>
+        <button id="logout-btn" style="display:none;">Logout</button>
+      </div>
+    </header>
+
+    <main class="chat-messages" id="chat-messages"></main>
+
+    <form class="chat-input-area" id="chat-form">
+      <label for="chat-image-upload" class="icon-btn" title="Send image">📎</label>
+      <input type="file" id="chat-image-upload" accept="image/*" style="display: none;">
+      <button type="button" id="emoji-btn" class="icon-btn">😀</button>
+      <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
+      <button type="submit" class="send-btn">Send</button>
+    </form>
+    
+    <emoji-picker id="emoji-picker" style="display: none;"></emoji-picker>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4",
+      authDomain: "visal-eaeea.firebaseapp.com",
+      projectId: "visal-eaeea",
+      storageBucket: "visal-eaeea.firebasestorage.app",
+      messagingSenderId: "77752028345",
+      appId: "1:77752028345:web:81c423c896b0701bfc9f68",
+      measurementId: "G-H2DBRZ8R8X"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+    const provider = new GoogleAuthProvider();
+
+    let currentUser = null;
+    let unsubscribeMessages = null;
+    let currentRoom = 'global';
+
+    document.getElementById('toggle-to-register').onclick = () => {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('toggle-to-register').style.display = 'none';
+      document.getElementById('register-form').style.display = 'flex';
+      document.getElementById('toggle-to-login').style.display = 'block';
+      document.getElementById('auth-title').innerText = "Create Account";
+    };
+    document.getElementById('toggle-to-login').onclick = () => {
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('toggle-to-login').style.display = 'none';
+      document.getElementById('login-form').style.display = 'flex';
+      document.getElementById('toggle-to-register').style.display = 'block';
+      document.getElementById('auth-title').innerText = "Login";
+    };
+
+    document.getElementById('register-form').onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-password').value;
+        const name = document.getElementById('reg-name').value;
+        
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(res.user, { displayName: name });
+        await saveUserToDatabase(res.user);
+      } catch (error) { 
+        alert("Registration Error: " + error.message); 
+      }
+    };
+
+    document.getElementById('login-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) { 
+        alert("Login Error Code: " + error.code + "\nMessage: " + error.message); 
+      }
+    };
+
+    document.getElementById('google-btn').onclick = async () => {
+      try {
+        const res = await signInWithPopup(auth, provider);
+        await saveUserToDatabase(res.user);
+      } catch (error) { 
+        alert("Google Sign-In Error: " + error.message); 
+      }
+    };
+
+    document.getElementById('logout-btn').onclick = () => {
+      if (confirm("Log out?")) signOut(auth);
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('logout-btn').style.display = 'block';
+        document.getElementById('user-profile').style.display = 'flex';
+        await saveUserToDatabase(user);
+        updateUserUI(user);
+        loadMessages();
+      } else {
+        currentUser = null;
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('logout-btn').style.display = 'none';
+        document.getElementById('user-profile').style.display = 'none';
+        if (unsubscribeMessages) unsubscribeMessages();
+      }
+    });
+
+    async function saveUserToDatabase(user) {
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          name: user.displayName || "User",
+          email: user.email,
+          photoURL: user.photoURL || ""
+        }, { merge: true });
+      } catch (err) {
+        console.error("Database sync error:", err);
+      }
+    }
+
+    function updateUserUI(user) {
+      const avatar = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "User")}&background=random`;
+      document.getElementById('user-pic').src = avatar;
+    }
+
+    document.getElementById('user-profile').onclick = () => {
+      document.getElementById('profile-preview').src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || "User")}&background=random`;
+      document.getElementById('profile-modal').style.display = 'flex';
+    };
+    document.getElementById('close-profile-btn').onclick = () => {
+      document.getElementById('profile-modal').style.display = 'none';
+      document.getElementById('save-profile-btn').style.display = 'none';
+    };
+
+    let profileFile = null;
+    document.getElementById('profile-upload').onchange = (e) => {
+      profileFile = e.target.files[0];
+      if (profileFile) {
+        document.getElementById('profile-preview').src = URL.createObjectURL(profileFile);
+        document.getElementById('save-profile-btn').style.display = 'block';
+      }
+    };
+
+    document.getElementById('save-profile-btn').onclick = async () => {
+      if (!profileFile) return;
+      try {
+        const imgRef = ref(storage, 'profiles/' + currentUser.uid + '_' + profileFile.name);
+        await uploadBytes(imgRef, profileFile);
+        const url = await getDownloadURL(imgRef);
+        await updateProfile(currentUser, { photoURL: url });
+        await saveUserToDatabase(currentUser);
+        updateUserUI(currentUser);
+        document.getElementById('profile-modal').style.display = 'none';
+        document.getElementById('save-profile-btn').style.display = 'none';
+        profileFile = null;
+      } catch (err) { alert("Failed updating profile picture: " + err.message); }
+    };
+
+    const searchInput = document.getElementById('user-search');
+    const searchResults = document.getElementById('search-results');
+
+    searchInput.oninput = async (e) => {
+      const val = e.target.value.toLowerCase().trim();
+      if (!val) { searchResults.style.display = 'none'; return; }
+      
+      const snap = await getDocs(collection(db, "users"));
+      searchResults.innerHTML = '';
+      let matches = 0;
+
+      snap.forEach(docSnap => {
+        const u = docSnap.data();
+        if (u.uid !== currentUser.uid && u.name.toLowerCase().includes(val)) {
+          matches++;
+          const div = document.createElement('div');
+          div.className = 'search-item';
+          const pic = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`;
+          div.innerHTML = `<img src="${pic}"><span>${u.name}</span>`;
+          
+          div.onclick = () => {
+            currentRoom = [currentUser.uid, u.uid].sort().join('_');
+            document.getElementById('room-label').innerText = u.name;
+            document.getElementById('back-btn').style.display = 'inline-block';
+            searchResults.style.display = 'none';
+            searchInput.value = '';
+            loadMessages();
+          };
+          searchResults.appendChild(div);
+        }
+      });
+      searchResults.style.display = matches > 0 ? 'flex' : 'none';
+    };
+
+    document.onclick = (e) => {
+      if (e.target !== searchInput && !searchResults.contains(e.target)) {
+        searchResults.style.display = 'none';
+      }
+    };
+
+    document.getElementById('back-btn').onclick = () => {
+      currentRoom = 'global';
+      document.getElementById('room-label').innerText = 'Global';
+      document.getElementById('back-btn').style.display = 'none';
+      loadMessages();
+    };
+
+    const messageInput = document.getElementById('message-input');
+    let chatFile = document.getElementById('chat-image-upload');
+    let selectedChatFile = null;
+
+    chatFile.onchange = (e) => {
+      selectedChatFile = e.target.files[0];
+      if (selectedChatFile) messageInput.placeholder = `Attached: ${selectedChatFile.name}`;
+    };
+
+    document.getElementById('emoji-btn').onclick = () => {
+      const picker = document.getElementById('emoji-picker');
+      picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+    };
+    document.getElementById('emoji-picker').addEventListener('emoji-click', e => {
+      messageInput.value += e.detail.unicode;
+    });
+
+    document.getElementById('chat-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const text = messageInput.value.trim();
+      if (!text && !selectedChatFile) return;
+
+      document.getElementById('emoji-picker').style.display = 'none';
+      let imageUrl = null;
+
+      try {
+        if (selectedChatFile) {
+          const imgRef = ref(storage, 'chat_images/' + Date.now() + '_' + selectedChatFile.name);
+          await uploadBytes(imgRef, selectedChatFile);
+          imageUrl = await getDownloadURL(imgRef);
+        }
+
+        await addDoc(collection(db, "messages"), {
+          text: text,
+          imageUrl: imageUrl,
+          uid: currentUser.uid,
+          name: currentUser.displayName || "User",
+          photoURL: currentUser.photoURL || "",
+          room: currentRoom,
+          createdAt: serverTimestamp()
+        });
+
+        messageInput.value = '';
+        messageInput.placeholder = "Type a message...";
+        selectedChatFile = null;
+        chatFile.value = '';
+      } catch (err) { alert("Error sending message: " + err.message); }
+    };
+
+    function loadMessages() {
+      if (unsubscribeMessages) unsubscribeMessages();
+
+      const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+      const chatMessages = document.getElementById('chat-messages');
+
+      unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        chatMessages.innerHTML = '';
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const msgRoom = data.room || 'global';
+          if (msgRoom !== currentRoom) return;
+
+          const isMe = data.uid === currentUser.uid;
+          const wrapper = document.createElement('div');
+          wrapper.className = `message-wrapper ${isMe ? 'sent' : 'received'}`;
+
+          const name = data.name || 'User';
+          const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+          
+          let textContent = data.text ? `<div>${data.text}</div>` : '';
+          let imageContent = data.imageUrl ? `<img src="${data.imageUrl}" class="chat-image" onclick="window.open('${data.imageUrl}', '_blank')">` : '';
+
+          wrapper.innerHTML = `
+            <img src="${avatar}" class="avatar">
+            <div class="message-content">
+              <span class="sender-name">${name}</span>
+              <div class="message-row">
+                <div class="message">${textContent}${imageContent}</div>
+              </div>
+            </div>
+          `;
+
+          if (isMe) {
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-icon';
+            delBtn.innerHTML = '🗑️';
+            delBtn.title = 'Delete message';
+            delBtn.onclick = async () => {
+              if (confirm("Delete this message?")) {
+                await deleteDoc(doc(db, "messages", docSnap.id));
+              }
+            };
+            wrapper.querySelector('.message-row').appendChild(delBtn);
+          }
+
+          chatMessages.appendChild(wrapper);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      });
+    }
+  </script>
+</body>
+</html>
