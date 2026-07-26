@@ -9,7 +9,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    body { background-color: #e5e5f7; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; overflow: hidden; }
+    body { background-color: #e5e5f7; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; }
 
     /* Modals */
     .modal-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
@@ -27,20 +27,20 @@
     #profile-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 10px auto; display: block; border: 2px solid #007bff; }
 
     /* Chat Container */
-    .chat-container { width: 100%; height: 100%; max-width: 100%; max-height: 100%; background: white; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .chat-container { width: 100vw; height: 100vh; height: 100dvh; background: white; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 
     @media (min-width: 768px) {
       .chat-container { max-width: 650px; height: 90vh; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
     }
 
     /* Header & Top Navigation Bar */
-    .chat-header { background: #007bff; color: white; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; z-index: 10; flex-shrink: 0; }
+    .chat-header { background: #007bff; color: white; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10; flex-shrink: 0; }
     .header-top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; }
     
     /* Search Bar Area */
     .search-container { position: relative; flex: 1; max-width: 180px; }
-    #user-search { width: 100%; padding: 6px 10px; border-radius: 20px; border: none; outline: none; font-size: 13px; }
-    .search-results { position: absolute; top: 35px; left: 0; background: white; width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 180px; overflow-y: auto; display: none; flex-direction: column; color: black; z-index: 100; }
+    #user-search { width: 100%; padding: 5px 10px; border-radius: 20px; border: none; outline: none; font-size: 13px; }
+    .search-results { position: absolute; top: 32px; left: 0; background: white; width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 150px; overflow-y: auto; display: none; flex-direction: column; color: black; z-index: 100; }
     .search-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
     .search-item img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
     .search-item:hover { background: #f8f9fa; }
@@ -50,22 +50,22 @@
     #remove-friend-btn:hover { background: rgba(255, 0, 0, 0.3); }
     
     /* Friends Top Menu Bar */
-    .friends-bar { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; width: 100%; scrollbar-width: none; }
+    .friends-bar { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 2px; width: 100%; scrollbar-width: none; }
     .friends-bar::-webkit-scrollbar { display: none; }
-    .friend-chip { position: relative; display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); padding: 4px 10px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: background 0.2s; border: 1px solid transparent; }
+    .friend-chip { position: relative; display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); padding: 3px 8px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: background 0.2s; border: 1px solid transparent; }
     .friend-chip:hover, .friend-chip.active { background: white; color: #007bff; font-weight: bold; }
-    .friend-chip img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+    .friend-chip img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
     
     /* Notification dot badge */
-    .notification-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background-color: #ff3b30; border-radius: 50%; border: 2px solid #007bff; display: none; }
+    .notification-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background-color: #ff3b30; border-radius: 50%; border: 2px solid #007bff; display: none; }
 
     /* User Profile & Logout */
     .user-profile { display: flex; align-items: center; cursor: pointer; }
-    .user-profile img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid white; }
-    #logout-btn { background: transparent; color: white; border: 1px solid white; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .user-profile img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid white; }
+    #logout-btn { background: transparent; color: white; border: 1px solid white; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 
     /* Messages Area */
-    .chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; -webkit-overflow-scrolling: touch; }
+    .chat-messages { flex: 1 1 auto; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; -webkit-overflow-scrolling: touch; min-height: 0; }
     .message-wrapper { display: flex; gap: 8px; max-width: 88%; }
     .message-wrapper img.avatar { width: 26px; height: 26px; border-radius: 50%; align-self: flex-end; object-fit: cover; }
     .message-content { display: flex; flex-direction: column; }
@@ -85,28 +85,16 @@
     .message-wrapper.sent .message-row { flex-direction: row-reverse; }
 
     /* Input Area */
-    .chat-input-area { display: flex; padding: 8px 10px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 6px; position: relative; flex-shrink: 0; }
+    .chat-input-area { display: flex; padding: 6px 10px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 6px; position: relative; flex-shrink: 0; width: 100%; }
     .chat-input-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; min-width: 0; }
     .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #555; padding: 2px; }
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
     
-    emoji-picker { position: absolute; bottom: 55px; left: 5px; z-index: 100; max-width: 95vw; height: 280px; }
-      
-    /* --- SPLASH SCREEN & OFFLINE GAME --- */
-    #splash-screen {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: white; display: flex; flex-direction: column;
-        justify-content: center; align-items: center; z-index: 9999;
-        transition: opacity 0.5s ease;
-    }
-    #splash-screen.fade-out { opacity: 0; pointer-events: none; }
-
+    emoji-picker { position: absolute; bottom: 50px; left: 5px; z-index: 100; max-width: 95vw; height: 240px; }
   </style>
 </head>
 <body>
-    <div id="splash-screen">
-      <h1>Starting...</h1>
-  </div>
+
   <!-- Login / Register Screen -->
   <div id="auth-screen" class="modal-screen">
     <div class="modal-box">
@@ -323,7 +311,6 @@
       } catch (err) { alert("Save Error: " + err.message); }
     };
 
-    // User Search & Local Storage Saving for Friends
     const searchInput = document.getElementById('user-search');
     const searchResults = document.getElementById('search-results');
 
@@ -378,7 +365,6 @@
       }
     };
 
-    // Load Friends from Local Device Storage
     function loadFriendsBar() {
       const bar = document.getElementById('friends-bar');
       bar.innerHTML = `
@@ -393,7 +379,7 @@
       try {
         const storageKey = 'chat_friends_' + currentUser.uid;
         let localFriends = JSON.parse(localStorage.getItem(storageKey) || '[]');
-
+        
         localFriends.forEach(f => {
           const roomId = [currentUser.uid, f.uid].sort().join('_');
           const pic = f.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.name)}&background=random`;
@@ -419,7 +405,6 @@
         removeBtn.style.display = 'inline-block';
       }
 
-      // Clear the red dot notification when opening room
       const dot = document.getElementById(`dot-${roomId}`);
       if (dot) dot.style.display = 'none';
 
@@ -445,7 +430,6 @@
       }
     };
 
-    // Real-time listener for incoming messages to trigger notification dots
     function listenToAllNotifications() {
       if (globalUnsubscribeNotification) globalUnsubscribeNotification();
 
@@ -456,7 +440,6 @@
             const data = change.doc.data();
             const msgRoom = data.room || 'global';
             
-            // If message is from someone else and not currently open room, show red dot
             if (data.uid !== currentUser.uid && msgRoom !== currentRoom) {
               const dot = document.getElementById(`dot-${msgRoom}`);
               if (dot) {
@@ -566,12 +549,6 @@
         console.error("Error loading messages:", error);
       });
     }
-  window.addEventListener('load', () => {
-        setTimeout(() => {
-            const splash = document.getElementById('splash-screen');
-            if (splash) { splash.classList.add('fade-out'); setTimeout(() => splash.style.display = 'none', 500); }
-        }, 1000); 
-    });
   </script>
 </body>
 </html>
