@@ -91,10 +91,20 @@
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
     
     emoji-picker { position: absolute; bottom: 50px; left: 5px; z-index: 100; max-width: 95vw; height: 240px; }
+        #splash-screen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: white; display: flex; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 9999;
+        transition: opacity 0.5s ease;
+    }
+    #splash-screen.fade-out { opacity: 0; pointer-events: none; }
+    
   </style>
 </head>
 <body>
-
+    <div id="splash-screen">
+      <h1>Starting...</h1>
+    </div>
   <!-- Login / Register Screen -->
   <div id="auth-screen" class="modal-screen">
     <div class="modal-box">
@@ -549,6 +559,12 @@
         console.error("Error loading messages:", error);
       });
     }
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            if (splash) { splash.classList.add('fade-out'); setTimeout(() => splash.style.display = 'none', 500); }
+        }, 1000); 
+    });
   </script>
 </body>
 </html>
