@@ -11,6 +11,16 @@
     
     body { background-color: #e5e5f7; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; }
 
+    /* Splash Screen Styles */
+    #splash-screen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: white; display: flex; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 9999;
+        transition: opacity 0.5s ease;
+    }
+    #splash-screen.fade-out { opacity: 0; pointer-events: none; }
+    #splash-screen h1 { color: #007bff; font-size: 24px; font-weight: bold; }
+
     /* Modals */
     .modal-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
     .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
@@ -91,22 +101,17 @@
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
     
     emoji-picker { position: absolute; bottom: 50px; left: 5px; z-index: 100; max-width: 95vw; height: 240px; }
-        #splash-screen {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: white; display: flex; flex-direction: column;
-        justify-content: center; align-items: center; z-index: 9999;
-        transition: opacity 0.5s ease;
-    }
-    #splash-screen.fade-out { opacity: 0; pointer-events: none; }
-    
   </style>
 </head>
 <body>
-    <div id="splash-screen">
+
+  <!-- Splash Screen -->
+  <div id="splash-screen">
       <h1>Starting...</h1>
-    </div>
+  </div>
+
   <!-- Login / Register Screen -->
-  <div id="auth-screen" class="modal-screen">
+  <div id="auth-screen" class="modal-screen" style="display: none;">
     <div class="modal-box">
       <h2 id="auth-title">Login</h2>
       <form id="login-form" class="auth-form">
@@ -207,7 +212,24 @@
     let currentUser = null;
     let unsubscribeMessages = null;
     let globalUnsubscribeNotification = null;
+    let unsubscribeFriends = null;
     let currentRoom = 'global';
+
+    // Splash Screen Logic
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            if (splash) { 
+              splash.classList.add('fade-out'); 
+              setTimeout(() => splash.style.display = 'none', 500); 
+            }
+        }, 1000); 
+    });
+
+    // Request browser notification permissions on launch
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
 
     document.getElementById('toggle-to-register').onclick = () => {
       document.getElementById('login-form').style.display = 'none';
@@ -269,6 +291,7 @@
         document.getElementById('user-profile').style.display = 'none';
         if (unsubscribeMessages) unsubscribeMessages();
         if (globalUnsubscribeNotification) globalUnsubscribeNotification();
+        if (unsubscribeFriends) unsubscribeFriends();
       }
     });
 
@@ -342,23 +365,22 @@
             const pic = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`;
             div.innerHTML = `<img src="${pic}"><span>${u.name} (Add)</span>`;
             
-            div.onclick = () => {
-              const storageKey = 'chat_friends_' + currentUser.uid;
-              let localFriends = JSON.parse(localStorage.getItem(storageKey) || '[]');
-              
-              if (!localFriends.some(f => f.uid === u.uid)) {
-                localFriends.push({
+            div.onclick = async () => {
+              // Save Friend to Firestore Database Cloud
+              try {
+                await setDoc(doc(db, "users", currentUser.uid, "friends", u.uid), {
                   uid: u.uid,
                   name: u.name,
                   photoURL: u.photoURL || ""
                 });
-                localStorage.setItem(storageKey, JSON.stringify(localFriends));
+              } catch (err) {
+                console.error("Error saving friend to database:", err);
               }
 
               searchResults.style.display = 'none';
               searchInput.value = '';
-              loadFriendsBar();
-              switchRoom([currentUser.uid, u.uid].sort().join('_'), u.name);
+              const roomId = [currentUser.uid, u.uid].sort().join('_');
+              switchRoom(roomId, u.name);
             };
             searchResults.appendChild(div);
           }
@@ -375,22 +397,22 @@
       }
     };
 
+    // Load Friends from Database Cloud Real-time
     function loadFriendsBar() {
+      if (unsubscribeFriends) unsubscribeFriends();
       const bar = document.getElementById('friends-bar');
-      bar.innerHTML = `
-        <div class="friend-chip ${currentRoom === 'global' ? 'active' : ''}" id="chip-global" onclick="switchRoom('global', 'Global Chat')">
-          🌐 Global
-          <span class="notification-dot" id="dot-global"></span>
-        </div>
-      `;
 
-      if (!currentUser) return;
+      const friendsCol = collection(db, "users", currentUser.uid, "friends");
+      unsubscribeFriends = onSnapshot(friendsCol, (snapshot) => {
+        bar.innerHTML = `
+          <div class="friend-chip ${currentRoom === 'global' ? 'active' : ''}" id="chip-global" onclick="switchRoom('global', 'Global Chat')">
+            🌐 Global
+            <span class="notification-dot" id="dot-global"></span>
+          </div>
+        `;
 
-      try {
-        const storageKey = 'chat_friends_' + currentUser.uid;
-        let localFriends = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        
-        localFriends.forEach(f => {
+        snapshot.forEach(docSnap => {
+          const f = docSnap.data();
           const roomId = [currentUser.uid, f.uid].sort().join('_');
           const pic = f.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.name)}&background=random`;
           
@@ -401,7 +423,7 @@
           chip.onclick = () => switchRoom(roomId, f.name);
           bar.appendChild(chip);
         });
-      } catch (err) { console.error("Error loading local friends:", err); }
+      });
     }
 
     window.switchRoom = function(roomId, roomName) {
@@ -425,21 +447,20 @@
       loadMessages();
     };
 
-    document.getElementById('remove-friend-btn').onclick = () => {
+    document.getElementById('remove-friend-btn').onclick = async () => {
       if (currentRoom === 'global') return;
-      if (confirm("Remove this friend from your device?")) {
-        const storageKey = 'chat_friends_' + currentUser.uid;
-        let localFriends = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      if (confirm("Remove this friend from your account?")) {
         const friendId = currentRoom.split('_').find(id => id !== currentUser.uid);
-        
-        localFriends = localFriends.filter(f => f.uid !== friendId);
-        localStorage.setItem(storageKey, JSON.stringify(localFriends));
-
+        try {
+          await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendId));
+        } catch (err) {
+          console.error("Error removing friend:", err);
+        }
         switchRoom('global', 'Global Chat');
-        loadFriendsBar();
       }
     };
 
+    // Listen to incoming messages for red dots + real Device Push Notifications
     function listenToAllNotifications() {
       if (globalUnsubscribeNotification) globalUnsubscribeNotification();
 
@@ -450,10 +471,22 @@
             const data = change.doc.data();
             const msgRoom = data.room || 'global';
             
-            if (data.uid !== currentUser.uid && msgRoom !== currentRoom) {
-              const dot = document.getElementById(`dot-${msgRoom}`);
-              if (dot) {
-                dot.style.display = 'block';
+            if (data.uid !== currentUser.uid) {
+              if (msgRoom !== currentRoom) {
+                const dot = document.getElementById(`dot-${msgRoom}`);
+                if (dot) dot.style.display = 'block';
+              }
+
+              if ("Notification" in window && Notification.permission === "granted") {
+                const senderName = data.name || "Someone";
+                const messageText = data.text || "Sent an attachment 📎";
+                
+                if (document.hidden || msgRoom !== currentRoom) {
+                  new Notification(`New message from ${senderName}`, {
+                    body: messageText,
+                    icon: data.photoURL || "https://via.placeholder.com/128"
+                  });
+                }
               }
             }
           }
@@ -559,12 +592,6 @@
         console.error("Error loading messages:", error);
       });
     }
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            const splash = document.getElementById('splash-screen');
-            if (splash) { splash.classList.add('fade-out'); setTimeout(() => splash.style.display = 'none', 500); }
-        }, 1000); 
-    });
   </script>
 </body>
 </html>
