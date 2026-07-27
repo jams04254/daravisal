@@ -91,6 +91,9 @@
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
     emoji-picker { position: absolute; bottom: 50px; left: 5px; z-index: 100; max-width: 95vw; height: 240px; }
+
+    /* Video Call Overlay Screen */
+    #video-call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: space-between; padding: 10px; }
   </style>
 </head>
 <body>
@@ -129,6 +132,18 @@
   </div>
 
   <div class="chat-container">
+    <!-- VIDEO CALL OVERLAY SCREEN -->
+    <div id="video-call-screen">
+      <div style="display:flex; justify-content:space-between; color:white; font-weight:bold; padding:10px; align-items:center;">
+        <span id="call-status">Connecting...</span>
+        <button id="end-call-btn" style="background:red; color:white; border:none; padding:6px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">End Call</button>
+      </div>
+      <div style="display:flex; flex:1; gap:10px; justify-content:center; align-items:center; position:relative;">
+        <video id="remote-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover; border-radius:10px; background:#222;"></video>
+        <video id="local-video" autoplay playsinline muted style="position:absolute; bottom:20px; right:20px; width:100px; height:150px; object-fit:cover; border-radius:8px; border:2px solid white; background:#111;"></video>
+      </div>
+    </div>
+
     <header class="chat-header">
       <div class="header-top-row">
         <div class="search-container">
@@ -190,14 +205,21 @@
 
     let currentUser = null;
     let unsubscribeMessages = null;
-    let globalUnsubscribeNotification = null;
     let unsubscribeFriends = null;
     let currentRoom = 'global';
-    let isInitialNotificationLoad = true;
 
     // --- OWNER EMAIL CONFIGURATION ---
-    // Change this string to your real Google Account email address to get admin privileges
-    const OWNER_EMAIL = "dam@gmail.com"; 
+    const OWNER_EMAIL = "your_email@gmail.com"; 
+
+    // --- WEBRTC CALL VARIABLES ---
+    let localStream;
+    let remoteStream;
+    let pc;
+    const servers = {
+      iceServers: [
+        { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+      ]
+    };
 
     // --- THE BOT BRAIN DICTIONARY ---
     const brain = {
@@ -316,7 +338,7 @@
         const url = await getDownloadURL(imgRef);
         await updateProfile(currentUser, { photoURL: url });
         await saveUserToDatabase(currentUser);
-  updateUserUI(currentUser);
+        updateUserUI(currentUser);
         document.getElementById('profile-modal').style.display = 'none'; document.getElementById('save-profile-btn').style.display = 'none';
         profileFile = null; alert("Profile updated!");
       } catch (err) { alert("Save Error: " + err.message); }
@@ -381,9 +403,7 @@
       currentRoom = roomId;
       document.getElementById('room-label').innerText = roomName;
       document.getElementById('remove-friend-btn').style.display = (roomId === 'global' || roomId === 'bot') ? 'none' : 'inline-block';
-      
-      // Hide video call button for bot room
-      document.getElementById('video-call-btn').style.display = (roomId === 'bot') ? 'none' : 'block';
+      document.getElementById('video-call-btn').style.display = (roomId === 'bot' || roomId === 'global') ? 'none' : 'block';
 
       document.querySelectorAll('.friend-chip').forEach(c => c.classList.remove('active'));
       const activeChip = document.getElementById(roomId === 'global' ? 'chip-global' : (roomId === 'bot' ? 'chip-bot' : `chip-${roomId}`));
@@ -397,34 +417,71 @@
       }
     };
 
-    // --- VIDEO CALL INITIATION ---
-    // --- VIDEO CALL LOGIC (OPENS IN A CLEAN POPUP WINDOW) ---
-    // --- VIDEO CALL LOGIC (AUTO-CLOSE ON HANG UP) ---
-    document.getElementById('video-call-btn').onclick = () => {
-        const videoRoomName = "ChatPro_" + currentRoom.replace(/[^a-zA-Z0-9]/g, ""); 
-        
-        // Open Jitsi inside an iframe overlay or popup that listens for hangup
-        const popup = window.open(`https://meet.jit.si/${videoRoomName}#config.startWithAudioMuted=false`, 'VideoCallWindow', 'width=800,height=600');
-        
-        // Check every second if the user closed the window or left the call
-        const checkInterval = setInterval(() => {
-            if (popup.closed) {
-                clearInterval(checkInterval);
-                return;
+    // --- FIREBASE WEBRTC VIDEO CALL INITIATION ---
+    document.getElementById('video-call-btn').onclick = async () => {
+      if (currentRoom === 'global' || currentRoom === 'bot') {
+        alert("Video calls are only available in private friend chats!");
+        return;
+      }
+
+      document.getElementById('video-call-screen').style.display = 'flex';
+      document.getElementById('call-status').innerText = "Starting camera...";
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('local-video').srcObject = localStream;
+
+        pc = new RTCPeerConnection(servers);
+        remoteStream = new MediaStream();
+        document.getElementById('remote-video').srcObject = remoteStream;
+
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+        pc.ontrack = event => { event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track)); };
+
+        const callDoc = doc(collection(db, "calls"));
+        const offerCandidates = collection(callDoc, "offerCandidates");
+        const answerCandidates = collection(callDoc, "answerCandidates");
+
+        pc.onicecandidate = event => {
+          if (event.candidate) { addDoc(offerCandidates, event.candidate.toJSON()); }
+        };
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        await setDoc(callDoc, { offer: { type: offer.type, sdp: offer.sdp }, caller: currentUser.uid, room: currentRoom });
+        document.getElementById('call-status').innerText = "Calling... Waiting for answer.";
+
+        onSnapshot(callDoc, async (snapshot) => {
+          const data = snapshot.data();
+          if (!pc.currentRemoteDescription && data && data.answer) {
+            const answer = new RTCSessionDescription(data.answer);
+            await pc.setRemoteDescription(answer);
+            document.getElementById('call-status').innerText = "Connected!";
+          }
+        });
+
+        onSnapshot(collection(callDoc, "answerCandidates"), (snapshot) => {
+          snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+              pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
             }
-            try {
-                // Detects if Jitsi has navigated to the post-call/feedback page
-                if (popup.location.href.includes('static/feedback.html') || popup.location.href.includes('thank-you')) {
-                    popup.close();
-                    clearInterval(checkInterval);
-                }
-            } catch (e) {
-                // Cross-origin security notices can be safely ignored while inside the call
-            }
-        }, 1000);
+          });
+        });
+
+        window.activeCallDoc = callDoc;
+      } catch (err) {
+        alert("Camera/Mic error: " + err.message);
+        document.getElementById('video-call-screen').style.display = 'none';
+      }
     };
 
-
+    document.getElementById('end-call-btn').onclick = () => {
+      if (localStream) { localStream.getTracks().forEach(track => track.stop()); }
+      if (pc) { pc.close(); }
+      document.getElementById('video-call-screen').style.display = 'none';
+      if (window.activeCallDoc) { deleteDoc(window.activeCallDoc); }
+    };
 
     document.getElementById('remove-friend-btn').onclick = async () => {
       if (currentRoom === 'global' || currentRoom === 'bot') return;
@@ -454,7 +511,6 @@
       wrapper.innerHTML = `<img src="${avatar}" class="avatar"><div class="message-content"><span class="sender-name">${name}</span><div class="message-row"><div class="message">${textContent}${imageContent}${audioContent}</div></div></div>`;
       const msgRow = wrapper.querySelector('.message-row');
 
-      // Add Copy Button
       if (data.text) {
           const copyBtn = document.createElement('button');
           copyBtn.className = 'action-icon'; copyBtn.innerHTML = '📋'; copyBtn.title = "Copy text";
@@ -467,7 +523,6 @@
           msgRow.appendChild(copyBtn);
       }
 
-      // Add Delete Button (Allowed if it's your message, the bot's message, or if you are the Owner)
       if ((isMe || isOwner || data.uid === "ai_bot_123") && docId) {
         const delBtn = document.createElement('button');
         delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️'; delBtn.title = "Delete message";
@@ -490,7 +545,6 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // --- LOCAL STORAGE BOT LOADER ---
     function loadLocalBotMessages() {
         const chatMessages = document.getElementById('chat-messages');
         chatMessages.innerHTML = '';
@@ -498,7 +552,6 @@
         localMsgs.forEach(msg => appendMessageToUI(msg, msg.id, true));
     }
 
-    // --- FIREBASE MESSAGES LOADER ---
     function loadMessages() {
       if (unsubscribeMessages) unsubscribeMessages();
       const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
@@ -511,7 +564,6 @@
       });
     }
 
-    // --- CHAT SUBMIT / PROFANITY FILTER / BOT LOGIC ---
     const messageInput = document.getElementById('message-input');
     let chatFile = document.getElementById('chat-image-upload');
     let selectedChatFile = null;
@@ -526,7 +578,6 @@
       e.preventDefault();
       const text = messageInput.value.trim();
       
-      // --- PROFANITY FILTER (Auto Block Bad Words) ---
       const badWords = ["bitch", "fuck", "b****", "f***"];
       const lowerText = text.toLowerCase();
       if (badWords.some(word => lowerText.includes(word))) {
@@ -545,7 +596,6 @@
           await uploadBytes(imgRef, selectedChatFile); imageUrl = await getDownloadURL(imgRef);
         }
 
-        // --- IF IN BOT ROOM ---
         if (currentRoom === 'bot') {
             const userMsg = {
                 id: Date.now().toString(), text: text, imageUrl: imageUrl, audioUrl: null,
@@ -570,7 +620,6 @@
                 }, 1000);
             }
         } else {
-            // --- IF IN NORMAL ROOM (FIREBASE) ---
             await addDoc(collection(db, "messages"), {
               text: text, imageUrl: imageUrl, audioUrl: null,
               uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
@@ -580,7 +629,6 @@
       } catch (err) { alert("Error sending: " + err.message); }
     };
 
-    // --- MICROPHONE LOGIC ---
     let mediaRecorder; let audioChunks = []; let isRecording = false; const micBtn = document.getElementById('mic-btn');
     micBtn.onclick = async () => {
         if (!isRecording) {
