@@ -8,7 +8,6 @@
   
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    
     body { background-color: #e5e5f7; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; }
 
     /* Splash Screen Styles */
@@ -33,45 +32,34 @@
     .google-btn { background: #4285F4; color: white; margin-top: 10px; }
     .toggle-text { margin-top: 12px; font-size: 13px; color: #555; }
     .toggle-text span { color: #007bff; cursor: pointer; font-weight: bold; }
-    
     #profile-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 10px auto; display: block; border: 2px solid #007bff; }
 
     /* Chat Container */
     .chat-container { width: 100vw; height: 100vh; height: 100dvh; background: white; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    @media (min-width: 768px) { .chat-container { max-width: 650px; height: 90vh; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); } }
 
-    @media (min-width: 768px) {
-      .chat-container { max-width: 650px; height: 90vh; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-    }
-
-    /* Header & Top Navigation Bar */
+    /* Header & Navigation */
     .chat-header { background: #007bff; color: white; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10; flex-shrink: 0; }
     .header-top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; }
-    
-    /* Search Bar Area */
     .search-container { position: relative; flex: 1; max-width: 180px; }
     #user-search { width: 100%; padding: 5px 10px; border-radius: 20px; border: none; outline: none; font-size: 13px; }
     .search-results { position: absolute; top: 32px; left: 0; background: white; width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 150px; overflow-y: auto; display: none; flex-direction: column; color: black; z-index: 100; }
     .search-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
     .search-item img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
-    .search-item:hover { background: #f8f9fa; }
-
+    
     .chat-info { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; }
     #remove-friend-btn { background: rgba(255, 255, 255, 0.2); border: 1px solid white; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: none; }
-    #remove-friend-btn:hover { background: rgba(255, 0, 0, 0.3); }
     
-    /* Friends Top Menu Bar */
     .friends-bar { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 2px; width: 100%; scrollbar-width: none; }
     .friends-bar::-webkit-scrollbar { display: none; }
-    .friend-chip { position: relative; display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); padding: 3px 8px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: background 0.2s; border: 1px solid transparent; }
+    .friend-chip { position: relative; display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); padding: 3px 8px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: 0.2s; border: 1px solid transparent; }
     .friend-chip:hover, .friend-chip.active { background: white; color: #007bff; font-weight: bold; }
     .friend-chip img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
-    
-    /* Notification dot badge */
     .notification-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background-color: #ff3b30; border-radius: 50%; border: 2px solid #007bff; display: none; }
 
-    /* User Profile & Logout */
     .user-profile { display: flex; align-items: center; cursor: pointer; }
     .user-profile img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid white; }
+    #video-call-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 0 4px; }
     #logout-btn { background: transparent; color: white; border: 1px solid white; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 
     /* Messages Area */
@@ -82,9 +70,10 @@
     .sender-name { font-size: 10px; color: #666; margin-bottom: 2px; }
     .message { padding: 8px 12px; border-radius: 12px; word-wrap: break-word; font-size: 14px; }
     .message img.chat-image { max-width: 100%; border-radius: 8px; margin-top: 4px; display: block; }
+    .message audio { max-width: 200px; height: 35px; outline: none; margin-top: 4px; border-radius: 8px; }
     
-    .delete-icon { background: none; border: none; font-size: 13px; cursor: pointer; opacity: 0.5; padding: 4px; }
-    .delete-icon:hover { opacity: 1; color: red; }
+    .action-icon { background: none; border: none; font-size: 14px; cursor: pointer; opacity: 0.5; padding: 4px; transition: 0.2s; }
+    .action-icon:hover { opacity: 1; transform: scale(1.1); }
 
     .message-wrapper.sent { align-self: flex-end; flex-direction: row-reverse; }
     .message-wrapper.sent .message { background: #007bff; color: white; border-bottom-right-radius: 2px; }
@@ -98,19 +87,16 @@
     .chat-input-area { display: flex; padding: 6px 10px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 6px; position: relative; flex-shrink: 0; width: 100%; }
     .chat-input-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; min-width: 0; }
     .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #555; padding: 2px; }
+    #mic-btn.recording { color: red; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    
     emoji-picker { position: absolute; bottom: 50px; left: 5px; z-index: 100; max-width: 95vw; height: 240px; }
   </style>
 </head>
 <body>
 
-  <!-- Splash Screen -->
-  <div id="splash-screen">
-      <h1>Starting...</h1>
-  </div>
+  <div id="splash-screen"><h1>Starting...</h1></div>
 
-  <!-- Login / Register Screen -->
   <div id="auth-screen" class="modal-screen" style="display: none;">
     <div class="modal-box">
       <h2 id="auth-title">Login</h2>
@@ -131,7 +117,6 @@
     </div>
   </div>
 
-  <!-- Profile Screen -->
   <div id="profile-modal" class="modal-screen" style="display: none;">
     <div class="modal-box">
       <h2>Edit Profile</h2>
@@ -143,34 +128,27 @@
     </div>
   </div>
 
-  <!-- Chat UI -->
   <div class="chat-container">
     <header class="chat-header">
       <div class="header-top-row">
         <div class="search-container">
-          <input type="text" id="user-search" placeholder="🔍 Search & Add...">
+          <input type="text" id="user-search" placeholder="🔍 Search...">
           <div id="search-results" class="search-results"></div>
         </div>
-
         <div class="chat-info">
           <span id="room-label">Global Chat</span>
-          <button id="remove-friend-btn">❌ Remove Friend</button>
+          <button id="remove-friend-btn">❌ Remove</button>
         </div>
-        
         <div style="display: flex; gap: 6px; align-items: center;">
-          <div id="user-profile" class="user-profile" style="display: none;" title="Profile">
+          <div id="user-profile" class="user-profile" style="display: none;">
             <img id="user-pic" src="" alt="Profile">
           </div>
+          <button id="video-call-btn" title="Start Video Call">🎥</button>
           <button id="logout-btn" style="display:none;">Logout</button>
         </div>
       </div>
-
-      <!-- Top Menu Friends Bar -->
       <div class="friends-bar" id="friends-bar">
-        <div class="friend-chip active" id="chip-global" onclick="switchRoom('global', 'Global Chat')">
-          🌐 Global
-          <span class="notification-dot" id="dot-global"></span>
-        </div>
+        <div class="friend-chip active" id="chip-global" onclick="switchRoom('global', 'Global Chat')">🌐 Global</div>
       </div>
     </header>
 
@@ -179,6 +157,7 @@
     <form class="chat-input-area" id="chat-form">
       <label for="chat-image-upload" class="icon-btn" title="Send image">📎</label>
       <input type="file" id="chat-image-upload" accept="image/*" style="display: none;">
+      <button type="button" id="mic-btn" class="icon-btn" title="Record Voice">🎤</button>
       <button type="button" id="emoji-btn" class="icon-btn">😀</button>
       <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
       <button type="submit" class="send-btn">Send</button>
@@ -214,35 +193,55 @@
     let globalUnsubscribeNotification = null;
     let unsubscribeFriends = null;
     let currentRoom = 'global';
+    let isInitialNotificationLoad = true;
 
-    // Splash Screen Logic
+    // --- OWNER EMAIL CONFIGURATION ---
+    // Change this string to your real Google Account email address to get admin privileges
+    const OWNER_EMAIL = "dam@gmail.com"; 
+
+    // --- THE BOT BRAIN DICTIONARY ---
+    const brain = {
+        "i am cute": "Yes you so cute.🥰",
+        "i'm cute": "Yes you so cute.🥰",
+        "you think i am cute": "Yes you so cute.🥰",
+        "you think i'm cute": "Yes you so cute.🥰",
+        "hello": "Hello ! Nice to meet you.",
+        "hi": "Hey there! How is your day going?",
+        "how are you": "I am feeling fantastic and fully charged!",
+        "joke": "Why don't scientists trust atoms? Because they make up everything!",
+        "name": "Daravisal kong",
+        "bye": "Goodbye! Come talk to me again soon.",
+        "crazy": "Is a bad word!?",
+        "bitch": "Is a bad word!",
+        "fuck": "Is a bad word!",
+        "google": "<a href='https://google.com' target='_blank'>Google</a><br><img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s' style='width:100px; border-radius:8px;'>",
+        "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a><br><img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s' style='width:100px; border-radius:8px;'>",
+        "you so cute": "Thank you!",
+        "you're so cute": "Thank you!",
+        "story": "The lion and the mouse. A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy, promising to one day repay the favor. Amused by the idea that such a tiny creature could help him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth, setting the King of the Jungle free. The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
+        "who are you": "I am an ai!",
+        "cute": "❤️❤️❤️❤️",
+        "សួស្ដី": "សួស្ដីអ្នក!",
+        "សួស្តី": "សួស្ដីអ្នក!",
+        "happy": "Happy is an emotional state characterized by feelings of joy.",
+        "default": "That sounds interesting! Tell me more about it."
+    };
+
     window.addEventListener('load', () => {
         setTimeout(() => {
             const splash = document.getElementById('splash-screen');
-            if (splash) { 
-              splash.classList.add('fade-out'); 
-              setTimeout(() => splash.style.display = 'none', 500); 
-            }
+            if (splash) { splash.classList.add('fade-out'); setTimeout(() => splash.style.display = 'none', 500); }
         }, 1000); 
     });
 
-    // Request browser notification permissions on launch
-    if ("Notification" in window && Notification.permission !== "granted") {
-      Notification.requestPermission();
-    }
-
     document.getElementById('toggle-to-register').onclick = () => {
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('toggle-to-register').style.display = 'none';
-      document.getElementById('register-form').style.display = 'flex';
-      document.getElementById('toggle-to-login').style.display = 'block';
+      document.getElementById('login-form').style.display = 'none'; document.getElementById('toggle-to-register').style.display = 'none';
+      document.getElementById('register-form').style.display = 'flex'; document.getElementById('toggle-to-login').style.display = 'block';
       document.getElementById('auth-title').innerText = "Create Account";
     };
     document.getElementById('toggle-to-login').onclick = () => {
-      document.getElementById('register-form').style.display = 'none';
-      document.getElementById('toggle-to-login').style.display = 'none';
-      document.getElementById('login-form').style.display = 'flex';
-      document.getElementById('toggle-to-register').style.display = 'block';
+      document.getElementById('register-form').style.display = 'none'; document.getElementById('toggle-to-login').style.display = 'none';
+      document.getElementById('login-form').style.display = 'flex'; document.getElementById('toggle-to-register').style.display = 'block';
       document.getElementById('auth-title').innerText = "Login";
     };
 
@@ -252,26 +251,21 @@
         const res = await createUserWithEmailAndPassword(auth, document.getElementById('reg-email').value, document.getElementById('reg-password').value);
         await updateProfile(res.user, { displayName: document.getElementById('reg-name').value });
         await saveUserToDatabase(res.user);
-      } catch (error) { alert("Registration Error: " + error.message); }
+      } catch (error) { alert("Error: " + error.message); }
     };
 
     document.getElementById('login-form').onsubmit = async (e) => {
       e.preventDefault();
-      try {
-        await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value);
-      } catch (error) { alert("Login Error: " + error.message); }
+      try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); } 
+      catch (error) { alert("Error: " + error.message); }
     };
 
     document.getElementById('google-btn').onclick = async () => {
-      try {
-        const res = await signInWithPopup(auth, provider);
-        await saveUserToDatabase(res.user);
-      } catch (error) { alert("Google Sign-In Error: " + error.message); }
+      try { const res = await signInWithPopup(auth, provider); await saveUserToDatabase(res.user); } 
+      catch (error) { alert("Error: " + error.message); }
     };
 
-    document.getElementById('logout-btn').onclick = () => {
-      if (confirm("Log out?")) signOut(auth);
-    };
+    document.getElementById('logout-btn').onclick = () => { if (confirm("Log out?")) signOut(auth); };
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -282,28 +276,18 @@
         await saveUserToDatabase(user);
         updateUserUI(user);
         loadFriendsBar();
-        loadMessages();
-        listenToAllNotifications();
+        switchRoom('global', 'Global Chat');
       } else {
         currentUser = null;
         document.getElementById('auth-screen').style.display = 'flex';
         document.getElementById('logout-btn').style.display = 'none';
         document.getElementById('user-profile').style.display = 'none';
-        if (unsubscribeMessages) unsubscribeMessages();
-        if (globalUnsubscribeNotification) globalUnsubscribeNotification();
-        if (unsubscribeFriends) unsubscribeFriends();
       }
     });
 
     async function saveUserToDatabase(user) {
-      try {
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          name: user.displayName || "User",
-          email: user.email,
-          photoURL: user.photoURL || ""
-        }, { merge: true });
-      } catch (err) { console.error("Error saving user profile:", err); }
+      try { await setDoc(doc(db, "users", user.uid), { uid: user.uid, name: user.displayName || "User", email: user.email, photoURL: user.photoURL || "" }, { merge: true }); } 
+      catch (err) { console.error(err); }
     }
 
     function updateUserUI(user) {
@@ -315,17 +299,13 @@
       document.getElementById('profile-modal').style.display = 'flex';
     };
     document.getElementById('close-profile-btn').onclick = () => {
-      document.getElementById('profile-modal').style.display = 'none';
-      document.getElementById('save-profile-btn').style.display = 'none';
+      document.getElementById('profile-modal').style.display = 'none'; document.getElementById('save-profile-btn').style.display = 'none';
     };
 
     let profileFile = null;
     document.getElementById('profile-upload').onchange = (e) => {
       profileFile = e.target.files[0];
-      if (profileFile) {
-        document.getElementById('profile-preview').src = URL.createObjectURL(profileFile);
-        document.getElementById('save-profile-btn').style.display = 'block';
-      }
+      if (profileFile) { document.getElementById('profile-preview').src = URL.createObjectURL(profileFile); document.getElementById('save-profile-btn').style.display = 'block'; }
     };
 
     document.getElementById('save-profile-btn').onclick = async () => {
@@ -336,86 +316,56 @@
         const url = await getDownloadURL(imgRef);
         await updateProfile(currentUser, { photoURL: url });
         await saveUserToDatabase(currentUser);
-        updateUserUI(currentUser);
-        document.getElementById('profile-modal').style.display = 'none';
-        document.getElementById('save-profile-btn').style.display = 'none';
-        profileFile = null;
-        alert("Profile picture updated!");
+  updateUserUI(currentUser);
+        document.getElementById('profile-modal').style.display = 'none'; document.getElementById('save-profile-btn').style.display = 'none';
+        profileFile = null; alert("Profile updated!");
       } catch (err) { alert("Save Error: " + err.message); }
     };
 
     const searchInput = document.getElementById('user-search');
     const searchResults = document.getElementById('search-results');
-
     searchInput.oninput = async (e) => {
       const val = e.target.value.toLowerCase().trim();
       if (!val) { searchResults.style.display = 'none'; return; }
-      
       try {
         const snap = await getDocs(collection(db, "users"));
         searchResults.innerHTML = '';
         let matches = 0;
-
         snap.forEach(docSnap => {
           const u = docSnap.data();
           if (u.uid !== currentUser.uid && u.name.toLowerCase().includes(val)) {
             matches++;
             const div = document.createElement('div');
             div.className = 'search-item';
-            const pic = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`;
-            div.innerHTML = `<img src="${pic}"><span>${u.name} (Add)</span>`;
-            
+            div.innerHTML = `<img src="${u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`}"><span>${u.name} (Add)</span>`;
             div.onclick = async () => {
-              // Save Friend to Firestore Database Cloud
-              try {
-                await setDoc(doc(db, "users", currentUser.uid, "friends", u.uid), {
-                  uid: u.uid,
-                  name: u.name,
-                  photoURL: u.photoURL || ""
-                });
-              } catch (err) {
-                console.error("Error saving friend to database:", err);
-              }
-
-              searchResults.style.display = 'none';
-              searchInput.value = '';
-              const roomId = [currentUser.uid, u.uid].sort().join('_');
-              switchRoom(roomId, u.name);
+              await setDoc(doc(db, "users", currentUser.uid, "friends", u.uid), { uid: u.uid, name: u.name, photoURL: u.photoURL || "" });
+              searchResults.style.display = 'none'; searchInput.value = '';
+              switchRoom([currentUser.uid, u.uid].sort().join('_'), u.name);
             };
             searchResults.appendChild(div);
           }
         });
         searchResults.style.display = matches > 0 ? 'flex' : 'none';
-      } catch (err) {
-        console.error("Search error:", err);
-      }
+      } catch (err) { console.error(err); }
     };
+    document.onclick = (e) => { if (e.target !== searchInput && !searchResults.contains(e.target)) searchResults.style.display = 'none'; };
 
-    document.onclick = (e) => {
-      if (e.target !== searchInput && !searchResults.contains(e.target)) {
-        searchResults.style.display = 'none';
-      }
-    };
-
-    // Load Friends from Database Cloud Real-time
+    // --- FRIENDS BAR WITH AI BOT INCLUDED ---
     function loadFriendsBar() {
       if (unsubscribeFriends) unsubscribeFriends();
       const bar = document.getElementById('friends-bar');
-
       const friendsCol = collection(db, "users", currentUser.uid, "friends");
+      
       unsubscribeFriends = onSnapshot(friendsCol, (snapshot) => {
         bar.innerHTML = `
-          <div class="friend-chip ${currentRoom === 'global' ? 'active' : ''}" id="chip-global" onclick="switchRoom('global', 'Global Chat')">
-            🌐 Global
-            <span class="notification-dot" id="dot-global"></span>
-          </div>
+          <div class="friend-chip ${currentRoom === 'global' ? 'active' : ''}" id="chip-global" onclick="switchRoom('global', 'Global Chat')">🌐 Global</div>
+          <div class="friend-chip ${currentRoom === 'bot' ? 'active' : ''}" id="chip-bot" onclick="switchRoom('bot', 'AI Bot')">🤖 AI Bot</div>
         `;
-
         snapshot.forEach(docSnap => {
           const f = docSnap.data();
           const roomId = [currentUser.uid, f.uid].sort().join('_');
           const pic = f.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.name)}&background=random`;
-          
           const chip = document.createElement('div');
           chip.className = `friend-chip ${currentRoom === roomId ? 'active' : ''}`;
           chip.id = `chip-${roomId}`;
@@ -426,172 +376,236 @@
       });
     }
 
+    // --- SWITCH ROOM LOGIC ---
     window.switchRoom = function(roomId, roomName) {
       currentRoom = roomId;
       document.getElementById('room-label').innerText = roomName;
+      document.getElementById('remove-friend-btn').style.display = (roomId === 'global' || roomId === 'bot') ? 'none' : 'inline-block';
       
-      const removeBtn = document.getElementById('remove-friend-btn');
-      if (roomId === 'global') {
-        removeBtn.style.display = 'none';
-      } else {
-        removeBtn.style.display = 'inline-block';
-      }
-
-      const dot = document.getElementById(`dot-${roomId}`);
-      if (dot) dot.style.display = 'none';
+      // Hide video call button for bot room
+      document.getElementById('video-call-btn').style.display = (roomId === 'bot') ? 'none' : 'block';
 
       document.querySelectorAll('.friend-chip').forEach(c => c.classList.remove('active'));
-      const activeChip = document.getElementById(roomId === 'global' ? 'chip-global' : `chip-${roomId}`);
+      const activeChip = document.getElementById(roomId === 'global' ? 'chip-global' : (roomId === 'bot' ? 'chip-bot' : `chip-${roomId}`));
       if (activeChip) activeChip.classList.add('active');
 
-      loadMessages();
+      if (roomId === 'bot') {
+        if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
+        loadLocalBotMessages();
+      } else {
+        loadMessages();
+      }
     };
 
+    // --- VIDEO CALL INITIATION ---
+    // --- VIDEO CALL LOGIC (OPENS IN A CLEAN POPUP WINDOW) ---
+    // --- VIDEO CALL LOGIC (AUTO-CLOSE ON HANG UP) ---
+    document.getElementById('video-call-btn').onclick = () => {
+        const videoRoomName = "ChatPro_" + currentRoom.replace(/[^a-zA-Z0-9]/g, ""); 
+        
+        // Open Jitsi inside an iframe overlay or popup that listens for hangup
+        const popup = window.open(`https://meet.jit.si/${videoRoomName}#config.startWithAudioMuted=false`, 'VideoCallWindow', 'width=800,height=600');
+        
+        // Check every second if the user closed the window or left the call
+        const checkInterval = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(checkInterval);
+                return;
+            }
+            try {
+                // Detects if Jitsi has navigated to the post-call/feedback page
+                if (popup.location.href.includes('static/feedback.html') || popup.location.href.includes('thank-you')) {
+                    popup.close();
+                    clearInterval(checkInterval);
+                }
+            } catch (e) {
+                // Cross-origin security notices can be safely ignored while inside the call
+            }
+        }, 1000);
+    };
+
+
+
     document.getElementById('remove-friend-btn').onclick = async () => {
-      if (currentRoom === 'global') return;
-      if (confirm("Remove this friend from your account?")) {
+      if (currentRoom === 'global' || currentRoom === 'bot') return;
+      if (confirm("Remove friend?")) {
         const friendId = currentRoom.split('_').find(id => id !== currentUser.uid);
-        try {
-          await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendId));
-        } catch (err) {
-          console.error("Error removing friend:", err);
-        }
+        await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendId));
         switchRoom('global', 'Global Chat');
       }
     };
 
-    // Listen to incoming messages for red dots + real Device Push Notifications
-    function listenToAllNotifications() {
-      if (globalUnsubscribeNotification) globalUnsubscribeNotification();
+    // --- UI MESSAGE BUILDER WITH COPY/DELETE & OWNER PRIVILEGES ---
+    function appendMessageToUI(data, docId, isLocal = false) {
+      const chatMessages = document.getElementById('chat-messages');
+      const isMe = data.uid === currentUser.uid;
+      const isOwner = currentUser && currentUser.email === OWNER_EMAIL;
 
-      const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
-      globalUnsubscribeNotification = onSnapshot(q, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            const data = change.doc.data();
-            const msgRoom = data.room || 'global';
-            
-            if (data.uid !== currentUser.uid) {
-              if (msgRoom !== currentRoom) {
-                const dot = document.getElementById(`dot-${msgRoom}`);
-                if (dot) dot.style.display = 'block';
-              }
+      const wrapper = document.createElement('div');
+      wrapper.className = `message-wrapper ${isMe ? 'sent' : 'received'}`;
 
-              if ("Notification" in window && Notification.permission === "granted") {
-                const senderName = data.name || "Someone";
-                const messageText = data.text || "Sent an attachment 📎";
-                
-                if (document.hidden || msgRoom !== currentRoom) {
-                  new Notification(`New message from ${senderName}`, {
-                    body: messageText,
-                    icon: data.photoURL || "https://via.placeholder.com/128"
-                  });
-                }
-              }
-            }
+      const name = data.name || 'User';
+      const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+      
+      let textContent = data.text ? `<div>${data.text}</div>` : '';
+      let imageContent = data.imageUrl ? `<img src="${data.imageUrl}" class="chat-image" onclick="window.open('${data.imageUrl}', '_blank')">` : '';
+      let audioContent = data.audioUrl ? `<audio controls src="${data.audioUrl}"></audio>` : '';
+
+      wrapper.innerHTML = `<img src="${avatar}" class="avatar"><div class="message-content"><span class="sender-name">${name}</span><div class="message-row"><div class="message">${textContent}${imageContent}${audioContent}</div></div></div>`;
+      const msgRow = wrapper.querySelector('.message-row');
+
+      // Add Copy Button
+      if (data.text) {
+          const copyBtn = document.createElement('button');
+          copyBtn.className = 'action-icon'; copyBtn.innerHTML = '📋'; copyBtn.title = "Copy text";
+          copyBtn.onclick = () => {
+              const temp = document.createElement('div'); temp.innerHTML = data.text;
+              navigator.clipboard.writeText(temp.innerText || temp.textContent).then(() => {
+                  copyBtn.innerHTML = '✅'; setTimeout(() => copyBtn.innerHTML = '📋', 1500);
+              });
+          };
+          msgRow.appendChild(copyBtn);
+      }
+
+      // Add Delete Button (Allowed if it's your message, the bot's message, or if you are the Owner)
+      if ((isMe || isOwner || data.uid === "ai_bot_123") && docId) {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️'; delBtn.title = "Delete message";
+        delBtn.onclick = async () => {
+          if (confirm("Delete message?")) {
+             if (isLocal) {
+                 let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
+                 localMsgs = localMsgs.filter(m => m.id !== docId);
+                 localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
+                 loadLocalBotMessages(); 
+             } else {
+                 await deleteDoc(doc(db, "messages", docId));
+             }
           }
+        };
+        msgRow.appendChild(delBtn);
+      }
+
+      chatMessages.appendChild(wrapper);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // --- LOCAL STORAGE BOT LOADER ---
+    function loadLocalBotMessages() {
+        const chatMessages = document.getElementById('chat-messages');
+        chatMessages.innerHTML = '';
+        const localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
+        localMsgs.forEach(msg => appendMessageToUI(msg, msg.id, true));
+    }
+
+    // --- FIREBASE MESSAGES LOADER ---
+    function loadMessages() {
+      if (unsubscribeMessages) unsubscribeMessages();
+      const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+      unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        document.getElementById('chat-messages').innerHTML = '';
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if ((data.room || 'global') === currentRoom) appendMessageToUI(data, docSnap.id, false);
         });
       });
     }
 
+    // --- CHAT SUBMIT / PROFANITY FILTER / BOT LOGIC ---
     const messageInput = document.getElementById('message-input');
     let chatFile = document.getElementById('chat-image-upload');
     let selectedChatFile = null;
-
-    chatFile.onchange = (e) => {
-      selectedChatFile = e.target.files[0];
-      if (selectedChatFile) messageInput.placeholder = `Attached: ${selectedChatFile.name}`;
-    };
+    chatFile.onchange = (e) => { selectedChatFile = e.target.files[0]; if (selectedChatFile) messageInput.placeholder = `Attached: ${selectedChatFile.name}`; };
 
     document.getElementById('emoji-btn').onclick = () => {
-      const picker = document.getElementById('emoji-picker');
-      picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+      const picker = document.getElementById('emoji-picker'); picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
     };
-    document.getElementById('emoji-picker').addEventListener('emoji-click', e => {
-      messageInput.value += e.detail.unicode;
-    });
+    document.getElementById('emoji-picker').addEventListener('emoji-click', e => { messageInput.value += e.detail.unicode; });
 
     document.getElementById('chat-form').onsubmit = async (e) => {
       e.preventDefault();
       const text = messageInput.value.trim();
-      if (!text && !selectedChatFile) return;
+      
+      // --- PROFANITY FILTER (Auto Block Bad Words) ---
+      const badWords = ["bitch", "fuck", "b****", "f***"];
+      const lowerText = text.toLowerCase();
+      if (badWords.some(word => lowerText.includes(word))) {
+          alert("Your message contained inappropriate language and was blocked automatically.");
+          messageInput.value = '';
+          return;
+      }
 
+      if (!text && !selectedChatFile) return;
       document.getElementById('emoji-picker').style.display = 'none';
       let imageUrl = null;
 
       try {
         if (selectedChatFile) {
           const imgRef = ref(storage, 'chat_images/' + Date.now() + '_' + selectedChatFile.name);
-          await uploadBytes(imgRef, selectedChatFile);
-          imageUrl = await getDownloadURL(imgRef);
+          await uploadBytes(imgRef, selectedChatFile); imageUrl = await getDownloadURL(imgRef);
         }
 
-        await addDoc(collection(db, "messages"), {
-          text: text,
-          imageUrl: imageUrl,
-          uid: currentUser.uid,
-          name: currentUser.displayName || "User",
-          photoURL: currentUser.photoURL || "",
-          room: currentRoom,
-          createdAt: serverTimestamp()
-        });
+        // --- IF IN BOT ROOM ---
+        if (currentRoom === 'bot') {
+            const userMsg = {
+                id: Date.now().toString(), text: text, imageUrl: imageUrl, audioUrl: null,
+                uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: "bot", createdAt: Date.now()
+            };
+            let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
+            localMsgs.push(userMsg);
+            localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
+            loadLocalBotMessages();
 
-        messageInput.value = '';
-        messageInput.placeholder = "Type a message...";
-        selectedChatFile = null;
-        chatFile.value = '';
-      } catch (err) { alert("Error sending message: " + err.message); }
+            if (text) {
+                const botReply = brain[lowerText] || brain["default"];
+                setTimeout(() => {
+                    const botMsg = {
+                        id: (Date.now() + 1).toString(), text: botReply, imageUrl: null, audioUrl: null,
+                        uid: "ai_bot_123", name: "AI Bot", photoURL: "https://ui-avatars.com/api/?name=Bot&background=0D8ABC&color=fff", room: "bot", createdAt: Date.now() + 1000
+                    };
+                    let msgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
+                    msgs.push(botMsg);
+                    localStorage.setItem('bot_messages', JSON.stringify(msgs));
+                    loadLocalBotMessages();
+                }, 1000);
+            }
+        } else {
+            // --- IF IN NORMAL ROOM (FIREBASE) ---
+            await addDoc(collection(db, "messages"), {
+              text: text, imageUrl: imageUrl, audioUrl: null,
+              uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
+            });
+        }
+        messageInput.value = ''; messageInput.placeholder = "Type a message..."; selectedChatFile = null; chatFile.value = '';
+      } catch (err) { alert("Error sending: " + err.message); }
     };
 
-    function loadMessages() {
-      if (unsubscribeMessages) unsubscribeMessages();
-
-      const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
-      const chatMessages = document.getElementById('chat-messages');
-
-      unsubscribeMessages = onSnapshot(q, (snapshot) => {
-        chatMessages.innerHTML = '';
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if ((data.room || 'global') !== currentRoom) return;
-
-          const isMe = data.uid === currentUser.uid;
-          const wrapper = document.createElement('div');
-          wrapper.className = `message-wrapper ${isMe ? 'sent' : 'received'}`;
-
-          const name = data.name || 'User';
-          const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-          
-          let textContent = data.text ? `<div>${data.text}</div>` : '';
-          let imageContent = data.imageUrl ? `<img src="${data.imageUrl}" class="chat-image" onclick="window.open('${data.imageUrl}', '_blank')">` : '';
-
-          wrapper.innerHTML = `
-            <img src="${avatar}" class="avatar">
-            <div class="message-content">
-              <span class="sender-name">${name}</span>
-              <div class="message-row">
-                <div class="message">${textContent}${imageContent}</div>
-              </div>
-            </div>
-          `;
-
-          if (isMe) {
-            const delBtn = document.createElement('button');
-            delBtn.className = 'delete-icon';
-            delBtn.innerHTML = '🗑️';
-            delBtn.onclick = async () => {
-              if (confirm("Delete message?")) await deleteDoc(doc(db, "messages", docSnap.id));
-            };
-            wrapper.querySelector('.message-row').appendChild(delBtn);
-          }
-
-          chatMessages.appendChild(wrapper);
-        });
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }, (error) => {
-        console.error("Error loading messages:", error);
-      });
-    }
+    // --- MICROPHONE LOGIC ---
+    let mediaRecorder; let audioChunks = []; let isRecording = false; const micBtn = document.getElementById('mic-btn');
+    micBtn.onclick = async () => {
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream); mediaRecorder.start(); audioChunks = [];
+                isRecording = true; micBtn.innerText = "🛑"; micBtn.classList.add("recording");
+                messageInput.placeholder = "Recording... Click stop to send."; messageInput.disabled = true;
+                mediaRecorder.addEventListener("dataavailable", e => audioChunks.push(e.data));
+                mediaRecorder.addEventListener("stop", async () => {
+                    messageInput.placeholder = "Uploading audio...";
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioRef = ref(storage, 'chat_audio/' + currentUser.uid + '_' + Date.now() + '.webm');
+                    try {
+                        await uploadBytes(audioRef, audioBlob); const audioUrl = await getDownloadURL(audioRef);
+                        await addDoc(collection(db, "messages"), { text: "", imageUrl: null, audioUrl: audioUrl, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
+                    } catch (e) { alert("Audio error: " + e.message); } 
+                    finally { messageInput.placeholder = "Type a message..."; messageInput.disabled = false; }
+                });
+            } catch(e) { alert("Mic access needed."); }
+        } else {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+            isRecording = false; micBtn.innerText = "🎤"; micBtn.classList.remove("recording");
+        }
+    };
   </script>
 </body>
 </html>
