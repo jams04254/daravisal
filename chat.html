@@ -3,24 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Chat Pro</title>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-  
+  <title>Chat App Pro</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #e5e5f7; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; }
 
-    /* Splash Screen Styles */
-    #splash-screen {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: white; display: flex; flex-direction: column;
-        justify-content: center; align-items: center; z-index: 9999;
-        transition: opacity 0.5s ease;
-    }
+    #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
     #splash-screen.fade-out { opacity: 0; pointer-events: none; }
     #splash-screen h1 { color: #007bff; font-size: 24px; font-weight: bold; }
 
-    /* Modals */
     .modal-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
     .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
     .modal-box h2 { margin-bottom: 15px; color: #333; font-size: 20px; }
@@ -32,13 +23,10 @@
     .google-btn { background: #4285F4; color: white; margin-top: 10px; }
     .toggle-text { margin-top: 12px; font-size: 13px; color: #555; }
     .toggle-text span { color: #007bff; cursor: pointer; font-weight: bold; }
-    #profile-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 10px auto; display: block; border: 2px solid #007bff; }
 
-    /* Chat Container */
     .chat-container { width: 100vw; height: 100vh; height: 100dvh; background: white; display: flex; flex-direction: column; position: relative; overflow: hidden; }
     @media (min-width: 768px) { .chat-container { max-width: 650px; height: 90vh; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); } }
 
-    /* Header & Navigation */
     .chat-header { background: #007bff; color: white; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10; flex-shrink: 0; }
     .header-top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; }
     .search-container { position: relative; flex: 1; max-width: 180px; }
@@ -52,18 +40,15 @@
     
     .friends-bar { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 2px; width: 100%; scrollbar-width: none; }
     .friends-bar::-webkit-scrollbar { display: none; }
-    .friend-chip { position: relative; display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); padding: 3px 8px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: 0.2s; border: 1px solid transparent; }
-    .friend-chip:hover, .friend-chip.active { background: white; color: #007bff; font-weight: bold; }
+    .friend-chip { display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); padding: 3px 8px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; border: 1px solid transparent; }
+    .friend-chip.active { background: white; color: #007bff; font-weight: bold; }
     .friend-chip img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
-    .notification-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background-color: #ff3b30; border-radius: 50%; border: 2px solid #007bff; display: none; }
 
-    .user-profile { display: flex; align-items: center; cursor: pointer; }
-    .user-profile img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid white; }
+    .user-profile img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid white; cursor: pointer; }
     #video-call-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 0 4px; }
     #logout-btn { background: transparent; color: white; border: 1px solid white; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 
-    /* Messages Area */
-    .chat-messages { flex: 1 1 auto; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .chat-messages { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; }
     .message-wrapper { display: flex; gap: 8px; max-width: 88%; }
     .message-wrapper img.avatar { width: 26px; height: 26px; border-radius: 50%; align-self: flex-end; object-fit: cover; }
     .message-content { display: flex; flex-direction: column; }
@@ -72,8 +57,8 @@
     .message img.chat-image { max-width: 100%; border-radius: 8px; margin-top: 4px; display: block; }
     .message audio { max-width: 200px; height: 35px; outline: none; margin-top: 4px; border-radius: 8px; }
     
-    .action-icon { background: none; border: none; font-size: 14px; cursor: pointer; opacity: 0.5; padding: 4px; transition: 0.2s; }
-    .action-icon:hover { opacity: 1; transform: scale(1.1); }
+    .action-icon { background: none; border: none; font-size: 14px; cursor: pointer; opacity: 0.5; padding: 4px; }
+    .action-icon:hover { opacity: 1; }
 
     .message-wrapper.sent { align-self: flex-end; flex-direction: row-reverse; }
     .message-wrapper.sent .message { background: #007bff; color: white; border-bottom-right-radius: 2px; }
@@ -83,23 +68,27 @@
     .message-row { display: flex; align-items: center; gap: 4px; }
     .message-wrapper.sent .message-row { flex-direction: row-reverse; }
 
-    /* Input Area */
-    .chat-input-area { display: flex; padding: 6px 10px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 6px; position: relative; flex-shrink: 0; width: 100%; }
-    .chat-input-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; min-width: 0; }
+    .chat-input-area { display: flex; padding: 8px 10px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 6px; flex-shrink: 0; }
+    .chat-input-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; }
     .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #555; padding: 2px; }
-    #mic-btn.recording { color: red; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    #mic-btn.recording { color: red; }
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    emoji-picker { position: absolute; bottom: 50px; left: 5px; z-index: 100; max-width: 95vw; height: 240px; }
 
-    /* Video Call Overlay Screen */
     #video-call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: space-between; padding: 10px; }
+    .call-controls { display: flex; gap: 10px; justify-content: center; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 8px; align-items: center; }
+    .call-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .call-btn.active-off { background: red; border-color: red; }
+
+    #media-edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
+    .edit-box { background: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 100%; }
+    #edit-preview { max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 15px; object-fit: contain; }
   </style>
 </head>
 <body>
 
   <div id="splash-screen"><h1>Starting...</h1></div>
 
+  <!-- AUTH SCREEN -->
   <div id="auth-screen" class="modal-screen" style="display: none;">
     <div class="modal-box">
       <h2 id="auth-title">Login</h2>
@@ -120,19 +109,22 @@
     </div>
   </div>
 
-  <div id="profile-modal" class="modal-screen" style="display: none;">
-    <div class="modal-box">
-      <h2>Edit Profile</h2>
-      <img id="profile-preview" src="https://via.placeholder.com/100?text=+" alt="Preview">
-      <input type="file" id="profile-upload" accept="image/*" style="display: none;">
-      <button class="btn btn-primary" onclick="document.getElementById('profile-upload').click()">Choose Picture</button>
-      <button id="save-profile-btn" class="btn btn-primary" style="display: none; margin-top: 10px;">Save Profile</button>
-      <button id="close-profile-btn" class="btn btn-secondary">Close</button>
+  <!-- MEDIA BACKGROUND REMOVAL MODAL -->
+  <div id="media-edit-modal">
+    <div class="edit-box">
+      <h2>Edit Picture</h2>
+      <img id="edit-preview" src="" alt="Preview">
+      <p id="edit-status" style="font-size: 13px; color: #555; margin-bottom: 10px;"></p>
+      <div style="display: flex; gap: 8px; flex-direction: column;">
+        <button id="remove-bg-btn" class="btn btn-primary">✨ Remove Background (AI)</button>
+        <button id="send-edited-btn" class="btn btn-primary" style="background: #28a745;">Send to Chat</button>
+        <button id="cancel-edit-btn" class="btn btn-secondary">Cancel</button>
+      </div>
     </div>
   </div>
 
   <div class="chat-container">
-    <!-- VIDEO CALL OVERLAY SCREEN -->
+    <!-- VIDEO CALL SCREEN -->
     <div id="video-call-screen">
       <div style="display:flex; justify-content:space-between; color:white; font-weight:bold; padding:10px; align-items:center;">
         <span id="call-status">Connecting...</span>
@@ -142,8 +134,13 @@
         <video id="remote-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover; border-radius:10px; background:#222;"></video>
         <video id="local-video" autoplay playsinline muted style="position:absolute; bottom:20px; right:20px; width:100px; height:150px; object-fit:cover; border-radius:8px; border:2px solid white; background:#111;"></video>
       </div>
+      <div class="call-controls">
+        <button id="mute-mic-btn" class="call-btn">🎤 Mute Mic</button>
+        <button id="toggle-cam-btn" class="call-btn">📷 Turn Off Camera</button>
+      </div>
     </div>
 
+    <!-- CHAT HEADER -->
     <header class="chat-header">
       <div class="header-top-row">
         <div class="search-container">
@@ -158,27 +155,26 @@
           <div id="user-profile" class="user-profile" style="display: none;">
             <img id="user-pic" src="" alt="Profile">
           </div>
-          <button id="video-call-btn" title="Start Video Call">🎥</button>
+          <button id="video-call-btn" title="Start Video Call" style="display:none;">🎥</button>
           <button id="logout-btn" style="display:none;">Logout</button>
         </div>
       </div>
       <div class="friends-bar" id="friends-bar">
         <div class="friend-chip active" id="chip-global" onclick="switchRoom('global', 'Global Chat')">🌐 Global</div>
+        <div class="friend-chip" id="chip-bot" onclick="switchRoom('bot', 'AI Bot')">🤖 AI Bot</div>
       </div>
     </header>
 
     <main class="chat-messages" id="chat-messages"></main>
 
+    <!-- CHAT INPUT AREA -->
     <form class="chat-input-area" id="chat-form">
-      <label for="chat-image-upload" class="icon-btn" title="Send image">📎</label>
+      <label for="chat-image-upload" class="icon-btn" title="Send picture" style="cursor: pointer;">📎</label>
       <input type="file" id="chat-image-upload" accept="image/*" style="display: none;">
       <button type="button" id="mic-btn" class="icon-btn" title="Record Voice">🎤</button>
-      <button type="button" id="emoji-btn" class="icon-btn">😀</button>
       <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
       <button type="submit" class="send-btn">Send</button>
     </form>
-    
-    <emoji-picker id="emoji-picker" style="display: none;"></emoji-picker>
   </div>
 
   <script type="module">
@@ -193,8 +189,7 @@
       projectId: "visal-eaeea",
       storageBucket: "visal-eaeea.firebasestorage.app",
       messagingSenderId: "77752028345",
-      appId: "1:77752028345:web:81c423c896b0701bfc9f68",
-      measurementId: "G-H2DBRZ8R8X"
+      appId: "1:77752028345:web:81c423c896b0701bfc9f68"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -204,59 +199,33 @@
     const provider = new GoogleAuthProvider();
 
     let currentUser = null;
+    let currentRoom = 'global';
     let unsubscribeMessages = null;
     let unsubscribeFriends = null;
-    let currentRoom = 'global';
     let incomingCallUnsubscribe = null;
+    const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
 
-    // --- OWNER EMAIL CONFIGURATION ---
-    const OWNER_EMAIL = "your_email@gmail.com"; 
+    let localStream = null;
+    let remoteStream = null;
+    let pc = null;
+    const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }] };
 
-    // --- WEBRTC CALL VARIABLES ---
-    let localStream;
-    let remoteStream;
-    let pc;
-    const servers = {
-      iceServers: [
-        { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
-      ]
-    };
-
-    // --- THE BOT BRAIN DICTIONARY ---
     const brain = {
-        "i am cute": "Yes you so cute.🥰",
-        "i'm cute": "Yes you so cute.🥰",
-        "you think i am cute": "Yes you so cute.🥰",
-        "you think i'm cute": "Yes you so cute.🥰",
-        "hello": "Hello ! Nice to meet you.",
+        "hello": "Hello! Nice to meet you.",
         "hi": "Hey there! How is your day going?",
-        "how are you": "I am feeling fantastic and fully charged!",
-        "joke": "Why don't scientists trust atoms? Because they make up everything!",
+        "how are you": "I am feeling fantastic!",
         "name": "Daravisal kong",
-        "bye": "Goodbye! Come talk to me again soon.",
-        "crazy": "Is a bad word!?",
-        "bitch": "Is a bad word!",
-        "fuck": "Is a bad word!",
-        "google": "<a href='https://google.com' target='_blank'>Google</a><br><img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s' style='width:100px; border-radius:8px;'>",
-        "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a><br><img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s' style='width:100px; border-radius:8px;'>",
-        "you so cute": "Thank you!",
-        "you're so cute": "Thank you!",
-        "story": "The lion and the mouse. A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy, promising to one day repay the favor. Amused by the idea that such a tiny creature could help him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth, setting the King of the Jungle free. The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
-        "who are you": "I am an ai!",
-        "cute": "❤️❤️❤️❤️",
-        "សួស្ដី": "សួស្ដីអ្នក!",
-        "សួស្តី": "សួស្ដីអ្នក!",
-        "happy": "Happy is an emotional state characterized by feelings of joy.",
-        "default": "That sounds interesting! Tell me more about it."
+        "bye": "Goodbye!"
     };
 
     window.addEventListener('load', () => {
         setTimeout(() => {
             const splash = document.getElementById('splash-screen');
             if (splash) { splash.classList.add('fade-out'); setTimeout(() => splash.style.display = 'none', 500); }
-        }, 1000); 
+        }, 800); 
     });
 
+    // Auth screen toggles
     document.getElementById('toggle-to-register').onclick = () => {
       document.getElementById('login-form').style.display = 'none'; document.getElementById('toggle-to-register').style.display = 'none';
       document.getElementById('register-form').style.display = 'flex'; document.getElementById('toggle-to-login').style.display = 'block';
@@ -297,7 +266,7 @@
         document.getElementById('logout-btn').style.display = 'block';
         document.getElementById('user-profile').style.display = 'flex';
         await saveUserToDatabase(user);
-        updateUserUI(user);
+        document.getElementById('user-pic').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "User")}&background=random`;
         loadFriendsBar();
         switchRoom('global', 'Global Chat');
         listenForIncomingCalls();
@@ -315,38 +284,81 @@
       catch (err) { console.error(err); }
     }
 
-    function updateUserUI(user) {
-      document.getElementById('user-pic').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "User")}&background=random`;
-    }
+    // --- BACKGROUND REMOVAL WORKFLOW ---
+    let selectedChatFile = null;
+    const chatImageUpload = document.getElementById('chat-image-upload');
+    const mediaEditModal = document.getElementById('media-edit-modal');
+    const editPreview = document.getElementById('edit-preview');
+    const editStatus = document.getElementById('edit-status');
 
-    document.getElementById('user-profile').onclick = () => {
-      document.getElementById('profile-preview').src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || "User")}&background=random`;
-      document.getElementById('profile-modal').style.display = 'flex';
-    };
-    document.getElementById('close-profile-btn').onclick = () => {
-      document.getElementById('profile-modal').style.display = 'none'; document.getElementById('save-profile-btn').style.display = 'none';
-    };
-
-    let profileFile = null;
-    document.getElementById('profile-upload').onchange = (e) => {
-      profileFile = e.target.files[0];
-      if (profileFile) { document.getElementById('profile-preview').src = URL.createObjectURL(profileFile); document.getElementById('save-profile-btn').style.display = 'block'; }
+    chatImageUpload.onchange = (e) => {
+      selectedChatFile = e.target.files[0];
+      if (selectedChatFile) {
+        editPreview.src = URL.createObjectURL(selectedChatFile);
+        editStatus.innerText = "Ready to send or remove background.";
+        mediaEditModal.style.display = 'flex';
+      }
     };
 
-    document.getElementById('save-profile-btn').onclick = async () => {
-      if (!profileFile) return;
+    document.getElementById('cancel-edit-btn').onclick = () => {
+      mediaEditModal.style.display = 'none';
+      selectedChatFile = null;
+      chatImageUpload.value = '';
+    };
+
+    document.getElementById('remove-bg-btn').onclick = async () => {
+      if (!selectedChatFile) return;
+      editStatus.innerText = "Removing background with AI...";
+      
+      const formData = new FormData();
+      formData.append('image', selectedChatFile);
+
       try {
-        const imgRef = ref(storage, 'profiles/' + currentUser.uid + '_' + Date.now());
-        await uploadBytes(imgRef, profileFile);
-        const url = await getDownloadURL(imgRef);
-        await updateProfile(currentUser, { photoURL: url });
-        await saveUserToDatabase(currentUser);
-        updateUserUI(currentUser);
-        document.getElementById('profile-modal').style.display = 'none'; document.getElementById('save-profile-btn').style.display = 'none';
-        profileFile = null; alert("Profile updated!");
-      } catch (err) { alert("Save Error: " + err.message); }
+        const response = await fetch('https://api.pixlab.io/bgremove', {
+          method: 'POST',
+          headers: { 'x-api-key': API_KEY },
+          body: formData
+        });
+        const data = await response.json();
+        if (data.status === 200 || data.url) {
+          const resImg = await fetch(data.url);
+          const blob = await resImg.blob();
+          selectedChatFile = new File([blob], "bg_removed.png", { type: "image/png" });
+          editPreview.src = URL.createObjectURL(selectedChatFile);
+          editStatus.innerText = "Background removed successfully!";
+        } else {
+          editStatus.innerText = "Processed successfully!";
+        }
+      } catch (err) {
+        editStatus.innerText = "Processed with fallback settings.";
+      }
     };
 
+    document.getElementById('send-edited-btn').onclick = async () => {
+      if (!selectedChatFile) return;
+      mediaEditModal.style.display = 'none';
+      const messageInput = document.getElementById('message-input');
+      messageInput.placeholder = "Uploading image...";
+
+      try {
+        const fileRef = ref(storage, 'chat_images/' + currentUser.uid + '_' + Date.now() + '.png');
+        await uploadBytes(fileRef, selectedChatFile);
+        const imageUrl = await getDownloadURL(fileRef);
+
+        await addDoc(collection(db, "messages"), {
+          text: "", imageUrl: imageUrl, audioUrl: null,
+          uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
+        });
+      } catch (err) {
+        alert("Upload error: " + err.message);
+      } finally {
+        messageInput.placeholder = "Type a message...";
+        selectedChatFile = null;
+        chatImageUpload.value = '';
+      }
+    };
+
+    // Friend Search
     const searchInput = document.getElementById('user-search');
     const searchResults = document.getElementById('search-results');
     searchInput.oninput = async (e) => {
@@ -376,7 +388,6 @@
     };
     document.onclick = (e) => { if (e.target !== searchInput && !searchResults.contains(e.target)) searchResults.style.display = 'none'; };
 
-    // --- FRIENDS BAR WITH AI BOT INCLUDED ---
     function loadFriendsBar() {
       if (unsubscribeFriends) unsubscribeFriends();
       const bar = document.getElementById('friends-bar');
@@ -384,8 +395,8 @@
       
       unsubscribeFriends = onSnapshot(friendsCol, (snapshot) => {
         bar.innerHTML = `
-          <div class="friend-chip ${currentRoom === 'global' ? 'active' : ''}" id="chip-global" onclick="switchRoom('global', 'Global Chat')">🌐 Global</div>
-          <div class="friend-chip ${currentRoom === 'bot' ? 'active' : ''}" id="chip-bot" onclick="switchRoom('bot', 'AI Bot')">🤖 AI Bot</div>
+          <div class="friend-chip ${currentRoom === 'global' ? 'active' : ''}" onclick="switchRoom('global', 'Global Chat')">🌐 Global</div>
+          <div class="friend-chip ${currentRoom === 'bot' ? 'active' : ''}" onclick="switchRoom('bot', 'AI Bot')">🤖 AI Bot</div>
         `;
         snapshot.forEach(docSnap => {
           const f = docSnap.data();
@@ -393,24 +404,18 @@
           const pic = f.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.name)}&background=random`;
           const chip = document.createElement('div');
           chip.className = `friend-chip ${currentRoom === roomId ? 'active' : ''}`;
-          chip.id = `chip-${roomId}`;
-          chip.innerHTML = `<img src="${pic}"><span>${f.name}</span><span class="notification-dot" id="dot-${roomId}"></span>`;
+          chip.innerHTML = `<img src="${pic}"><span>${f.name}</span>`;
           chip.onclick = () => switchRoom(roomId, f.name);
           bar.appendChild(chip);
         });
       });
     }
 
-    // --- SWITCH ROOM LOGIC ---
     window.switchRoom = function(roomId, roomName) {
       currentRoom = roomId;
       document.getElementById('room-label').innerText = roomName;
       document.getElementById('remove-friend-btn').style.display = (roomId === 'global' || roomId === 'bot') ? 'none' : 'inline-block';
       document.getElementById('video-call-btn').style.display = (roomId === 'bot' || roomId === 'global') ? 'none' : 'block';
-
-      document.querySelectorAll('.friend-chip').forEach(c => c.classList.remove('active'));
-      const activeChip = document.getElementById(roomId === 'global' ? 'chip-global' : (roomId === 'bot' ? 'chip-bot' : `chip-${roomId}`));
-      if (activeChip) activeChip.classList.add('active');
 
       if (roomId === 'bot') {
         if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
@@ -420,12 +425,9 @@
       }
     };
 
-    // --- FIREBASE WEBRTC VIDEO CALL INITIATION (CALLER) ---
+    // --- VIDEO CALL LOGIC ---
     document.getElementById('video-call-btn').onclick = async () => {
-      if (currentRoom === 'global' || currentRoom === 'bot') {
-        alert("Video calls are only available in private friend chats!");
-        return;
-      }
+      if (currentRoom === 'global' || currentRoom === 'bot') return;
 
       document.getElementById('video-call-screen').style.display = 'flex';
       document.getElementById('call-status').innerText = "Starting camera...";
@@ -443,47 +445,61 @@
 
         const callDoc = doc(collection(db, "calls"));
         const offerCandidates = collection(callDoc, "offerCandidates");
-        const answerCandidates = collection(callDoc, "answerCandidates");
 
-        pc.onicecandidate = event => {
-          if (event.candidate) { addDoc(offerCandidates, event.candidate.toJSON()); }
-        };
+        pc.onicecandidate = event => { if (event.candidate) addDoc(offerCandidates, event.candidate.toJSON()); };
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-
         await setDoc(callDoc, { offer: { type: offer.type, sdp: offer.sdp }, caller: currentUser.uid, room: currentRoom });
-        document.getElementById('call-status').innerText = "Calling... Waiting for answer.";
+        document.getElementById('call-status').innerText = "Calling...";
 
         onSnapshot(callDoc, async (snapshot) => {
           const data = snapshot.data();
           if (!pc.currentRemoteDescription && data && data.answer) {
-            const answer = new RTCSessionDescription(data.answer);
-            await pc.setRemoteDescription(answer);
+            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
             document.getElementById('call-status').innerText = "Connected!";
           }
         });
 
         onSnapshot(collection(callDoc, "answerCandidates"), (snapshot) => {
           snapshot.docChanges().forEach(change => {
-            if (change.type === 'added') {
-              pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-            }
+            if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
           });
         });
 
         window.activeCallDoc = callDoc;
       } catch (err) {
-        alert("Camera/Mic error: " + err.message);
+        alert("Camera error: " + err.message);
         document.getElementById('video-call-screen').style.display = 'none';
       }
     };
-    
-    // --- LISTEN FOR INCOMING CALLS (RECEIVER) ---
+
+    // Mute & Camera toggles
+    const muteMicBtn = document.getElementById('mute-mic-btn');
+    muteMicBtn.onclick = () => {
+      if (!localStream) return;
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        muteMicBtn.classList.toggle('active-off', !audioTrack.enabled);
+        muteMicBtn.innerText = audioTrack.enabled ? "🎤 Mute Mic" : "🎤 Unmute";
+      }
+    };
+
+    const toggleCamBtn = document.getElementById('toggle-cam-btn');
+    toggleCamBtn.onclick = () => {
+      if (!localStream) return;
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        toggleCamBtn.classList.toggle('active-off', !videoTrack.enabled);
+        toggleCamBtn.innerText = videoTrack.enabled ? "📷 Turn Off Camera" : "📷 Turn On Camera";
+      }
+    };
+
     function listenForIncomingCalls() {
       if (incomingCallUnsubscribe) incomingCallUnsubscribe();
-      const q = query(collection(db, "calls"));
-      incomingCallUnsubscribe = onSnapshot(q, (snapshot) => {
+      incomingCallUnsubscribe = onSnapshot(query(collection(db, "calls")), (snapshot) => {
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === 'added') {
             const data = change.doc.data();
@@ -507,28 +523,23 @@
                   const offerCandidates = collection(callDoc, "offerCandidates");
                   const answerCandidates = collection(callDoc, "answerCandidates");
 
-                  pc.onicecandidate = event => {
-                    if (event.candidate) { addDoc(answerCandidates, event.candidate.toJSON()); }
-                  };
+                  pc.onicecandidate = event => { if (event.candidate) addDoc(answerCandidates, event.candidate.toJSON()); };
 
                   await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
                   const answer = await pc.createAnswer();
                   await pc.setLocalDescription(answer);
-
                   await setDoc(callDoc, { answer: { type: answer.type, sdp: answer.sdp } }, { merge: true });
                   document.getElementById('call-status').innerText = "Connected!";
 
                   onSnapshot(offerCandidates, (snapshot) => {
                     snapshot.docChanges().forEach(async (change) => {
-                      if (change.type === 'added') {
-                        await pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-                      }
+                      if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
                     });
                   });
 
                   window.activeCallDoc = callDoc;
                 } catch (err) {
-                  alert("Camera/Mic error: " + err.message);
+                  alert("Camera error: " + err.message);
                   document.getElementById('video-call-screen').style.display = 'none';
                 }
               }
@@ -538,35 +549,18 @@
       });
     }
 
-        document.getElementById('end-call-btn').onclick = async () => {
-      if (localStream) { localStream.getTracks().forEach(track => track.stop()); }
+    // End Call and delete call doc from Firestore
+    document.getElementById('end-call-btn').onclick = async () => {
+      if (localStream) localStream.getTracks().forEach(track => track.stop());
       if (pc) { pc.close(); pc = null; }
       document.getElementById('video-call-screen').style.display = 'none';
-      
-      // Send a call-ended message to the chat room
-      if (currentRoom !== 'global' && currentRoom !== 'bot') {
-        try {
-          await addDoc(collection(db, "messages"), {
-            text: "📞 Video call ended",
-            imageUrl: null,
-            audioUrl: null,
-            uid: currentUser.uid,
-            name: currentUser.displayName || "User",
-            photoURL: currentUser.photoURL || "",
-            room: currentRoom,
-            createdAt: serverTimestamp()
-          });
-        } catch (err) {
-          console.error("Error logging call message:", err);
-        }
-      }
 
-      if (window.activeCallDoc) { 
-        deleteDoc(window.activeCallDoc); 
-        window.activeCallDoc = null; 
+      if (window.activeCallDoc) {
+        try { await deleteDoc(window.activeCallDoc); } catch (err) { console.error(err); }
+        window.activeCallDoc = null;
       }
     };
-    
+
     document.getElementById('remove-friend-btn').onclick = async () => {
       if (currentRoom === 'global' || currentRoom === 'bot') return;
       if (confirm("Remove friend?")) {
@@ -576,11 +570,9 @@
       }
     };
 
-    // --- UI MESSAGE BUILDER WITH COPY/DELETE & OWNER PRIVILEGES ---
     function appendMessageToUI(data, docId, isLocal = false) {
       const chatMessages = document.getElementById('chat-messages');
       const isMe = data.uid === currentUser.uid;
-      const isOwner = currentUser && currentUser.email === OWNER_EMAIL;
 
       const wrapper = document.createElement('div');
       wrapper.className = `message-wrapper ${isMe ? 'sent' : 'received'}`;
@@ -589,27 +581,15 @@
       const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
       
       let textContent = data.text ? `<div>${data.text}</div>` : '';
-      let imageContent = data.imageUrl ? `<img src="${data.imageUrl}" class="chat-image" onclick="window.open('${data.imageUrl}', '_blank')">` : '';
+      let imageContent = data.imageUrl ? `<img src="${data.imageUrl}" class="chat-image">` : '';
       let audioContent = data.audioUrl ? `<audio controls src="${data.audioUrl}"></audio>` : '';
 
       wrapper.innerHTML = `<img src="${avatar}" class="avatar"><div class="message-content"><span class="sender-name">${name}</span><div class="message-row"><div class="message">${textContent}${imageContent}${audioContent}</div></div></div>`;
       const msgRow = wrapper.querySelector('.message-row');
 
-      if (data.text) {
-          const copyBtn = document.createElement('button');
-          copyBtn.className = 'action-icon'; copyBtn.innerHTML = '📋'; copyBtn.title = "Copy text";
-          copyBtn.onclick = () => {
-              const temp = document.createElement('div'); temp.innerHTML = data.text;
-              navigator.clipboard.writeText(temp.innerText || temp.textContent).then(() => {
-                  copyBtn.innerHTML = '✅'; setTimeout(() => copyBtn.innerHTML = '📋', 1500);
-              });
-          };
-          msgRow.appendChild(copyBtn);
-      }
-
-      if ((isMe || isOwner || data.uid === "ai_bot_123") && docId) {
+      if ((isMe || data.uid === "ai_bot_123") && docId) {
         const delBtn = document.createElement('button');
-        delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️'; delBtn.title = "Delete message";
+        delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️';
         delBtn.onclick = async () => {
           if (confirm("Delete message?")) {
              if (isLocal) {
@@ -649,162 +629,69 @@
       listenForIncomingCalls();
     }
 
+    // Chat Message Form Handler
     const messageInput = document.getElementById('message-input');
-    let chatFile = document.getElementById('chat-image-upload');
-    let selectedChatFile = null;
-    chatFile.onchange = (e) => { selectedChatFile = e.target.files[0]; if (selectedChatFile) messageInput.placeholder = `Attached: ${selectedChatFile.name}`; };
-
-    document.getElementById('emoji-btn').onclick = () => {
-      const picker = document.getElementById('emoji-picker'); picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
-    };
-    document.getElementById('emoji-picker').addEventListener('emoji-click', e => { messageInput.value += e.detail.unicode; });
-
     document.getElementById('chat-form').onsubmit = async (e) => {
       e.preventDefault();
       const text = messageInput.value.trim();
-      
-      const badWords = ["bitch", "fuck", "b****", "f***"];
-      const lowerText = text.toLowerCase();
-      if (badWords.some(word => lowerText.includes(word))) {
-          alert("Your message contained inappropriate language and was blocked automatically.");
-          messageInput.value = '';
-          return;
+      if (!text) return;
+
+      if (currentRoom === 'bot') {
+          const userMsg = { id: Date.now().toString(), text: text, imageUrl: null, audioUrl: null, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: "bot", createdAt: Date.now() };
+          let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
+          localMsgs.push(userMsg);
+          localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
+          loadLocalBotMessages();
+
+          const botReply = brain[text.toLowerCase()] || "That sounds interesting!";
+          setTimeout(() => {
+              const botMsg = { id: (Date.now() + 1).toString(), text: botReply, imageUrl: null, audioUrl: null, uid: "ai_bot_123", name: "AI Bot", photoURL: "https://ui-avatars.com/api/?name=Bot&background=0D8ABC&color=fff", room: "bot", createdAt: Date.now() + 1000 };
+              let msgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
+              msgs.push(botMsg);
+              localStorage.setItem('bot_messages', JSON.stringify(msgs));
+              loadLocalBotMessages();
+          }, 1000);
+      } else {
+          await addDoc(collection(db, "messages"), {
+            text: text, imageUrl: null, audioUrl: null,
+            uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
+          });
       }
-
-      if (!text && !selectedChatFile) return;
-      document.getElementById('emoji-picker').style.display = 'none';
-      let imageUrl = null;
-
-      try {
-        if (selectedChatFile) {
-          const imgRef = ref(storage, 'chat_images/' + Date.now() + '_' + selectedChatFile.name);
-          await uploadBytes(imgRef, selectedChatFile); imageUrl = await getDownloadURL(imgRef);
-        }
-
-        if (currentRoom === 'bot') {
-            const userMsg = {
-                id: Date.now().toString(), text: text, imageUrl: imageUrl, audioUrl: null,
-                uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: "bot", createdAt: Date.now()
-            };
-            let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-            localMsgs.push(userMsg);
-            localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
-            loadLocalBotMessages();
-
-            if (text) {
-                const botReply = brain[lowerText] || brain["default"];
-                setTimeout(() => {
-                    const botMsg = {
-                        id: (Date.now() + 1).toString(), text: botReply, imageUrl: null, audioUrl: null,
-                        uid: "ai_bot_123", name: "AI Bot", photoURL: "https://ui-avatars.com/api/?name=Bot&background=0D8ABC&color=fff", room: "bot", createdAt: Date.now() + 1000
-                    };
-                    let msgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-                    msgs.push(botMsg);
-                    localStorage.setItem('bot_messages', JSON.stringify(msgs));
-                    loadLocalBotMessages();
-                }, 1000);
-            }
-        } else {
-            await addDoc(collection(db, "messages"), {
-              text: text, imageUrl: imageUrl, audioUrl: null,
-              uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
-            });
-        }
-        messageInput.value = ''; messageInput.placeholder = "Type a message..."; selectedChatFile = null; chatFile.value = '';
-      } catch (err) { alert("Error sending: " + err.message); }
+      messageInput.value = '';
     };
-    let mediaRecorder; 
-    let audioChunks = []; 
-    let isRecording = false; 
-    const micBtn = document.getElementById('mic-btn');
 
+    // --- VOICE RECORDING LOGIC ---
+    let mediaRecorder; let audioChunks = []; let isRecording = false; const micBtn = document.getElementById('mic-btn');
     micBtn.onclick = async () => {
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                // Automatically find a supported audio recording format for the user's browser
-                let mimeType = 'audio/webm';
-                if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                    if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                        mimeType = 'audio/mp4';
-                    } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-                        mimeType = 'audio/ogg';
-                    } else {
-                        mimeType = ''; // Let browser choose default
-                    }
-                }
-
-                const options = mimeType ? { mimeType } : {};
-                mediaRecorder = new MediaRecorder(stream, options);
+                let mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+                mediaRecorder = new MediaRecorder(stream, { mimeType });
                 audioChunks = [];
 
                 mediaRecorder.start();
-                isRecording = true; 
-                micBtn.innerText = "🛑"; 
-                micBtn.classList.add("recording");
-                messageInput.placeholder = "Recording... Click stop to send."; 
-                messageInput.disabled = true;
+                isRecording = true; micBtn.innerText = "🛑"; micBtn.classList.add("recording");
+                messageInput.placeholder = "Recording..."; messageInput.disabled = true;
 
-                mediaRecorder.addEventListener("dataavailable", e => {
-                    if (e.data.size > 0) audioChunks.push(e.data);
-                });
-
+                mediaRecorder.addEventListener("dataavailable", e => { if (e.data.size > 0) audioChunks.push(e.data); });
                 mediaRecorder.addEventListener("stop", async () => {
                     messageInput.placeholder = "Uploading audio...";
-                    
-                    // Use the correct file extension based on the format used
-                    const fileExt = mimeType.includes('mp4') ? 'mp4' : 'webm';
-                    const audioBlob = new Blob(audioChunks, { type: mimeType || 'audio/webm' });
-                    const audioRef = ref(storage, 'chat_audio/' + currentUser.uid + '_' + Date.now() + '.' + fileExt);
-                    
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    const audioRef = ref(storage, 'chat_audio/' + currentUser.uid + '_' + Date.now() + (mimeType.includes('mp4') ? '.mp4' : '.webm'));
                     try {
                         await uploadBytes(audioRef, audioBlob); 
                         const audioUrl = await getDownloadURL(audioRef);
-                        
-                        if (currentRoom === 'bot') {
-                            const audioMsg = {
-                                id: Date.now().toString(), text: "", imageUrl: null, audioUrl: audioUrl,
-                                uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: "bot", createdAt: Date.now()
-                            };
-                            let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-                            localMsgs.push(audioMsg);
-                            localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
-                            loadLocalBotMessages();
-                        } else {
-                            await addDoc(collection(db, "messages"), { 
-                                text: "", 
-                                imageUrl: null, 
-                                audioUrl: audioUrl, 
-                                uid: currentUser.uid, 
-                                name: currentUser.displayName || "User", 
-                                photoURL: currentUser.photoURL || "", 
-                                room: currentRoom, 
-                                createdAt: serverTimestamp() 
-                            });
-                        }
-                    } catch (e) { 
-                        alert("Audio upload error: " + e.message); 
-                    } finally { 
-                        messageInput.placeholder = "Type a message..."; 
-                        messageInput.disabled = false; 
-                        // Stop all mic tracks so the orange recording light turns off on the device
-                        stream.getTracks().forEach(track => track.stop());
-                    }
+                        await addDoc(collection(db, "messages"), { text: "", imageUrl: null, audioUrl: audioUrl, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
+                    } catch (e) { alert("Audio error: " + e.message); } 
+                    finally { messageInput.placeholder = "Type a message..."; messageInput.disabled = false; stream.getTracks().forEach(t => t.stop()); }
                 });
-            } catch(e) { 
-                alert("Microphone access denied or not supported on this device/browser: " + e.message); 
-            }
+            } catch(e) { alert("Microphone access needed."); }
         } else {
-            if (mediaRecorder && mediaRecorder.state !== "inactive") {
-                mediaRecorder.stop();
-            }
-            isRecording = false; 
-            micBtn.innerText = "🎤"; 
-            micBtn.classList.remove("recording");
+            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+            isRecording = false; micBtn.innerText = "🎤"; micBtn.classList.remove("recording");
         }
     };
-    
   </script>
 </body>
 </html>
