@@ -68,11 +68,16 @@
     .message-row { display: flex; align-items: center; gap: 4px; }
     .message-wrapper.sent .message-row { flex-direction: row-reverse; }
 
-    .chat-input-area { display: flex; padding: 8px 10px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 6px; flex-shrink: 0; }
+    .chat-input-area { display: flex; padding: 8px 10px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 6px; flex-shrink: 0; position: relative; }
     .chat-input-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; }
     .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #555; padding: 2px; }
     #mic-btn.recording { color: red; }
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
+
+    /* EMOJI PICKER STYLES */
+    #emoji-picker { display: none; position: absolute; bottom: 55px; left: 10px; background: white; border: 1px solid #ccc; border-radius: 12px; padding: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); width: 240px; grid-template-columns: repeat(6, 1fr); gap: 10px; z-index: 1000; }
+    .emoji-item { cursor: pointer; font-size: 22px; text-align: center; user-select: none; transition: transform 0.1s; }
+    .emoji-item:hover { transform: scale(1.2); }
 
     #video-call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: space-between; padding: 10px; }
     .call-controls { display: flex; gap: 10px; justify-content: center; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 8px; align-items: center; }
@@ -167,11 +172,17 @@
 
     <main class="chat-messages" id="chat-messages"></main>
 
-    <!-- CHAT INPUT AREA -->
+    <!-- CHAT INPUT AREA (UPDATED WITH EMOJI BUTTON) -->
     <form class="chat-input-area" id="chat-form">
       <label for="chat-image-upload" class="icon-btn" title="Send picture" style="cursor: pointer;">📎</label>
       <input type="file" id="chat-image-upload" accept="image/*" style="display: none;">
+      
       <button type="button" id="mic-btn" class="icon-btn" title="Record Voice">🎤</button>
+      <button type="button" id="emoji-btn" class="icon-btn" title="Emojis">😀</button>
+      
+      <!-- The Emoji Menu Popup -->
+      <div id="emoji-picker"></div>
+
       <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
       <button type="submit" class="send-btn">Send</button>
     </form>
@@ -284,8 +295,45 @@
       catch (err) { console.error(err); }
     }
 
+    // --- EMOJI PICKER LOGIC ---
+    const emojiPicker = document.getElementById('emoji-picker');
+    const emojiBtn = document.getElementById('emoji-btn');
+    const messageInput = document.getElementById('message-input');
+
+    // Array of common emojis
+    const commonEmojis = [
+      "😀", "😂", "🥰", "😎", "😭", "🥺", "😡", "👍", "❤️", "🔥", 
+      "✨", "🎉", "💀", "👀", "🤔", "🙌", "😊", "👋", "🙏", "💯",
+      "😅", "😋", "😜", "😠"
+    ];
+
+    // Load emojis into the picker box
+    commonEmojis.forEach(emoji => {
+      const span = document.createElement('span');
+      span.className = 'emoji-item';
+      span.innerText = emoji;
+      span.onclick = () => {
+        messageInput.value += emoji;
+        messageInput.focus();
+      };
+      emojiPicker.appendChild(span);
+    });
+
+    // Toggle emoji menu open/close
+    emojiBtn.onclick = (e) => {
+      e.preventDefault();
+      emojiPicker.style.display = emojiPicker.style.display === 'grid' ? 'none' : 'grid';
+    };
+
+    // Close menu when clicking outside of it
+    document.addEventListener('click', (e) => {
+      if (e.target !== emojiBtn && !emojiPicker.contains(e.target)) {
+        emojiPicker.style.display = 'none';
+      }
+    });
+
     // --- BACKGROUND REMOVAL WORKFLOW ---
-    let selectedChatFile = null;
+   let selectedChatFile = null;
     const chatImageUpload = document.getElementById('chat-image-upload');
     const mediaEditModal = document.getElementById('media-edit-modal');
     const editPreview = document.getElementById('edit-preview');
@@ -337,7 +385,6 @@
     document.getElementById('send-edited-btn').onclick = async () => {
       if (!selectedChatFile) return;
       mediaEditModal.style.display = 'none';
-      const messageInput = document.getElementById('message-input');
       messageInput.placeholder = "Uploading image...";
 
       try {
@@ -416,6 +463,9 @@
       document.getElementById('room-label').innerText = roomName;
       document.getElementById('remove-friend-btn').style.display = (roomId === 'global' || roomId === 'bot') ? 'none' : 'inline-block';
       document.getElementById('video-call-btn').style.display = (roomId === 'bot' || roomId === 'global') ? 'none' : 'block';
+      
+      // Close emoji picker when switching rooms just in case
+      emojiPicker.style.display = 'none';
 
       if (roomId === 'bot') {
         if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
@@ -548,7 +598,7 @@
         });
       });
     }
-
+  
     // End Call and delete call doc from Firestore
     document.getElementById('end-call-btn').onclick = async () => {
       if (localStream) localStream.getTracks().forEach(track => track.stop());
@@ -630,10 +680,10 @@
     }
 
     // Chat Message Form Handler
-    const messageInput = document.getElementById('message-input');
     document.getElementById('chat-form').onsubmit = async (e) => {
       e.preventDefault();
       const text = messageInput.value.trim();
+      emojiPicker.style.display = 'none'; // Close emoji picker when sending
       if (!text) return;
 
       if (currentRoom === 'bot') {
