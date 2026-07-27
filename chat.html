@@ -96,11 +96,54 @@
     .message-row { display: flex; align-items: center; gap: 4px; }
     .message-wrapper.sent .message-row { flex-direction: row-reverse; }
 
-    .chat-input-area { display: flex; padding: 8px 10px; background: var(--card-bg); border-top: 1px solid var(--border-color); align-items: center; gap: 6px; flex-shrink: 0; position: relative; }
-    .chat-input-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; font-size: 14px; background: var(--card-bg); color: var(--text-color); }
-    .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); padding: 2px; opacity: 0.8; }
-    #mic-btn.recording { color: red; opacity: 1; }
-    .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
+.chat-input-area { 
+  display: flex; 
+  padding: 8px 6px; /* Reduced padding for mobile */
+  background: var(--card-bg); 
+  border-top: 1px solid var(--border-color); 
+  align-items: center; 
+  gap: 4px; /* Reduced gap between icons */
+  flex-shrink: 0; 
+  position: relative; 
+  width: 100%; /* Ensures it doesn't exceed screen width */
+}
+
+.chat-input-area input[type="text"] { 
+  flex: 1; 
+  min-width: 0; /* CRITICAL FIX: Allows the input to shrink */
+  padding: 8px 10px; 
+  border: 1px solid var(--border-color); 
+  border-radius: 20px; 
+  outline: none; 
+  font-size: 14px; 
+  background: var(--card-bg); 
+  color: var(--text-color); 
+}
+
+.icon-btn { 
+  background: none; 
+  border: none; 
+  font-size: 18px; /* Slightly smaller icons */
+  cursor: pointer; 
+  color: var(--text-color); 
+  padding: 2px; 
+  opacity: 0.8; 
+  flex-shrink: 0; /* Keeps icons from shrinking */
+}
+
+#mic-btn.recording { color: red; opacity: 1; }
+
+.send-btn { 
+  background: #007bff; 
+  color: white; 
+  border: none; 
+  padding: 8px 12px; 
+  border-radius: 20px; 
+  cursor: pointer; 
+  font-weight: bold; 
+  font-size: 13px; 
+  flex-shrink: 0; /* CRITICAL FIX: Prevents button from being pushed out */
+}
 
     /* EMOJI PICKER STYLES */
     #emoji-picker { display: none; position: absolute; bottom: 55px; left: 10px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 240px; grid-template-columns: repeat(6, 1fr); gap: 10px; z-index: 1000; }
@@ -242,7 +285,7 @@
     let unsubscribeMessages = null;
     let unsubscribeFriends = null;
     let incomingCallUnsubscribe = null;
-    const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
+    const API_KEY = "nVC1zAUpbZreqLzRQrGEUyZC";
 
     // Audio sound for notifications
     const soundEffect = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
@@ -254,11 +297,34 @@
     const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }] };
 
     const brain = {
+            "I am cute" : "Yes you so cute.🥰",
+            "I'm cute" : "Yes you so cute.🥰",
+            "you think i am cute" : "Yes you so cute.🥰",
+            "you think i'm cute" : "Yes you so cute.🥰",
+            "hello": "Hello ! Nice to meet you.",
+            "hi": "Hey there! How is your day going?",
+            "how are you": "I am feeling fantastic and fully charged!",
+            "joke": "Why don't scientists trust atoms? Because they make up everything!",
+            "name": "Daravisal kong",
+            "bye": "Goodbye! Come talk to me again soon.",
+            "crazy" : "Is a bad word!?",
+            "bitch" : "Is a bad word!",
+            "fuck" : "Is a bad word!",
+            "google": "<a href='https://google.com' target='_blank'>Google</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s'>",
+            "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s'>",
+            "you so cute" : "Thank you!",
+            "you're so cute" : "Thank you!",
+            "story" : "    The lion and the mouse.  A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy,  promising to one day repay the favor. Amused by the idea that such a tiny creature could help   him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the  thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth,   setting the King of the Jungle free.  The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
+            "who are you" : "I am an ai!",
+            "cute" : "❤️❤️❤️❤️",
+            "សួស្ដី" : "សួស្ដីអ្នក!",
+            "សួស្តី" : "សួស្ដីអ្នក!",
+      "happy": "Happy is an emotional state characterized by feelings of joy.",
         "hello": "Hello! Nice to meet you.",
         "hi": "Hey there! How is your day going?",
-        "how are you": "I am feeling fantastic!",
-        "name": "Daravisal kong",
-        "bye": "Goodbye!"
+        "joke": "Why don't scientists trust atoms? Because they make up everything!",
+        "who are you": "I am an AI!",
+        "default": "That sounds interesting! Tell me more about it."
     };
 
     // DARK MODE TOGGLE
