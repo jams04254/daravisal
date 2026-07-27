@@ -538,13 +538,35 @@
       });
     }
 
-    document.getElementById('end-call-btn').onclick = () => {
+        document.getElementById('end-call-btn').onclick = async () => {
       if (localStream) { localStream.getTracks().forEach(track => track.stop()); }
       if (pc) { pc.close(); pc = null; }
       document.getElementById('video-call-screen').style.display = 'none';
-      if (window.activeCallDoc) { deleteDoc(window.activeCallDoc); window.activeCallDoc = null; }
-    };
+      
+      // Send a call-ended message to the chat room
+      if (currentRoom !== 'global' && currentRoom !== 'bot') {
+        try {
+          await addDoc(collection(db, "messages"), {
+            text: "📞 Video call ended",
+            imageUrl: null,
+            audioUrl: null,
+            uid: currentUser.uid,
+            name: currentUser.displayName || "User",
+            photoURL: currentUser.photoURL || "",
+            room: currentRoom,
+            createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Error logging call message:", err);
+        }
+      }
 
+      if (window.activeCallDoc) { 
+        deleteDoc(window.activeCallDoc); 
+        window.activeCallDoc = null; 
+      }
+    };
+    
     document.getElementById('remove-friend-btn').onclick = async () => {
       if (currentRoom === 'global' || currentRoom === 'bot') return;
       if (confirm("Remove friend?")) {
@@ -691,32 +713,98 @@
         messageInput.value = ''; messageInput.placeholder = "Type a message..."; selectedChatFile = null; chatFile.value = '';
       } catch (err) { alert("Error sending: " + err.message); }
     };
+    let mediaRecorder; 
+    let audioChunks = []; 
+    let isRecording = false; 
+    const micBtn = document.getElementById('mic-btn');
 
-    let mediaRecorder; let audioChunks = []; let isRecording = false; const micBtn = document.getElementById('mic-btn');
     micBtn.onclick = async () => {
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream); mediaRecorder.start(); audioChunks = [];
-                isRecording = true; micBtn.innerText = "🛑"; micBtn.classList.add("recording");
-                messageInput.placeholder = "Recording... Click stop to send."; messageInput.disabled = true;
-                mediaRecorder.addEventListener("dataavailable", e => audioChunks.push(e.data));
+                
+                // Automatically find a supported audio recording format for the user's browser
+                let mimeType = 'audio/webm';
+                if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                    if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                        mimeType = 'audio/mp4';
+                    } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+                        mimeType = 'audio/ogg';
+                    } else {
+                        mimeType = ''; // Let browser choose default
+                    }
+                }
+
+                const options = mimeType ? { mimeType } : {};
+                mediaRecorder = new MediaRecorder(stream, options);
+                audioChunks = [];
+
+                mediaRecorder.start();
+                isRecording = true; 
+                micBtn.innerText = "🛑"; 
+                micBtn.classList.add("recording");
+                messageInput.placeholder = "Recording... Click stop to send."; 
+                messageInput.disabled = true;
+
+                mediaRecorder.addEventListener("dataavailable", e => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                });
+
                 mediaRecorder.addEventListener("stop", async () => {
                     messageInput.placeholder = "Uploading audio...";
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioRef = ref(storage, 'chat_audio/' + currentUser.uid + '_' + Date.now() + '.webm');
+                    
+                    // Use the correct file extension based on the format used
+                    const fileExt = mimeType.includes('mp4') ? 'mp4' : 'webm';
+                    const audioBlob = new Blob(audioChunks, { type: mimeType || 'audio/webm' });
+                    const audioRef = ref(storage, 'chat_audio/' + currentUser.uid + '_' + Date.now() + '.' + fileExt);
+                    
                     try {
-                        await uploadBytes(audioRef, audioBlob); const audioUrl = await getDownloadURL(audioRef);
-                        await addDoc(collection(db, "messages"), { text: "", imageUrl: null, audioUrl: audioUrl, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
-                    } catch (e) { alert("Audio error: " + e.message); } 
-                    finally { messageInput.placeholder = "Type a message..."; messageInput.disabled = false; }
+                        await uploadBytes(audioRef, audioBlob); 
+                        const audioUrl = await getDownloadURL(audioRef);
+                        
+                        if (currentRoom === 'bot') {
+                            const audioMsg = {
+                                id: Date.now().toString(), text: "", imageUrl: null, audioUrl: audioUrl,
+                                uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: "bot", createdAt: Date.now()
+                            };
+                            let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
+                            localMsgs.push(audioMsg);
+                            localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
+                            loadLocalBotMessages();
+                        } else {
+                            await addDoc(collection(db, "messages"), { 
+                                text: "", 
+                                imageUrl: null, 
+                                audioUrl: audioUrl, 
+                                uid: currentUser.uid, 
+                                name: currentUser.displayName || "User", 
+                                photoURL: currentUser.photoURL || "", 
+                                room: currentRoom, 
+                                createdAt: serverTimestamp() 
+                            });
+                        }
+                    } catch (e) { 
+                        alert("Audio upload error: " + e.message); 
+                    } finally { 
+                        messageInput.placeholder = "Type a message..."; 
+                        messageInput.disabled = false; 
+                        // Stop all mic tracks so the orange recording light turns off on the device
+                        stream.getTracks().forEach(track => track.stop());
+                    }
                 });
-            } catch(e) { alert("Mic access needed."); }
+            } catch(e) { 
+                alert("Microphone access denied or not supported on this device/browser: " + e.message); 
+            }
         } else {
-            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
-            isRecording = false; micBtn.innerText = "🎤"; micBtn.classList.remove("recording");
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+            }
+            isRecording = false; 
+            micBtn.innerText = "🎤"; 
+            micBtn.classList.remove("recording");
         }
     };
+    
   </script>
 </body>
 </html>
