@@ -3,36 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Chat App Pro</title>
+  <title>Chat App Pro - Enhanced</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #e5e5f7; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; }
+    :root {
+      --bg-color: #e5e5f7;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --header-bg: #007bff;
+      --msg-sent: #007bff;
+      --msg-sent-text: #ffffff;
+      --msg-received: #e9ecef;
+      --msg-received-text: #000000;
+      --border-color: #dddddd;
+    }
 
-    #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-color: #f1f1f1;
+      --header-bg: #1f2937;
+      --msg-sent: #2563eb;
+      --msg-sent-text: #ffffff;
+      --msg-received: #374151;
+      --msg-received-text: #f9fafb;
+      --border-color: #374151;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; transition: background-color 0.3s; }
+
+    #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--card-bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
     #splash-screen.fade-out { opacity: 0; pointer-events: none; }
     #splash-screen h1 { color: #007bff; font-size: 24px; font-weight: bold; }
 
-    .modal-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
-    .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-    .modal-box h2 { margin-bottom: 15px; color: #333; font-size: 20px; }
+    .modal-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+    .modal-box { background: var(--card-bg); color: var(--text-color); padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; }
+    .modal-box h2 { margin-bottom: 15px; font-size: 20px; }
     .auth-form { display: flex; flex-direction: column; gap: 12px; }
-    .auth-form input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; width: 100%; }
+    .auth-form input { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; width: 100%; background: var(--card-bg); color: var(--text-color); }
     .btn { padding: 10px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; border: none; width: 100%; }
     .btn-primary { background: #007bff; color: white; }
     .btn-secondary { background: #e9ecef; color: #333; margin-top: 8px; }
     .google-btn { background: #4285F4; color: white; margin-top: 10px; }
-    .toggle-text { margin-top: 12px; font-size: 13px; color: #555; }
+    .toggle-text { margin-top: 12px; font-size: 13px; opacity: 0.8; }
     .toggle-text span { color: #007bff; cursor: pointer; font-weight: bold; }
 
-    .chat-container { width: 100vw; height: 100vh; height: 100dvh; background: white; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-    @media (min-width: 768px) { .chat-container { max-width: 650px; height: 90vh; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); } }
+    .chat-container { width: 100vw; height: 100vh; height: 100dvh; background: var(--card-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    @media (min-width: 768px) { .chat-container { max-width: 650px; height: 90vh; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); } }
 
-    .chat-header { background: #007bff; color: white; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10; flex-shrink: 0; }
+    .chat-header { background: var(--header-bg); color: white; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10; flex-shrink: 0; }
     .header-top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; }
     .search-container { position: relative; flex: 1; max-width: 180px; }
     #user-search { width: 100%; padding: 5px 10px; border-radius: 20px; border: none; outline: none; font-size: 13px; }
-    .search-results { position: absolute; top: 32px; left: 0; background: white; width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 150px; overflow-y: auto; display: none; flex-direction: column; color: black; z-index: 100; }
-    .search-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
+    .search-results { position: absolute; top: 32px; left: 0; background: var(--card-bg); width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 150px; overflow-y: auto; display: none; flex-direction: column; color: var(--text-color); z-index: 100; }
+    .search-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
     .search-item img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
     
     .chat-info { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; }
@@ -45,37 +69,41 @@
     .friend-chip img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
 
     .user-profile img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid white; cursor: pointer; }
-    #video-call-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 0 4px; }
+    .header-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; color: white; padding: 0 4px; }
     #logout-btn { background: transparent; color: white; border: 1px solid white; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 
-    .chat-messages { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; }
+    .chat-messages { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--card-bg); }
     .message-wrapper { display: flex; gap: 8px; max-width: 88%; }
     .message-wrapper img.avatar { width: 26px; height: 26px; border-radius: 50%; align-self: flex-end; object-fit: cover; }
     .message-content { display: flex; flex-direction: column; }
-    .sender-name { font-size: 10px; color: #666; margin-bottom: 2px; }
-    .message { padding: 8px 12px; border-radius: 12px; word-wrap: break-word; font-size: 14px; }
+    .sender-name { font-size: 10px; opacity: 0.7; margin-bottom: 2px; }
+    .message { padding: 8px 12px; border-radius: 12px; word-wrap: break-word; font-size: 14px; position: relative; }
     .message img.chat-image { max-width: 100%; border-radius: 8px; margin-top: 4px; display: block; }
     .message audio { max-width: 200px; height: 35px; outline: none; margin-top: 4px; border-radius: 8px; }
     
+    .msg-timestamp { font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: right; }
+    .reactions-bar { display: flex; gap: 4px; margin-top: 3px; font-size: 12px; }
+    .reaction-badge { background: rgba(0,0,0,0.05); padding: 1px 5px; border-radius: 10px; cursor: pointer; }
+
     .action-icon { background: none; border: none; font-size: 14px; cursor: pointer; opacity: 0.5; padding: 4px; }
     .action-icon:hover { opacity: 1; }
 
     .message-wrapper.sent { align-self: flex-end; flex-direction: row-reverse; }
-    .message-wrapper.sent .message { background: #007bff; color: white; border-bottom-right-radius: 2px; }
+    .message-wrapper.sent .message { background: var(--msg-sent); color: var(--msg-sent-text); border-bottom-right-radius: 2px; }
     .message-wrapper.sent .sender-name { display: none; }
     .message-wrapper.received { align-self: flex-start; }
-    .message-wrapper.received .message { background: #e9ecef; color: black; border-bottom-left-radius: 2px; }
+    .message-wrapper.received .message { background: var(--msg-received); color: var(--msg-received-text); border-bottom-left-radius: 2px; }
     .message-row { display: flex; align-items: center; gap: 4px; }
     .message-wrapper.sent .message-row { flex-direction: row-reverse; }
 
-    .chat-input-area { display: flex; padding: 8px 10px; background: white; border-top: 1px solid #ddd; align-items: center; gap: 6px; flex-shrink: 0; position: relative; }
-    .chat-input-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; }
-    .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #555; padding: 2px; }
-    #mic-btn.recording { color: red; }
+    .chat-input-area { display: flex; padding: 8px 10px; background: var(--card-bg); border-top: 1px solid var(--border-color); align-items: center; gap: 6px; flex-shrink: 0; position: relative; }
+    .chat-input-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; font-size: 14px; background: var(--card-bg); color: var(--text-color); }
+    .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); padding: 2px; opacity: 0.8; }
+    #mic-btn.recording { color: red; opacity: 1; }
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
 
     /* EMOJI PICKER STYLES */
-    #emoji-picker { display: none; position: absolute; bottom: 55px; left: 10px; background: white; border: 1px solid #ccc; border-radius: 12px; padding: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); width: 240px; grid-template-columns: repeat(6, 1fr); gap: 10px; z-index: 1000; }
+    #emoji-picker { display: none; position: absolute; bottom: 55px; left: 10px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 240px; grid-template-columns: repeat(6, 1fr); gap: 10px; z-index: 1000; }
     .emoji-item { cursor: pointer; font-size: 22px; text-align: center; user-select: none; transition: transform 0.1s; }
     .emoji-item:hover { transform: scale(1.2); }
 
@@ -85,13 +113,13 @@
     .call-btn.active-off { background: red; border-color: red; }
 
     #media-edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
-    .edit-box { background: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 100%; }
+    .edit-box { background: var(--card-bg); color: var(--text-color); padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 100%; }
     #edit-preview { max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 15px; object-fit: contain; }
   </style>
 </head>
 <body>
 
-  <div id="splash-screen"><h1>Starting...</h1></div>
+  <div id="splash-screen"><h1>Starting Chat App...</h1></div>
 
   <!-- AUTH SCREEN -->
   <div id="auth-screen" class="modal-screen" style="display: none;">
@@ -119,7 +147,7 @@
     <div class="edit-box">
       <h2>Edit Picture</h2>
       <img id="edit-preview" src="" alt="Preview">
-      <p id="edit-status" style="font-size: 13px; color: #555; margin-bottom: 10px;"></p>
+      <p id="edit-status" style="font-size: 13px; opacity: 0.8; margin-bottom: 10px;"></p>
       <div style="display: flex; gap: 8px; flex-direction: column;">
         <button id="remove-bg-btn" class="btn btn-primary">✨ Remove Background (AI)</button>
         <button id="send-edited-btn" class="btn btn-primary" style="background: #28a745;">Send to Chat</button>
@@ -157,10 +185,11 @@
           <button id="remove-friend-btn">❌ Remove</button>
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
+          <button id="theme-toggle-btn" class="header-btn" title="Toggle Dark/Light Mode">🌙</button>
           <div id="user-profile" class="user-profile" style="display: none;">
             <img id="user-pic" src="" alt="Profile">
           </div>
-          <button id="video-call-btn" title="Start Video Call" style="display:none;">🎥</button>
+          <button id="video-call-btn" class="header-btn" title="Start Video Call" style="display:none;">🎥</button>
           <button id="logout-btn" style="display:none;">Logout</button>
         </div>
       </div>
@@ -172,7 +201,7 @@
 
     <main class="chat-messages" id="chat-messages"></main>
 
-    <!-- CHAT INPUT AREA (UPDATED WITH EMOJI BUTTON) -->
+    <!-- CHAT INPUT AREA -->
     <form class="chat-input-area" id="chat-form">
       <label for="chat-image-upload" class="icon-btn" title="Send picture" style="cursor: pointer;">📎</label>
       <input type="file" id="chat-image-upload" accept="image/*" style="display: none;">
@@ -180,7 +209,6 @@
       <button type="button" id="mic-btn" class="icon-btn" title="Record Voice">🎤</button>
       <button type="button" id="emoji-btn" class="icon-btn" title="Emojis">😀</button>
       
-      <!-- The Emoji Menu Popup -->
       <div id="emoji-picker"></div>
 
       <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
@@ -190,7 +218,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
@@ -216,6 +244,10 @@
     let incomingCallUnsubscribe = null;
     const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
 
+    // Audio sound for notifications
+    const soundEffect = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+    const badWords = ["badword1", "badword2", "stupid", "idiot", "hate"];
+
     let localStream = null;
     let remoteStream = null;
     let pc = null;
@@ -227,6 +259,13 @@
         "how are you": "I am feeling fantastic!",
         "name": "Daravisal kong",
         "bye": "Goodbye!"
+    };
+
+    // DARK MODE TOGGLE
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    themeBtn.onclick = () => {
+      document.body.classList.toggle('dark-mode');
+      themeBtn.innerText = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
     };
 
     window.addEventListener('load', () => {
@@ -300,14 +339,12 @@
     const emojiBtn = document.getElementById('emoji-btn');
     const messageInput = document.getElementById('message-input');
 
-    // Array of common emojis
     const commonEmojis = [
       "😀", "😂", "🥰", "😎", "😭", "🥺", "😡", "👍", "❤️", "🔥", 
       "✨", "🎉", "💀", "👀", "🤔", "🙌", "😊", "👋", "🙏", "💯",
       "😅", "😋", "😜", "😠"
     ];
 
-    // Load emojis into the picker box
     commonEmojis.forEach(emoji => {
       const span = document.createElement('span');
       span.className = 'emoji-item';
@@ -319,13 +356,11 @@
       emojiPicker.appendChild(span);
     });
 
-    // Toggle emoji menu open/close
     emojiBtn.onclick = (e) => {
       e.preventDefault();
       emojiPicker.style.display = emojiPicker.style.display === 'grid' ? 'none' : 'grid';
     };
 
-    // Close menu when clicking outside of it
     document.addEventListener('click', (e) => {
       if (e.target !== emojiBtn && !emojiPicker.contains(e.target)) {
         emojiPicker.style.display = 'none';
@@ -333,7 +368,7 @@
     });
 
     // --- BACKGROUND REMOVAL WORKFLOW ---
-   let selectedChatFile = null;
+    let selectedChatFile = null;
     const chatImageUpload = document.getElementById('chat-image-upload');
     const mediaEditModal = document.getElementById('media-edit-modal');
     const editPreview = document.getElementById('edit-preview');
@@ -464,7 +499,6 @@
       document.getElementById('remove-friend-btn').style.display = (roomId === 'global' || roomId === 'bot') ? 'none' : 'inline-block';
       document.getElementById('video-call-btn').style.display = (roomId === 'bot' || roomId === 'global') ? 'none' : 'block';
       
-      // Close emoji picker when switching rooms just in case
       emojiPicker.style.display = 'none';
 
       if (roomId === 'bot') {
@@ -524,7 +558,6 @@
       }
     };
 
-    // Mute & Camera toggles
     const muteMicBtn = document.getElementById('mute-mic-btn');
     muteMicBtn.onclick = () => {
       if (!localStream) return;
@@ -598,8 +631,7 @@
         });
       });
     }
-  
-    // End Call and delete call doc from Firestore
+   
     document.getElementById('end-call-btn').onclick = async () => {
       if (localStream) localStream.getTracks().forEach(track => track.stop());
       if (pc) { pc.close(); pc = null; }
@@ -620,6 +652,12 @@
       }
     };
 
+    function formatTime(timestamp) {
+      if (!timestamp) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
     function appendMessageToUI(data, docId, isLocal = false) {
       const chatMessages = document.getElementById('chat-messages');
       const isMe = data.uid === currentUser.uid;
@@ -633,14 +671,41 @@
       let textContent = data.text ? `<div>${data.text}</div>` : '';
       let imageContent = data.imageUrl ? `<img src="${data.imageUrl}" class="chat-image">` : '';
       let audioContent = data.audioUrl ? `<audio controls src="${data.audioUrl}"></audio>` : '';
+      let timeFormatted = formatTime(data.createdAt);
 
-      wrapper.innerHTML = `<img src="${avatar}" class="avatar"><div class="message-content"><span class="sender-name">${name}</span><div class="message-row"><div class="message">${textContent}${imageContent}${audioContent}</div></div></div>`;
+      let reaction = data.reaction ? `<div class="reactions-bar"><span class="reaction-badge">${data.reaction}</span></div>` : '';
+
+      wrapper.innerHTML = `
+        <img src="${avatar}" class="avatar">
+        <div class="message-content">
+          <span class="sender-name">${name}</span>
+          <div class="message-row">
+            <div class="message">
+              ${textContent}${imageContent}${audioContent}
+              <div class="msg-timestamp">${timeFormatted}</div>
+              ${reaction}
+            </div>
+          </div>
+        </div>`;
+
       const msgRow = wrapper.querySelector('.message-row');
+      const msgBubble = wrapper.querySelector('.message');
+
+      // Reaction Picker on click
+      msgBubble.onclick = async () => {
+        const chosenEmoji = prompt("React to message (e.g. ❤️, 👍, 😂, 🔥):");
+        if (chosenEmoji && docId && !isLocal) {
+          try {
+            await updateDoc(doc(db, "messages", docId), { reaction: chosenEmoji });
+          } catch(e) { console.error(e); }
+        }
+      };
 
       if ((isMe || data.uid === "ai_bot_123") && docId) {
         const delBtn = document.createElement('button');
         delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️';
-        delBtn.onclick = async () => {
+        delBtn.onclick = async (e) => {
+          e.stopPropagation();
           if (confirm("Delete message?")) {
              if (isLocal) {
                  let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
@@ -669,12 +734,20 @@
     function loadMessages() {
       if (unsubscribeMessages) unsubscribeMessages();
       const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+      let firstLoad = true;
+
       unsubscribeMessages = onSnapshot(q, (snapshot) => {
         document.getElementById('chat-messages').innerHTML = '';
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();
           if ((data.room || 'global') === currentRoom) appendMessageToUI(data, docSnap.id, false);
         });
+
+        // Play sound when new incoming message arrives
+        if (!firstLoad && snapshot.docChanges().some(change => change.type === 'added')) {
+          soundEffect.play().catch(() => {});
+        }
+        firstLoad = false;
       });
       listenForIncomingCalls();
     }
@@ -682,9 +755,15 @@
     // Chat Message Form Handler
     document.getElementById('chat-form').onsubmit = async (e) => {
       e.preventDefault();
-      const text = messageInput.value.trim();
-      emojiPicker.style.display = 'none'; // Close emoji picker when sending
+      let text = messageInput.value.trim();
+      emojiPicker.style.display = 'none';
       if (!text) return;
+
+      // BAD WORD FILTER
+      badWords.forEach(word => {
+        const reg = new RegExp(word, 'gi');
+        text = text.replace(reg, '***');
+      });
 
       if (currentRoom === 'bot') {
           const userMsg = { id: Date.now().toString(), text: text, imageUrl: null, audioUrl: null, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: "bot", createdAt: Date.now() };
