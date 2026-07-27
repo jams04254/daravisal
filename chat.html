@@ -207,6 +207,7 @@
     let unsubscribeMessages = null;
     let unsubscribeFriends = null;
     let currentRoom = 'global';
+    let incomingCallUnsubscribe = null;
 
     // --- OWNER EMAIL CONFIGURATION ---
     const OWNER_EMAIL = "your_email@gmail.com"; 
@@ -299,11 +300,13 @@
         updateUserUI(user);
         loadFriendsBar();
         switchRoom('global', 'Global Chat');
+        listenForIncomingCalls();
       } else {
         currentUser = null;
         document.getElementById('auth-screen').style.display = 'flex';
         document.getElementById('logout-btn').style.display = 'none';
         document.getElementById('user-profile').style.display = 'none';
+        if (incomingCallUnsubscribe) { incomingCallUnsubscribe(); incomingCallUnsubscribe = null; }
       }
     });
 
@@ -417,7 +420,7 @@
       }
     };
 
-    // --- FIREBASE WEBRTC VIDEO CALL INITIATION ---
+    // --- FIREBASE WEBRTC VIDEO CALL INITIATION (CALLER) ---
     document.getElementById('video-call-btn').onclick = async () => {
       if (currentRoom === 'global' || currentRoom === 'bot') {
         alert("Video calls are only available in private friend chats!");
@@ -475,12 +478,71 @@
         document.getElementById('video-call-screen').style.display = 'none';
       }
     };
+    
+    // --- LISTEN FOR INCOMING CALLS (RECEIVER) ---
+    function listenForIncomingCalls() {
+      if (incomingCallUnsubscribe) incomingCallUnsubscribe();
+      const q = query(collection(db, "calls"));
+      incomingCallUnsubscribe = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === 'added') {
+            const data = change.doc.data();
+            if (data.room === currentRoom && data.caller !== currentUser.uid && !pc) {
+              if (confirm("Incoming video call! Answer?")) {
+                document.getElementById('video-call-screen').style.display = 'flex';
+                document.getElementById('call-status').innerText = "Connecting...";
+
+                try {
+                  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                  document.getElementById('local-video').srcObject = localStream;
+
+                  pc = new RTCPeerConnection(servers);
+                  remoteStream = new MediaStream();
+                  document.getElementById('remote-video').srcObject = remoteStream;
+
+                  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                  pc.ontrack = event => { event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track)); };
+
+                  const callDoc = change.doc.ref;
+                  const offerCandidates = collection(callDoc, "offerCandidates");
+                  const answerCandidates = collection(callDoc, "answerCandidates");
+
+                  pc.onicecandidate = event => {
+                    if (event.candidate) { addDoc(answerCandidates, event.candidate.toJSON()); }
+                  };
+
+                  await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                  const answer = await pc.createAnswer();
+                  await pc.setLocalDescription(answer);
+
+                  await setDoc(callDoc, { answer: { type: answer.type, sdp: answer.sdp } }, { merge: true });
+                  document.getElementById('call-status').innerText = "Connected!";
+
+                  onSnapshot(offerCandidates, (snapshot) => {
+                    snapshot.docChanges().forEach(async (change) => {
+                      if (change.type === 'added') {
+                        await pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                      }
+                    });
+                  });
+
+                  window.activeCallDoc = callDoc;
+                } catch (err) {
+                  alert("Camera/Mic error: " + err.message);
+                  document.getElementById('video-call-screen').style.display = 'none';
+                }
+              }
+            }
+          }
+        });
+      });
+    }
 
     document.getElementById('end-call-btn').onclick = () => {
       if (localStream) { localStream.getTracks().forEach(track => track.stop()); }
-      if (pc) { pc.close(); }
+      if (pc) { pc.close(); pc = null; }
       document.getElementById('video-call-screen').style.display = 'none';
-      if (window.activeCallDoc) { deleteDoc(window.activeCallDoc); }
+      if (window.activeCallDoc) { deleteDoc(window.activeCallDoc); window.activeCallDoc = null; }
     };
 
     document.getElementById('remove-friend-btn').onclick = async () => {
@@ -562,6 +624,7 @@
           if ((data.room || 'global') === currentRoom) appendMessageToUI(data, docSnap.id, false);
         });
       });
+      listenForIncomingCalls();
     }
 
     const messageInput = document.getElementById('message-input');
