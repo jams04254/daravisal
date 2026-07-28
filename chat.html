@@ -932,17 +932,30 @@
         });
       });
     }
+document.getElementById('end-call-btn').onclick = async () => {
+  ringtone.pause(); 
+  ringtone.currentTime = 0;
   
-    document.getElementById('end-call-btn').onclick = async () => {
-      ringtone.pause(); ringtone.currentTime = 0;
-      if (localStream) localStream.getTracks().forEach(track => track.stop());
-      if (pc) { pc.close(); pc = null; }
-      document.getElementById('video-call-screen').style.display = 'none';
-      if (window.activeCallDoc) {
-        try { await deleteDoc(window.activeCallDoc); } catch (err) {}
-        window.activeCallDoc = null;
-      }
-    };
+  if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+  }
+  if (pc) { 
+    pc.close(); 
+    pc = null; 
+  }
+  
+  document.getElementById('video-call-screen').style.display = 'none';
+
+  // Robust cleanup: Delete via active reference or query active calls
+  if (window.activeCallDoc) {
+    try { 
+      await deleteDoc(window.activeCallDoc); 
+    } catch (err) {
+      console.log("Error deleting specific call doc:", err);
+    }
+    window.activeCallDoc = null;
+  }
+};
 
     function formatTime(timestamp) {
       if (!timestamp) return new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
