@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Chat App Pro - Broadcast Video Calls</title>
+  <title>Chat App Pro - Broadcast Video Calls & Storage</title>
   <style>
     :root {
       --bg-color: #e5e5f7;
@@ -43,10 +43,18 @@
     .auth-form input { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; width: 100%; background: var(--card-bg); color: var(--text-color); }
     .btn { padding: 10px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; border: none; width: 100%; }
     .btn-primary { background: #007bff; color: white; }
-    .btn-secondary { background: #e9ecef; color: #333; margin-top: 8px; }
+    .btn-secondary { background: var(--msg-received); color: var(--text-color); margin-top: 8px; border: 1px solid var(--border-color); }
     .google-btn { background: #4285F4; color: white; margin-top: 10px; }
     .toggle-text { margin-top: 12px; font-size: 13px; opacity: 0.8; }
     .toggle-text span { color: #007bff; cursor: pointer; font-weight: bold; }
+
+    /* Custom Confirm Modal Style */
+    #custom-confirm-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
+    .confirm-box { background: var(--card-bg); color: var(--text-color); padding: 22px; border-radius: 14px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popUp 0.2s ease-in-out; }
+    @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .confirm-box h3 { margin-bottom: 10px; font-size: 18px; color: #dc3545; }
+    .confirm-box p { font-size: 14px; opacity: 0.85; margin-bottom: 20px; line-height: 1.4; }
+    .confirm-actions { display: flex; gap: 10px; }
 
     .chat-container { width: 100vw; height: 100vh; height: 100dvh; background: var(--card-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
     @media (min-width: 768px) { .chat-container { max-width: 650px; height: 90vh; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); } }
@@ -116,10 +124,28 @@
     .edit-box { background: var(--card-bg); color: var(--text-color); padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
     #edit-preview { max-width: 100%; max-height: 220px; border-radius: 8px; margin-bottom: 12px; object-fit: contain; }
   </style>
+  <script>
+    if (localStorage.getItem('app_theme') === 'dark') {
+      document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
+    }
+  </script>
 </head>
 <body>
 
   <div id="splash-screen"><h1>Starting Chat App...</h1></div>
+
+  <!-- Custom Confirmation Dialog Box (User Style) -->
+  <div id="custom-confirm-modal">
+    <div class="confirm-box">
+      <h3 id="confirm-title">⚠️ Confirmation</h3>
+      <p id="confirm-message">Are you sure you want to delete all messages?</p>
+      <div class="confirm-actions">
+        <button id="confirm-cancel-btn" class="btn btn-secondary" style="margin-top: 0;">Cancel</button>
+        <button id="confirm-ok-btn" class="btn" style="background: #dc3545; color: white;">Delete All</button>
+      </div>
+    </div>
+  </div>
 
   <div id="auth-screen" class="modal-screen" style="display: none;">
     <div class="modal-box">
@@ -145,8 +171,24 @@
     <div style="background: var(--card-bg); color: var(--text-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
       <img id="modal-profile-pic" src="" alt="Profile" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; border: 2px solid #007bff;">
       <h3 id="modal-profile-name" style="margin-bottom: 6px; font-size: 18px;">Account Name</h3>
-      <p id="modal-profile-email" style="font-size: 13px; opacity: 0.7; margin-bottom: 20px;"></p>
-      <button id="close-profile-modal" class="btn btn-primary">Close</button>
+      <p id="modal-profile-email" style="font-size: 13px; opacity: 0.7; margin-bottom: 15px;"></p>
+      
+      <div style="margin-bottom: 20px; font-size: 14px; text-align: left; background: var(--msg-received); padding: 10px; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <strong>Cloud Storage:</strong> <span id="storage-text">0 KB / 1024 KB</span>
+        </div>
+        <div style="width: 100%; background: var(--border-color); height: 10px; border-radius: 5px; overflow: hidden;">
+          <div id="storage-bar" style="width: 0%; height: 100%; background: #007bff; border-radius: 5px; transition: width 0.3s, background 0.3s;"></div>
+        </div>
+        <p id="storage-warning-text" style="font-size: 11px; margin-top: 5px; opacity: 0.8; text-align: center;">Maximum allowance: 1 MB per user</p>
+        
+        <!-- Delete All Messages Button inside Profile when storage is full or user wants to clear -->
+        <button id="profile-delete-all-btn" class="btn" style="background: #dc3545; color: white; margin-top: 10px; font-size: 13px; padding: 6px; display: none;">🗑️ Clear All Messages (Memory Full)</button>
+      </div>
+
+      <button id="modal-theme-toggle" class="btn btn-secondary" style="margin-bottom: 10px;">Toggle Dark Mode</button>
+      <button id="modal-delete-account" class="btn" style="background: #dc3545; color: white; margin-bottom: 10px;">Request Account Deletion</button>
+      <button id="close-profile-modal" class="btn btn-primary">Close Profile</button>
     </div>
   </div>
 
@@ -200,10 +242,10 @@
           <span id="room-label">Global Chat</span>
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
-          <button id="theme-toggle-btn" class="header-btn" title="Toggle Dark/Light Mode">🌙</button>
           <div id="user-profile" class="user-profile" style="display: none;">
-            <img id="user-pic" src="" alt="Profile">
+            <img id="user-pic" src="" alt="Profile" title="Open Profile & Settings">
           </div>
+          <button id="remove-friend-btn" class="header-btn" title="Remove Friend" style="display: none; font-size: 14px;">❌</button>
           <button id="video-call-btn" class="header-btn" title="Start Video Call">🎥</button>
           <button id="logout-btn" style="display:none;">Logout</button>
         </div>
@@ -258,6 +300,8 @@
     let unsubscribeFriends = null;
     let incomingCallUnsubscribe = null;
     const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
+    
+    const MAX_STORAGE_BYTES = 1048576; 
 
     const soundEffect = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
     const ringtone = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
@@ -269,10 +313,75 @@
     let pc = null;
     const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }] };
 
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    themeBtn.onclick = () => {
+    const brain = {
+        "i am cute": "Yes you so cute.🥰",
+        "i'm cute": "Yes you so cute.🥰",
+        "you think i am cute": "Yes you so cute.🥰",
+        "you think i'm cute": "Yes you so cute.🥰",
+        "hello": "Hello! Nice to meet you.",
+        "hi": "Hey there! How is your day going?",
+        "how are you": "I am feeling fantastic and fully charged!",
+        "joke": "Why don't scientists trust atoms? Because they make up everything!",
+        "name": "Daravisal kong",
+        "bye": "Goodbye! Come talk to me again soon.",
+        "crazy": "Is a bad word!?",
+        "bitch": "Is a bad word!",
+        "fuck": "Is a bad word!",
+        "google": "<a href='https://google.com' target='_blank'>Google</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s'>",
+        "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s'>",
+        "you so cute": "Thank you!",
+        "you're so cute": "Thank you!",
+        "story": "The lion and the mouse. A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy, promising to one day repay the favor. Amused by the idea that such a tiny creature could help him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth, setting the King of the Jungle free. The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
+        "who are you": "I am an AI!",
+        "cute": "❤️❤️❤️❤️",
+        "សួស្ដី": "សួស្ដីអ្នក!",
+        "សួស្តី": "សួស្ដីអ្នក!",
+        "happy": "Happy is an emotional state characterized by feelings of joy.",
+        "what can you reply": "I can say hello, tell you a joke, tell a story, give you links to Google and YouTube, or answer 'who are you'. Try asking me!",
+        "what can you do": "I can chat with you! You can ask me for a joke, a story, my name, or just say hi.",
+        "help": "Here is what you can ask me: hello, how are you, joke, story, google, youtube, name, who are you, happy, cute.",
+        "options": "You can say: hello, hi, how are you, joke, story, google, youtube, bye, name, who are you.",
+        "default": "That sounds interesting! Tell me more about it."
+    };
+
+    // Custom Confirm Helper Function
+    function showCustomConfirm(title, message, onConfirm) {
+      const modal = document.getElementById('custom-confirm-modal');
+      document.getElementById('confirm-title').innerText = title;
+      document.getElementById('confirm-message').innerText = message;
+      modal.style.display = 'flex';
+
+      const okBtn = document.getElementById('confirm-ok-btn');
+      const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+      // Clear previous event listeners by cloning
+      const newOkBtn = okBtn.cloneNode(true);
+      okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+      const newCancelBtn = cancelBtn.cloneNode(true);
+      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+      newOkBtn.onclick = () => {
+        modal.style.display = 'none';
+        onConfirm();
+      };
+      newCancelBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
+    }
+
+    document.getElementById('modal-theme-toggle').onclick = () => {
       document.body.classList.toggle('dark-mode');
-      themeBtn.innerText = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+      if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('app_theme', 'dark');
+      } else {
+        localStorage.setItem('app_theme', 'light');
+      }
+    };
+
+    document.getElementById('modal-delete-account').onclick = () => {
+       showCustomConfirm("⚠️ Delete Account", "Are you sure you want to delete this account? If you do not log in or cancel within one week, your profile, all messages, and all friends will be permanently deleted.", () => {
+           alert("Account deletion requested.");
+       });
     };
 
     window.addEventListener('load', () => {
@@ -313,7 +422,9 @@
       catch (error) { alert("Error: " + error.message); }
     };
 
-    document.getElementById('logout-btn').onclick = () => { if (confirm("Log out?")) signOut(auth); };
+    document.getElementById('logout-btn').onclick = () => { 
+      showCustomConfirm("🚪 Logout", "Are you sure you want to log out?", () => signOut(auth)); 
+    };
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -340,15 +451,119 @@
     });
 
     async function saveUserToDatabase(user) {
-      try { await setDoc(doc(db, "users", user.uid), { uid: user.uid, name: user.displayName || "User", email: user.email, photoURL: user.photoURL || "" }, { merge: true }); } 
+      try { 
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+        if (!snap.exists()) {
+           await setDoc(userRef, { uid: user.uid, name: user.displayName || "User", email: user.email, photoURL: user.photoURL || "", storageUsed: 0 });
+        } else {
+           await setDoc(userRef, { uid: user.uid, name: user.displayName || "User", email: user.email, photoURL: user.photoURL || "" }, { merge: true });
+        }
+      } 
       catch (err) { console.error(err); }
     }
 
-    document.getElementById('user-profile').onclick = () => {
+    async function checkAndUpdateStorage(fileSize) {
+      if (!currentUser) return false;
+      const userRef = doc(db, "users", currentUser.uid);
+      const snap = await getDoc(userRef);
+      let currentStorage = 0;
+      if (snap.exists() && snap.data().storageUsed) {
+          currentStorage = snap.data().storageUsed;
+      }
+      
+      if (currentStorage + fileSize > MAX_STORAGE_BYTES) {
+          showCustomConfirm("⚠️ Storage Full", "Upload failed! You have exceeded your 1 MB cloud storage limit. Would you like to clear all messages to free up space?", () => {
+              executeDeleteAllMessages();
+          });
+          return false;
+      }
+      
+      await updateDoc(userRef, { storageUsed: currentStorage + fileSize });
+      return true;
+    }
+
+    // Function to delete all messages created by the user or clear local bot messages
+    async function executeDeleteAllMessages() {
+      if (!currentUser) return;
+      try {
+        if (currentRoom === 'bot') {
+          localStorage.removeItem('bot_messages');
+          loadLocalBotMessages();
+        } else {
+          const q = query(collection(db, "messages"));
+          const snapshot = await getDocs(q);
+          const batchDeletes = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.uid === currentUser.uid && (data.room || 'global') === currentRoom) {
+              batchDeletes.push(deleteDoc(doc(db, "messages", docSnap.id)));
+            }
+          });
+          await Promise.all(batchDeletes);
+        }
+
+        // Reset user storage tracking
+        await updateDoc(doc(db, "users", currentUser.uid), { storageUsed: 0 });
+        alert("All your messages have been successfully cleared!");
+        document.getElementById('profile-modal').style.display = 'none';
+      } catch (err) {
+        alert("Error clearing messages: " + err.message);
+      }
+    }
+
+    document.getElementById('profile-delete-all-btn').onclick = () => {
+      showCustomConfirm("🗑️ Clear All Messages", "Are you sure you want to delete all your messages in this chat and reset your memory usage?", () => {
+        executeDeleteAllMessages();
+      });
+    };
+
+    document.getElementById('user-profile').onclick = async () => {
       if (!currentUser) return;
       document.getElementById('modal-profile-pic').src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || "User")}&background=random`;
       document.getElementById('modal-profile-name').innerText = currentUser.displayName || "User";
       document.getElementById('modal-profile-email').innerText = currentUser.email || "";
+      
+      try {
+        const snap = await getDoc(doc(db, "users", currentUser.uid));
+        let storageUsed = 0;
+        if (snap.exists() && snap.data().storageUsed) {
+            storageUsed = snap.data().storageUsed;
+        }
+        
+        const kbUsed = (storageUsed / 1024).toFixed(1);
+        document.getElementById('storage-text').innerText = `${kbUsed} KB / 1024 KB`;
+        
+        let percentage = (storageUsed / MAX_STORAGE_BYTES) * 100;
+        if (percentage > 100) percentage = 100;
+        
+        const storageBar = document.getElementById('storage-bar');
+        storageBar.style.width = `${percentage}%`;
+        
+        const deleteAllBtn = document.getElementById('profile-delete-all-btn');
+        const warningText = document.getElementById('storage-warning-text');
+
+        if (percentage >= 90) {
+            storageBar.style.background = 'red';
+            warningText.innerText = "⚠️ Memory is almost full! Consider clearing messages.";
+            warningText.style.color = "red";
+            deleteAllBtn.style.display = 'block'; // Show delete all button automatically when memory is near full
+        } else if (percentage >= 70) {
+            storageBar.style.background = 'orange';
+            warningText.innerText = "Maximum allowance: 1 MB per user";
+            warningText.style.color = "inherit";
+            deleteAllBtn.style.display = 'block'; // Also allow clearing if desired
+        } else {
+            storageBar.style.background = '#007bff';
+            warningText.innerText = "Maximum allowance: 1 MB per user";
+            warningText.style.color = "inherit";
+            deleteAllBtn.style.display = 'block'; // Always accessible in profile modal
+        }
+
+      } catch(e) {
+        console.error("Error loading storage:", e);
+      }
+
       document.getElementById('profile-modal').style.display = 'flex';
     };
 
@@ -388,7 +603,7 @@
       if (selectedChatFile) {
         processedImageBlob = selectedChatFile;
         editPreview.src = URL.createObjectURL(selectedChatFile);
-        editStatus.innerText = "Ready to send or remove background.";
+        editStatus.innerText = `Size: ${(selectedChatFile.size / 1024).toFixed(1)} KB. Ready to send.`;
         mediaEditModal.style.display = 'flex';
       }
     };
@@ -433,7 +648,7 @@
       };
       img.src = URL.createObjectURL(processedImageBlob);
     };
-
+  
     document.getElementById('download-edited-btn').onclick = () => {
       if (!processedImageBlob) return;
       const a = document.createElement('a');
@@ -444,6 +659,15 @@
 
     document.getElementById('send-edited-btn').onclick = async () => {
       if (!processedImageBlob) return;
+      
+      const fileSize = processedImageBlob.size;
+      const hasSpace = await checkAndUpdateStorage(fileSize);
+      
+      if (!hasSpace) {
+          mediaEditModal.style.display = 'none';
+          return;
+      }
+
       mediaEditModal.style.display = 'none';
       messageInput.placeholder = "Uploading image...";
       try {
@@ -454,6 +678,7 @@
 
         await addDoc(collection(db, "messages"), {
           text: "", imageUrl: imageUrl, audioUrl: null,
+          fileSizeBytes: fileSize,
           uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
         });
       } catch (err) { alert("Upload error: " + err.message); } 
@@ -475,7 +700,11 @@
             matches++;
             const div = document.createElement('div');
             div.className = 'search-item';
-            div.innerHTML = `<img src="${u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`}"><span>${u.name} (Add)</span>`;
+            div.innerHTML = `
+              <img src="${u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`}">
+              <span style="flex: 1;">${u.name}</span>
+              <button style="background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Add</button>
+            `;
             div.onclick = async () => {
               await setDoc(doc(db, "users", currentUser.uid, "friends", u.uid), { uid: u.uid, name: u.name, photoURL: u.photoURL || "" });
               switchRoom([currentUser.uid, u.uid].sort().join('_'), u.name, 'private');
@@ -515,6 +744,23 @@
       currentRoomType = roomType;
       document.getElementById('room-label').innerText = roomName;
 
+      const removeBtn = document.getElementById('remove-friend-btn');
+      if (roomType === 'private') {
+        removeBtn.style.display = 'block';
+        const uids = roomId.split('_');
+        const friendUid = uids[0] === currentUser.uid ? uids[1] : uids[0];
+
+        removeBtn.onclick = async () => {
+          showCustomConfirm("❌ Remove Friend", `Are you sure you want to remove ${roomName} from your friends list?`, async () => {
+            await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendUid));
+            alert(`${roomName} has been removed.`);
+            switchRoom('global', 'Global Chat', 'global'); 
+          });
+        };
+      } else {
+        removeBtn.style.display = 'none';
+      }
+
       emojiPicker.style.display = 'none';
       if (roomId === 'bot') {
         if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
@@ -524,7 +770,6 @@
       }
     };
 
-    // --- VIDEO CALL LOGIC: GLOBAL BROADCAST TO EVERYONE ---
     document.getElementById('video-call-btn').onclick = async () => {
       document.getElementById('video-call-screen').style.display = 'flex';
       document.getElementById('call-status').innerText = "Starting camera...";
@@ -548,14 +793,30 @@
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         
+        let targetAudience = 'global';
+        let targetUid = null;
+
+        if (currentRoomType === 'private') {
+           targetAudience = 'private';
+           const uids = currentRoom.split('_');
+           targetUid = uids[0] === currentUser.uid ? uids[1] : uids[0];
+        }
+
         await setDoc(callDoc, { 
           offer: { type: offer.type, sdp: offer.sdp }, 
           caller: currentUser.uid, 
           callerName: currentUser.displayName || "Someone",
           room: currentRoom,
+          type: targetAudience,
+          targetUser: targetUid,
           status: 'ringing'
         });
-        document.getElementById('call-status').innerText = "Ringing everyone...";
+        
+        if (targetAudience === 'global') {
+          document.getElementById('call-status').innerText = "Ringing everyone...";
+        } else {
+          document.getElementById('call-status').innerText = `Ringing ${document.getElementById('room-label').innerText}...`;
+        }
 
         onSnapshot(callDoc, async (snapshot) => {
           const data = snapshot.data();
@@ -588,7 +849,7 @@
         muteMicBtn.innerText = audioTrack.enabled ? "🎤 Muted" : "🎤 Mute";
       }
     };
-  
+
     const toggleCamBtn = document.getElementById('toggle-cam-btn');
     toggleCamBtn.onclick = () => {
       if (!localStream) return;
@@ -606,23 +867,28 @@
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === 'added') {
             const data = change.doc.data();
-            if (data.caller !== currentUser.uid && !pc) {
+            
+            let isForMe = false;
+            if (data.type === 'global') isForMe = true;
+            if (data.type === 'private' && data.targetUser === currentUser.uid) isForMe = true;
+
+            if (data.caller !== currentUser.uid && !pc && isForMe) {
               
               ringtone.play().catch(() => {});
               if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
 
               const callerName = data.callerName || "Someone";
-              const userAccepted = confirm(`Do you want to call with ${callerName}?`);
+              const callTypeStr = data.type === 'global' ? 'a Global Call' : 'a Private Call';
               
-              ringtone.pause(); 
-              ringtone.currentTime = 0;
+              showCustomConfirm("📞 Incoming Call", `Incoming ${callTypeStr} from ${callerName}. Do you want to answer?`, async () => {
+                ringtone.pause(); 
+                ringtone.currentTime = 0;
 
-              if (userAccepted) {
                 const callDocRef = change.doc.ref;
                 try {
                   const freshSnap = await getDoc(callDocRef);
                   if (!freshSnap.exists() || freshSnap.data().answer) {
-                    alert("Someone else already answered this call!");
+                    alert("Someone else already answered this call or it ended!");
                     return;
                   }
 
@@ -660,7 +926,7 @@
                   alert("Could not connect call: " + err.message);
                   document.getElementById('video-call-screen').style.display = 'none';
                 }
-              }
+              });
             }
           }
         });
@@ -716,6 +982,22 @@
       const msgRow = wrapper.querySelector('.message-row');
       const msgBubble = wrapper.querySelector('.message');
 
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'action-icon';
+      copyBtn.innerHTML = '📋';
+      copyBtn.title = 'Copy message';
+      copyBtn.onclick = (e) => {
+        e.stopPropagation();
+        const textToCopy = data.text || (data.imageUrl ? data.imageUrl : "Audio message");
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          copyBtn.innerHTML = '✅';
+          setTimeout(() => { copyBtn.innerHTML = '📋'; }, 1500);
+        }).catch(err => {
+          alert('Failed to copy text.');
+        });
+      };
+      msgRow.appendChild(copyBtn);
+
       msgBubble.onclick = async () => {
         const chosenEmoji = prompt("React to message (e.g. ❤️, 👍, 😂, 🔥):");
         if (chosenEmoji && docId && !isLocal) {
@@ -726,9 +1008,10 @@
       if ((isMe || data.uid === "ai_bot_123") && docId) {
         const delBtn = document.createElement('button');
         delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️';
+        delBtn.title = 'Delete message';
         delBtn.onclick = async (e) => {
           e.stopPropagation();
-          if (confirm("Delete message?")) {
+          showCustomConfirm("🗑️ Delete Message", "Are you sure you want to delete this message?", async () => {
              if (isLocal) {
                  let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
                  localMsgs = localMsgs.filter(m => m.id !== docId);
@@ -737,7 +1020,7 @@
              } else {
                  await deleteDoc(doc(db, "messages", docId));
              }
-          }
+          });
         };
         msgRow.appendChild(delBtn);
       }
@@ -801,8 +1084,10 @@
           localMsgs.push(userMsg);
           localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
           loadLocalBotMessages();
+          
+          const normalizedInput = text.toLowerCase().trim();
+          const botReply = brain[normalizedInput] || brain["default"];
 
-          const botReply = "That sounds interesting!";
           setTimeout(() => {
               const botMsg = { id: (Date.now() + 1).toString(), text: botReply, imageUrl: null, audioUrl: null, uid: "ai_bot_123", name: "AI Bot", photoURL: "https://ui-avatars.com/api/?name=Bot&background=0D8ABC&color=fff", room: "bot", createdAt: Date.now() + 1000 };
               let msgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
@@ -834,13 +1119,21 @@
 
                 mediaRecorder.addEventListener("dataavailable", e => { if (e.data.size > 0) audioChunks.push(e.data); });
                 mediaRecorder.addEventListener("stop", async () => {
-                    messageInput.placeholder = "Uploading audio...";
                     const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    const fileSize = audioBlob.size;
+                    
+                    const hasSpace = await checkAndUpdateStorage(fileSize);
+                    if (!hasSpace) {
+                        messageInput.placeholder = "Type a message..."; messageInput.disabled = false; stream.getTracks().forEach(t => t.stop());
+                        return;
+                    }
+
+                    messageInput.placeholder = "Uploading audio...";
                     const audioRef = ref(storage, 'chat_audio/' + currentUser.uid + '_' + Date.now() + (mimeType.includes('mp4') ? '.mp4' : '.webm'));
                     try {
                         await uploadBytes(audioRef, audioBlob); 
                         const audioUrl = await getDownloadURL(audioRef);
-                        await addDoc(collection(db, "messages"), { text: "", imageUrl: null, audioUrl: audioUrl, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
+                        await addDoc(collection(db, "messages"), { text: "", imageUrl: null, audioUrl: audioUrl, fileSizeBytes: fileSize, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
                     } catch (e) { alert("Audio error: " + e.message); } 
                     finally { messageInput.placeholder = "Type a message..."; messageInput.disabled = false; stream.getTracks().forEach(t => t.stop()); }
                 });
