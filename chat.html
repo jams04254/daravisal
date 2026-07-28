@@ -961,16 +961,21 @@
         if (!docSnap.exists()) forceCloseCallUI();
       });
     }
-
-    function forceCloseCallUI() {
-      ringtone.pause(); ringtone.currentTime = 0;
-      if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
-      if (pc) { pc.close(); pc = null; }
-      document.getElementById('video-call-screen').style.display = 'none';
-      if (activeCallDocUnsubscribe) { activeCallDocUnsubscribe(); activeCallDocUnsubscribe = null; }
-      window.activeCallDoc = null;
-    }
+function forceCloseCallUI() {
+  ringtone.pause(); ringtone.currentTime = 0;
+  if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+  if (pc) { pc.close(); pc = null; }
+  document.getElementById('video-call-screen').style.display = 'none';
   
+  // Clean up database reference if it exists
+  if (window.activeCallDoc) {
+    deleteDoc(window.activeCallDoc).catch(() => {});
+  }
+
+  if (activeCallDocUnsubscribe) { activeCallDocUnsubscribe(); activeCallDocUnsubscribe = null; }
+  window.activeCallDoc = null;
+}
+
     document.getElementById('end-call-btn').onclick = async () => {
       const docRefToDel = window.activeCallDoc;
       forceCloseCallUI();
