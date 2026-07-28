@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -135,7 +135,6 @@
 
   <div id="splash-screen"><h1>Starting Chat App...</h1></div>
 
-  <!-- Custom Confirmation Dialog Box (Dynamic Button Styling) -->
   <div id="custom-confirm-modal">
     <div class="confirm-box">
       <h3 id="confirm-title">⚠️ Confirmation</h3>
@@ -228,6 +227,7 @@
       <div class="call-controls">
         <button id="mute-mic-btn" class="call-btn">🎤 Mute</button>
         <button id="toggle-cam-btn" class="call-btn">📷 Cam Off</button>
+        <button id="flip-cam-btn" class="call-btn">🔄 Flip</button>
       </div>
     </div>
 
@@ -277,20 +277,47 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4",
-      authDomain: "visal-eaeea.firebaseapp.com",
-      projectId: "visal-eaeea",
-      storageBucket: "visal-eaeea.firebasestorage.app",
-      messagingSenderId: "77752028345",
-      appId: "1:77752028345:web:81c423c896b0701bfc9f68"
-    };
+    // Four Firebase Project Configurations for memory failover
+    const firebaseConfigs = [
+      {  apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4",
+  authDomain: "visal-eaeea.firebaseapp.com",
+  projectId: "visal-eaeea",
+  storageBucket: "visal-eaeea.firebasestorage.app",
+  messagingSenderId: "77752028345",
+  appId: "1:77752028345:web:81c423c896b0701bfc9f68",
+  measurementId: "G-H2DBRZ8R8X" }, 
+      {    apiKey: "AIzaSyDvPPVr22NsVwd_yTOndKlY9iAP_Iczj9Y",
+  authDomain: "chat-4f98f.firebaseapp.com",
+  projectId: "chat-4f98f",
+  storageBucket: "chat-4f98f.firebasestorage.app",
+  messagingSenderId: "675567156910",
+  appId: "1:675567156910:web:053d1bf316d313cd72f73f",
+  measurementId: "G-CBG87WNF2G" }, 
+    ];
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const storage = getStorage(app);
+    let currentAppIndex = 0;
+
+    // Initialize with a unique name to avoid conflicts
+    let app = initializeApp(firebaseConfigs[currentAppIndex], `app_${currentAppIndex}`); 
+    let db = getFirestore(app);
+    let auth = getAuth(app);
+    let storage = getStorage(app);
     const provider = new GoogleAuthProvider();
+
+    // Fallback Function to swap databases automatically
+    async function switchToNextFirebase() {
+      if (currentAppIndex < firebaseConfigs.length - 1) {
+        currentAppIndex++;
+        app = initializeApp(firebaseConfigs[currentAppIndex], `app_${currentAppIndex}`);
+        db = getFirestore(app);
+        storage = getStorage(app);
+        alert(`Storage limit reached! Switched to Backup Firebase ${currentAppIndex + 1}.`);
+        return true;
+      } else {
+        alert("Critical: All 4 Firebase databases are completely full!");
+        return false;
+      }
+    }
 
     let currentUser = null;
     let currentRoom = 'global';
@@ -299,8 +326,9 @@
     let unsubscribeFriends = null;
     let incomingCallUnsubscribe = null;
     let activeCallDocUnsubscribe = null;
+    let currentFacingMode = "user"; // Camera flip state
+
     const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
-    
     const MAX_STORAGE_BYTES = 1048576; 
 
     const soundEffect = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
@@ -314,56 +342,12 @@
     const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
     const brain = {
-            "I am cute" : "Yes you so cute.🥰",
-
-            "I'm cute" : "Yes you so cute.🥰",
-
-            "you think i am cute" : "Yes you so cute.🥰",
-
-            "you think i'm cute" : "Yes you so cute.🥰",
-
-            "hello": "Hello ! Nice to meet you.",
-
-            "hi": "Hey there! How is your day going?",
-
-            "how are you": "I am feeling fantastic and fully charged!",
-
-            "joke": "Why don't scientists trust atoms? Because they make up everything!",
-
-            "name": "Daravisal kong",
-
-            "bye": "Goodbye! Come talk to me again soon.",
-
-            "crazy" : "Is a bad word!?",
-
-            "bitch" : "Is a bad word!",
-
-            "fuck" : "Is a bad word!",
-
-            "google": "<a href='https://google.com' target='_blank'>Google</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s'>",
-
-            "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s'>",
-
-            "you so cute" : "Thank you!",
-
-            "you're so cute" : "Thank you!",
-
-            "story" : "    The lion and the mouse.  A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy,  promising to one day repay the favor. Amused by the idea that such a tiny creature could help   him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the  thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth,   setting the King of the Jungle free.  The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
-
-            "who are you" : "I am an ai!",
-
-            "cute" : "❤️❤️❤️❤️",
-
-            "សួស្ដី" : "សួស្ដីអ្នក!",
-
-            "សួស្តី" : "សួស្ដីអ្នក!",
-
-      "happy": "Happy is an emotional state characterized by feelings of joy.",
-        "hello": "Hello! Nice to meet you.",
-        "hi": "Hey there! How is your day going?",
-        "joke": "Why don't scientists trust atoms? Because they make up everything!",
-        "who are you": "I am an AI!",
-        "default": "That sounds interesting! Tell me more about it."
+      "hello": "Hello! Nice to meet you.",
+      "hi": "Hey there! How is your day going?",
+      "how are you": "I am feeling fantastic and fully charged!",
+      "joke": "Why don't scientists trust atoms? Because they make up everything!",
+      "who are you": "I am an AI!",
+      "default": "That sounds interesting! Tell me more about it."
     };
 
     function showCustomConfirm(title, message, onConfirm, okText = "Delete All", okColor = "#dc3545") {
@@ -403,7 +387,7 @@
     };
 
     document.getElementById('modal-delete-account').onclick = () => {
-       showCustomConfirm("⚠️ Delete Account", "Are you sure you want to delete this account? If you do not log in or cancel within one week, your profile, all messages, and all friends will be permanently deleted.", () => {
+       showCustomConfirm("⚠️ Delete Account", "Are you sure you want to delete this account?", () => {
            alert("Account deletion requested.");
        }, "Delete Account", "#dc3545");
     };
@@ -461,10 +445,6 @@
         loadSidebarItems();
         switchRoom('global', 'Global Chat', 'global');
         listenForIncomingCalls();
-        
-        if ("Notification" in window && Notification.permission !== "granted") {
-          Notification.requestPermission();
-        }
       } else {
         currentUser = null;
         document.getElementById('auth-screen').style.display = 'flex';
@@ -497,10 +477,9 @@
       }
       
       if (currentStorage + fileSize > MAX_STORAGE_BYTES) {
-          showCustomConfirm("⚠️ Storage Full", "Upload failed! You have exceeded your 1 MB cloud storage limit. Would you like to clear all messages to free up space?", () => {
-              executeDeleteAllMessages();
-          }, "Delete All", "#dc3545");
-          return false;
+          // Trigger the failover system if storage limits are hit
+          const switched = await switchToNextFirebase();
+          return switched; 
       }
       
       await updateDoc(userRef, { storageUsed: currentStorage + fileSize });
@@ -589,12 +568,11 @@
     const emojiPicker = document.getElementById('emoji-picker');
     const emojiBtn = document.getElementById('emoji-btn');
     const messageInput = document.getElementById('message-input');
-
     const commonEmojis = ["😀", "😂", "🥰", "😎", "😭", "🥺", "😡", "👍", "❤️", "🔥", "✨", "🎉", "💀", "👀", "🤔", "🙌", "😊", "👋", "🙏", "💯"];
+    
     commonEmojis.forEach(emoji => {
       const span = document.createElement('span');
-      span.className = 'emoji-item';
-      span.innerText = emoji;
+      span.className = 'emoji-item'; span.innerText = emoji;
       span.onclick = () => { messageInput.value += emoji; messageInput.focus(); };
       emojiPicker.appendChild(span);
     });
@@ -751,8 +729,7 @@
           const pic = f.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.name)}&background=random`;
           friendsHTML += `<div class="friend-chip ${currentRoom === roomId ? 'active' : ''}" onclick="switchRoom('${roomId}', '${f.name}', 'private')"><img src="${pic}"><span>${f.name}</span></div>`;
         });
-
-    bar.innerHTML = friendsHTML;
+        bar.innerHTML = friendsHTML;
       });
     }
 
@@ -790,9 +767,10 @@
     document.getElementById('video-call-btn').onclick = async () => {
       document.getElementById('video-call-screen').style.display = 'flex';
       document.getElementById('call-status').innerText = "Starting camera...";
+      currentFacingMode = "user"; // Reset to front camera
 
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
         document.getElementById('local-video').srcObject = localStream;
 
         pc = new RTCPeerConnection(servers);
@@ -857,6 +835,37 @@
       }
     };
 
+    // Camera Flip Logic
+    document.getElementById('flip-cam-btn').onclick = async () => {
+      if (!pc || !localStream) return;
+      
+      currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+      
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: currentFacingMode }, 
+          audio: true 
+        });
+        
+        const newVideoTrack = newStream.getVideoTracks()[0];
+        const oldVideoTrack = localStream.getVideoTracks()[0];
+        
+        document.getElementById('local-video').srcObject = newStream;
+        
+        const sender = pc.getSenders().find(s => s.track.kind === 'video');
+        if (sender) {
+          await sender.replaceTrack(newVideoTrack);
+        }
+        
+        if (oldVideoTrack) oldVideoTrack.stop();
+        localStream = newStream;
+        
+      } catch (err) {
+        console.error("Could not flip camera:", err);
+        alert("Camera flip is not supported on this device.");
+      }
+    };
+
     const muteMicBtn = document.getElementById('mute-mic-btn');
     muteMicBtn.onclick = () => {
       if (!localStream) return;
@@ -885,35 +894,29 @@
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === 'added') {
             const data = change.doc.data();
-            
             let isForMe = false;
             if (data.type === 'global') isForMe = true;
             if (data.type === 'private' && data.targetUser === currentUser.uid) isForMe = true;
 
             if (data.caller !== currentUser.uid && !pc && isForMe) {
-              
               ringtone.play().catch(() => {});
               if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
-
+              
               const callerName = data.callerName || "Someone";
               const callTypeStr = data.type === 'global' ? 'a Global Call' : 'a Private Call';
               
               showCustomConfirm("📞 Incoming Call", `Incoming ${callTypeStr} from ${callerName}. Do you want to answer?`, async () => {
-                ringtone.pause(); 
-                ringtone.currentTime = 0;
-
+                ringtone.pause(); ringtone.currentTime = 0;
                 const callDocRef = change.doc.ref;
                 try {
                   const freshSnap = await getDoc(callDocRef);
-                  if (!freshSnap.exists() || freshSnap.data().answer) {
-                    alert("Call already answered or ended!");
-                    return;
-                  }
+                  if (!freshSnap.exists() || freshSnap.data().answer) { alert("Call already answered or ended!"); return; }
 
                   document.getElementById('video-call-screen').style.display = 'flex';
                   document.getElementById('call-status').innerText = `Connected with ${callerName}`;
+                  currentFacingMode = "user";
 
-                  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                  localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
                   document.getElementById('local-video').srcObject = localStream;
 
                   pc = new RTCPeerConnection(servers);
@@ -955,36 +958,23 @@
     function listenToCallTermination(callDocRef) {
       if (activeCallDocUnsubscribe) activeCallDocUnsubscribe();
       activeCallDocUnsubscribe = onSnapshot(callDocRef, (docSnap) => {
-        if (!docSnap.exists()) {
-          forceCloseCallUI();
-        }
+        if (!docSnap.exists()) forceCloseCallUI();
       });
     }
 
     function forceCloseCallUI() {
       ringtone.pause(); ringtone.currentTime = 0;
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
-      }
-      if (pc) { 
-        pc.close(); 
-        pc = null; 
-      }
+      if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+      if (pc) { pc.close(); pc = null; }
       document.getElementById('video-call-screen').style.display = 'none';
-      if (activeCallDocUnsubscribe) {
-        activeCallDocUnsubscribe();
-        activeCallDocUnsubscribe = null;
-      }
+      if (activeCallDocUnsubscribe) { activeCallDocUnsubscribe(); activeCallDocUnsubscribe = null; }
       window.activeCallDoc = null;
     }
   
     document.getElementById('end-call-btn').onclick = async () => {
       const docRefToDel = window.activeCallDoc;
       forceCloseCallUI();
-      if (docRefToDel) {
-        try { await deleteDoc(docRefToDel); } catch (err) {}
-      }
+      if (docRefToDel) { try { await deleteDoc(docRefToDel); } catch (err) {} }
     };
 
     function formatTime(timestamp) {
@@ -1035,9 +1025,7 @@
         navigator.clipboard.writeText(textToCopy).then(() => {
           copyBtn.innerHTML = '✅';
           setTimeout(() => { copyBtn.innerHTML = '📋'; }, 1500);
-        }).catch(err => {
-          alert('Failed to copy text.');
-        });
+        }).catch(err => { alert('Failed to copy text.'); });
       };
       msgRow.appendChild(copyBtn);
 
@@ -1094,16 +1082,6 @@
         if (!firstLoad && snapshot.docChanges().some(change => change.type === 'added')) {
           soundEffect.play().catch(() => {});
           if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
-
-          const newestChange = snapshot.docChanges().find(c => c.type === 'added');
-          if (newestChange && document.hidden) {
-            const msgData = newestChange.doc.data();
-            if (msgData.uid !== currentUser.uid) {
-              if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(msgData.name || "New Message", { body: msgData.text || "Sent an attachment", icon: msgData.photoURL || "https://ui-avatars.com/api/?name=Chat" });
-              }
-            }
-          }
         }
         firstLoad = false;
       });
@@ -1116,17 +1094,12 @@
       emojiPicker.style.display = 'none';
       if (!text) return;
 
-      badWords.forEach(word => {
-        const reg = new RegExp(word, 'gi');
-        text = text.replace(reg, '***');
-      });
+      badWords.forEach(word => { const reg = new RegExp(word, 'gi'); text = text.replace(reg, '***'); });
 
       if (currentRoom === 'bot') {
           const userMsg = { id: Date.now().toString(), text: text, imageUrl: null, audioUrl: null, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: "bot", createdAt: Date.now() };
           let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-          localMsgs.push(userMsg);
-          localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
-          loadLocalBotMessages();
+          localMsgs.push(userMsg); localStorage.setItem('bot_messages', JSON.stringify(localMsgs)); loadLocalBotMessages();
           
           const normalizedInput = text.toLowerCase().trim();
           const botReply = brain[normalizedInput] || brain["default"];
@@ -1134,15 +1107,10 @@
           setTimeout(() => {
               const botMsg = { id: (Date.now() + 1).toString(), text: botReply, imageUrl: null, audioUrl: null, uid: "ai_bot_123", name: "AI Bot", photoURL: "https://ui-avatars.com/api/?name=Bot&background=0D8ABC&color=fff", room: "bot", createdAt: Date.now() + 1000 };
               let msgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-              msgs.push(botMsg);
-              localStorage.setItem('bot_messages', JSON.stringify(msgs));
-              loadLocalBotMessages();
+              msgs.push(botMsg); localStorage.setItem('bot_messages', JSON.stringify(msgs)); loadLocalBotMessages();
           }, 1000);
       } else {
-          await addDoc(collection(db, "messages"), {
-            text: text, imageUrl: null, audioUrl: null,
-            uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
-          });
+          await addDoc(collection(db, "messages"), { text: text, imageUrl: null, audioUrl: null, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
       }
       messageInput.value = '';
     };
