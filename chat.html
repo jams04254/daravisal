@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -327,7 +327,6 @@
         "default": "That sounds interesting! Tell me more about it."
     };
 
-    // Custom Confirm Helper Function with dynamic text support
     function showCustomConfirm(title, message, onConfirm, okText = "Delete All", okColor = "#dc3545") {
       const modal = document.getElementById('custom-confirm-modal');
       document.getElementById('confirm-title').innerText = title;
@@ -635,7 +634,8 @@
       a.download = 'edited-image.png';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
-document.getElementById('send-edited-btn').onclick = async () => {
+
+    document.getElementById('send-edited-btn').onclick = async () => {
       if (!processedImageBlob) return;
       
       const fileSize = processedImageBlob.size;
@@ -713,7 +713,7 @@ document.getElementById('send-edited-btn').onclick = async () => {
           friendsHTML += `<div class="friend-chip ${currentRoom === roomId ? 'active' : ''}" onclick="switchRoom('${roomId}', '${f.name}', 'private')"><img src="${pic}"><span>${f.name}</span></div>`;
         });
 
-        bar.innerHTML = friendsHTML;
+    bar.innerHTML = friendsHTML;
       });
     }
 
@@ -748,7 +748,6 @@ document.getElementById('send-edited-btn').onclick = async () => {
       }
     };
 
-    // Video Call Initiation
     document.getElementById('video-call-btn').onclick = async () => {
       document.getElementById('video-call-screen').style.display = 'flex';
       document.getElementById('call-status').innerText = "Starting camera...";
@@ -796,7 +795,6 @@ document.getElementById('send-edited-btn').onclick = async () => {
         onSnapshot(callDoc, async (snapshot) => {
           const data = snapshot.data();
           if (!data) {
-             // Call was deleted/ended by someone else
              forceCloseCallUI();
              return;
           }
@@ -861,7 +859,6 @@ document.getElementById('send-edited-btn').onclick = async () => {
               const callerName = data.callerName || "Someone";
               const callTypeStr = data.type === 'global' ? 'a Global Call' : 'a Private Call';
               
-              // Custom confirm popup specifically styled to say "Answer" instead of "Delete All"
               showCustomConfirm("📞 Incoming Call", `Incoming ${callTypeStr} from ${callerName}. Do you want to answer?`, async () => {
                 ringtone.pause(); 
                 ringtone.currentTime = 0;
@@ -920,7 +917,6 @@ document.getElementById('send-edited-btn').onclick = async () => {
       if (activeCallDocUnsubscribe) activeCallDocUnsubscribe();
       activeCallDocUnsubscribe = onSnapshot(callDocRef, (docSnap) => {
         if (!docSnap.exists()) {
-          // Document was deleted by the other participant ending the call
           forceCloseCallUI();
         }
       });
