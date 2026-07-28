@@ -135,14 +135,14 @@
 
   <div id="splash-screen"><h1>Starting Chat App...</h1></div>
 
-  <!-- Custom Confirmation Dialog Box (User Style) -->
+  <!-- Custom Confirmation Dialog Box (Dynamic Button Styling) -->
   <div id="custom-confirm-modal">
     <div class="confirm-box">
       <h3 id="confirm-title">⚠️ Confirmation</h3>
-      <p id="confirm-message">Are you sure you want to delete all messages?</p>
+      <p id="confirm-message">Are you sure?</p>
       <div class="confirm-actions">
         <button id="confirm-cancel-btn" class="btn btn-secondary" style="margin-top: 0;">Cancel</button>
-        <button id="confirm-ok-btn" class="btn" style="background: #dc3545; color: white;">Delete All</button>
+        <button id="confirm-ok-btn" class="btn btn-primary" style="color: white;">Confirm</button>
       </div>
     </div>
   </div>
@@ -182,7 +182,6 @@
         </div>
         <p id="storage-warning-text" style="font-size: 11px; margin-top: 5px; opacity: 0.8; text-align: center;">Maximum allowance: 1 MB per user</p>
         
-        <!-- Delete All Messages Button inside Profile when storage is full or user wants to clear -->
         <button id="profile-delete-all-btn" class="btn" style="background: #dc3545; color: white; margin-top: 10px; font-size: 13px; padding: 6px; display: none;">🗑️ Clear All Messages (Memory Full)</button>
       </div>
 
@@ -279,7 +278,7 @@
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4",
+        apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4",
       authDomain: "visal-eaeea.firebaseapp.com",
       projectId: "visal-eaeea",
       storageBucket: "visal-eaeea.firebasestorage.app",
@@ -299,6 +298,7 @@
     let unsubscribeMessages = null;
     let unsubscribeFriends = null;
     let incomingCallUnsubscribe = null;
+    let activeCallDocUnsubscribe = null;
     const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
     
     const MAX_STORAGE_BYTES = 1048576; 
@@ -311,7 +311,7 @@
     let localStream = null;
     let remoteStream = null;
     let pc = null;
-    const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }] };
+    const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
     const brain = {
         "i am cute": "Yes you so cute.🥰",
@@ -324,37 +324,23 @@
         "joke": "Why don't scientists trust atoms? Because they make up everything!",
         "name": "Daravisal kong",
         "bye": "Goodbye! Come talk to me again soon.",
-        "crazy": "Is a bad word!?",
-        "bitch": "Is a bad word!",
-        "fuck": "Is a bad word!",
-        "google": "<a href='https://google.com' target='_blank'>Google</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s'>",
-        "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s'>",
-        "you so cute": "Thank you!",
-        "you're so cute": "Thank you!",
-        "story": "The lion and the mouse. A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy, promising to one day repay the favor. Amused by the idea that such a tiny creature could help him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth, setting the King of the Jungle free. The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
-        "who are you": "I am an AI!",
-        "cute": "❤️❤️❤️❤️",
-        "សួស្ដី": "សួស្ដីអ្នក!",
-        "សួស្តី": "សួស្ដីអ្នក!",
-        "happy": "Happy is an emotional state characterized by feelings of joy.",
-        "what can you reply": "I can say hello, tell you a joke, tell a story, give you links to Google and YouTube, or answer 'who are you'. Try asking me!",
-        "what can you do": "I can chat with you! You can ask me for a joke, a story, my name, or just say hi.",
-        "help": "Here is what you can ask me: hello, how are you, joke, story, google, youtube, name, who are you, happy, cute.",
-        "options": "You can say: hello, hi, how are you, joke, story, google, youtube, bye, name, who are you.",
         "default": "That sounds interesting! Tell me more about it."
     };
 
-    // Custom Confirm Helper Function
-    function showCustomConfirm(title, message, onConfirm) {
+    // Custom Confirm Helper Function with dynamic text support
+    function showCustomConfirm(title, message, onConfirm, okText = "Delete All", okColor = "#dc3545") {
       const modal = document.getElementById('custom-confirm-modal');
       document.getElementById('confirm-title').innerText = title;
       document.getElementById('confirm-message').innerText = message;
+      
+      const okBtn = document.getElementById('confirm-ok-btn');
+      okBtn.innerText = okText;
+      okBtn.style.background = okColor;
+
       modal.style.display = 'flex';
 
-      const okBtn = document.getElementById('confirm-ok-btn');
       const cancelBtn = document.getElementById('confirm-cancel-btn');
 
-      // Clear previous event listeners by cloning
       const newOkBtn = okBtn.cloneNode(true);
       okBtn.parentNode.replaceChild(newOkBtn, okBtn);
       const newCancelBtn = cancelBtn.cloneNode(true);
@@ -381,7 +367,7 @@
     document.getElementById('modal-delete-account').onclick = () => {
        showCustomConfirm("⚠️ Delete Account", "Are you sure you want to delete this account? If you do not log in or cancel within one week, your profile, all messages, and all friends will be permanently deleted.", () => {
            alert("Account deletion requested.");
-       });
+       }, "Delete Account", "#dc3545");
     };
 
     window.addEventListener('load', () => {
@@ -423,7 +409,7 @@
     };
 
     document.getElementById('logout-btn').onclick = () => { 
-      showCustomConfirm("🚪 Logout", "Are you sure you want to log out?", () => signOut(auth)); 
+      showCustomConfirm("🚪 Logout", "Are you sure you want to log out?", () => signOut(auth), "Logout", "#007bff"); 
     };
 
     onAuthStateChanged(auth, async (user) => {
@@ -475,7 +461,7 @@
       if (currentStorage + fileSize > MAX_STORAGE_BYTES) {
           showCustomConfirm("⚠️ Storage Full", "Upload failed! You have exceeded your 1 MB cloud storage limit. Would you like to clear all messages to free up space?", () => {
               executeDeleteAllMessages();
-          });
+          }, "Delete All", "#dc3545");
           return false;
       }
       
@@ -483,7 +469,6 @@
       return true;
     }
 
-    // Function to delete all messages created by the user or clear local bot messages
     async function executeDeleteAllMessages() {
       if (!currentUser) return;
       try {
@@ -503,7 +488,6 @@
           await Promise.all(batchDeletes);
         }
 
-        // Reset user storage tracking
         await updateDoc(doc(db, "users", currentUser.uid), { storageUsed: 0 });
         alert("All your messages have been successfully cleared!");
         document.getElementById('profile-modal').style.display = 'none';
@@ -515,7 +499,7 @@
     document.getElementById('profile-delete-all-btn').onclick = () => {
       showCustomConfirm("🗑️ Clear All Messages", "Are you sure you want to delete all your messages in this chat and reset your memory usage?", () => {
         executeDeleteAllMessages();
-      });
+      }, "Delete All", "#dc3545");
     };
 
     document.getElementById('user-profile').onclick = async () => {
@@ -547,17 +531,12 @@
             storageBar.style.background = 'red';
             warningText.innerText = "⚠️ Memory is almost full! Consider clearing messages.";
             warningText.style.color = "red";
-            deleteAllBtn.style.display = 'block'; // Show delete all button automatically when memory is near full
-        } else if (percentage >= 70) {
-            storageBar.style.background = 'orange';
-            warningText.innerText = "Maximum allowance: 1 MB per user";
-            warningText.style.color = "inherit";
-            deleteAllBtn.style.display = 'block'; // Also allow clearing if desired
+            deleteAllBtn.style.display = 'block';
         } else {
             storageBar.style.background = '#007bff';
             warningText.innerText = "Maximum allowance: 1 MB per user";
             warningText.style.color = "inherit";
-            deleteAllBtn.style.display = 'block'; // Always accessible in profile modal
+            deleteAllBtn.style.display = 'block';
         }
 
       } catch(e) {
@@ -648,7 +627,7 @@
       };
       img.src = URL.createObjectURL(processedImageBlob);
     };
-  
+
     document.getElementById('download-edited-btn').onclick = () => {
       if (!processedImageBlob) return;
       const a = document.createElement('a');
@@ -656,8 +635,7 @@
       a.download = 'edited-image.png';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
-
-    document.getElementById('send-edited-btn').onclick = async () => {
+document.getElementById('send-edited-btn').onclick = async () => {
       if (!processedImageBlob) return;
       
       const fileSize = processedImageBlob.size;
@@ -755,7 +733,7 @@
             await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendUid));
             alert(`${roomName} has been removed.`);
             switchRoom('global', 'Global Chat', 'global'); 
-          });
+          }, "Remove", "#dc3545");
         };
       } else {
         removeBtn.style.display = 'none';
@@ -770,6 +748,7 @@
       }
     };
 
+    // Video Call Initiation
     document.getElementById('video-call-btn').onclick = async () => {
       document.getElementById('video-call-screen').style.display = 'flex';
       document.getElementById('call-status').innerText = "Starting camera...";
@@ -812,14 +791,15 @@
           status: 'ringing'
         });
         
-        if (targetAudience === 'global') {
-          document.getElementById('call-status').innerText = "Ringing everyone...";
-        } else {
-          document.getElementById('call-status').innerText = `Ringing ${document.getElementById('room-label').innerText}...`;
-        }
+        document.getElementById('call-status').innerText = targetAudience === 'global' ? "Ringing everyone..." : `Ringing ${document.getElementById('room-label').innerText}...`;
 
         onSnapshot(callDoc, async (snapshot) => {
           const data = snapshot.data();
+          if (!data) {
+             // Call was deleted/ended by someone else
+             forceCloseCallUI();
+             return;
+          }
           if (!pc.currentRemoteDescription && data && data.answer) {
             await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
             document.getElementById('call-status').innerText = "Connected!";
@@ -833,6 +813,7 @@
         });
 
         window.activeCallDoc = callDoc;
+        listenToCallTermination(callDoc);
       } catch (err) {
         alert("Camera error: " + err.message);
         document.getElementById('video-call-screen').style.display = 'none';
@@ -880,6 +861,7 @@
               const callerName = data.callerName || "Someone";
               const callTypeStr = data.type === 'global' ? 'a Global Call' : 'a Private Call';
               
+              // Custom confirm popup specifically styled to say "Answer" instead of "Delete All"
               showCustomConfirm("📞 Incoming Call", `Incoming ${callTypeStr} from ${callerName}. Do you want to answer?`, async () => {
                 ringtone.pause(); 
                 ringtone.currentTime = 0;
@@ -888,7 +870,7 @@
                 try {
                   const freshSnap = await getDoc(callDocRef);
                   if (!freshSnap.exists() || freshSnap.data().answer) {
-                    alert("Someone else already answered this call or it ended!");
+                    alert("Call already answered or ended!");
                     return;
                   }
 
@@ -922,40 +904,53 @@
                   });
 
                   window.activeCallDoc = callDocRef;
+                  listenToCallTermination(callDocRef);
                 } catch (err) {
                   alert("Could not connect call: " + err.message);
                   document.getElementById('video-call-screen').style.display = 'none';
                 }
-              });
+              }, "Answer", "#28a745");
             }
           }
         });
       });
     }
-document.getElementById('end-call-btn').onclick = async () => {
-  ringtone.pause(); 
-  ringtone.currentTime = 0;
-  
-  if (localStream) {
-    localStream.getTracks().forEach(track => track.stop());
-  }
-  if (pc) { 
-    pc.close(); 
-    pc = null; 
-  }
-  
-  document.getElementById('video-call-screen').style.display = 'none';
 
-  // Robust cleanup: Delete via active reference or query active calls
-  if (window.activeCallDoc) {
-    try { 
-      await deleteDoc(window.activeCallDoc); 
-    } catch (err) {
-      console.log("Error deleting specific call doc:", err);
+    function listenToCallTermination(callDocRef) {
+      if (activeCallDocUnsubscribe) activeCallDocUnsubscribe();
+      activeCallDocUnsubscribe = onSnapshot(callDocRef, (docSnap) => {
+        if (!docSnap.exists()) {
+          // Document was deleted by the other participant ending the call
+          forceCloseCallUI();
+        }
+      });
     }
-    window.activeCallDoc = null;
-  }
-};
+
+    function forceCloseCallUI() {
+      ringtone.pause(); ringtone.currentTime = 0;
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      if (pc) { 
+        pc.close(); 
+        pc = null; 
+      }
+      document.getElementById('video-call-screen').style.display = 'none';
+      if (activeCallDocUnsubscribe) {
+        activeCallDocUnsubscribe();
+        activeCallDocUnsubscribe = null;
+      }
+      window.activeCallDoc = null;
+    }
+  
+    document.getElementById('end-call-btn').onclick = async () => {
+      const docRefToDel = window.activeCallDoc;
+      forceCloseCallUI();
+      if (docRefToDel) {
+        try { await deleteDoc(docRefToDel); } catch (err) {}
+      }
+    };
 
     function formatTime(timestamp) {
       if (!timestamp) return new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -1033,7 +1028,7 @@ document.getElementById('end-call-btn').onclick = async () => {
              } else {
                  await deleteDoc(doc(db, "messages", docId));
              }
-          });
+          }, "Delete", "#dc3545");
         };
         msgRow.appendChild(delBtn);
       }
