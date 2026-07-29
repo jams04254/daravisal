@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Chat App Pro - Complete Unified Code</title>
+  <title>Chat App Pro - Broadcast Video Calls & Storage</title>
   <style>
     :root {
       --bg-color: #e5e5f7;
@@ -48,6 +48,7 @@
     .toggle-text { margin-top: 12px; font-size: 13px; opacity: 0.8; }
     .toggle-text span { color: #007bff; cursor: pointer; font-weight: bold; }
 
+    /* Custom Confirm Modal Style */
     #custom-confirm-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
     .confirm-box { background: var(--card-bg); color: var(--text-color); padding: 22px; border-radius: 14px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popUp 0.2s ease-in-out; }
     @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -126,6 +127,7 @@
   <script>
     if (localStorage.getItem('app_theme') === 'dark') {
       document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
     }
   </script>
 </head>
@@ -172,14 +174,14 @@
       
       <div style="margin-bottom: 20px; font-size: 14px; text-align: left; background: var(--msg-received); padding: 10px; border-radius: 8px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-          <strong>Device Storage:</strong> <span id="storage-text">0 KB / 10 GB</span>
+          <strong>Cloud Storage:</strong> <span id="storage-text">0 KB / 1024 KB</span>
         </div>
         <div style="width: 100%; background: var(--border-color); height: 10px; border-radius: 5px; overflow: hidden;">
           <div id="storage-bar" style="width: 0%; height: 100%; background: #007bff; border-radius: 5px; transition: width 0.3s, background 0.3s;"></div>
         </div>
-        <p id="storage-warning-text" style="font-size: 11px; margin-top: 5px; opacity: 0.8; text-align: center;">Maximum allowance: 10 GB per user</p>
+        <p id="storage-warning-text" style="font-size: 11px; margin-top: 5px; opacity: 0.8; text-align: center;">Maximum allowance: 1 MB per user</p>
         
-        <button id="profile-delete-all-btn" class="btn" style="background: #dc3545; color: white; margin-top: 10px; font-size: 13px; padding: 6px;">🗑️ Clear All Messages</button>
+        <button id="profile-delete-all-btn" class="btn" style="background: #dc3545; color: white; margin-top: 10px; font-size: 13px; padding: 6px; display: none;">🗑️ Clear All Messages (Memory Full)</button>
       </div>
 
       <button id="modal-theme-toggle" class="btn btn-secondary" style="margin-bottom: 10px;">Toggle Dark Mode</button>
@@ -275,42 +277,51 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
+    // Four Firebase Project Configurations for memory failover
     const firebaseConfigs = [
-      {
-        apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4",
-        authDomain: "visal-eaeea.firebaseapp.com",
-         projectId: "visal-eaeea",
-        storageBucket: "visal-eaeea.firebasestorage.app",
-        messagingSenderId: "77752028345",
-        appId: "1:77752028345:web:81c423c896b0701bfc9f68"
-      }, 
-      {
-        apiKey: "AIzaSyDvPPVr22NsVwd_yTOndKlY9iAP_Iczj9Y",
-        authDomain: "chat-4f98f.firebaseapp.com",
-        projectId: "chat-4f98f",
-        storageBucket: "chat-4f98f.firebasestorage.app",
-        messagingSenderId: "675567156910",
-        appId: "1:675567156910:web:053d1bf316d313cd72f73f"
-      } 
+      {  apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4",
+  authDomain: "visal-eaeea.firebaseapp.com",
+  projectId: "visal-eaeea",
+  storageBucket: "visal-eaeea.firebasestorage.app",
+  messagingSenderId: "77752028345",
+  appId: "1:77752028345:web:81c423c896b0701bfc9f68",
+  measurementId: "G-H2DBRZ8R8X"}, 
+      {  apiKey: "AIzaSyDvPPVr22NsVwd_yTOndKlY9iAP_Iczj9Y",
+  authDomain: "chat-4f98f.firebaseapp.com",
+  projectId: "chat-4f98f",
+  storageBucket: "chat-4f98f.firebasestorage.app",
+  messagingSenderId: "675567156910",
+  appId: "1:675567156910:web:053d1bf316d313cd72f73f",
+  measurementId: "G-CBG87WNF2G" }, 
+      {  apiKey: "AIzaSyCw7-4HO7-m2yKEiu0OJlH6IUrwqUtQ_Yk",
+  authDomain: "damm-87625.firebaseapp.com",
+  projectId: "damm-87625",
+  storageBucket: "damm-87625.firebasestorage.app",
+  messagingSenderId: "409640965902",
+  appId: "1:409640965902:web:fc2cc0a6e82cc70cd2e95f" }, 
+      { apiKey: "API_KEY_4", authDomain: "project-4.firebaseapp.com", projectId: "project-4", storageBucket: "project-4.firebasestorage.app" }  
     ];
 
     let currentAppIndex = 0;
+
+    // Initialize with a unique name to avoid conflicts
     let app = initializeApp(firebaseConfigs[currentAppIndex], `app_${currentAppIndex}`); 
     let db = getFirestore(app);
     let auth = getAuth(app);
     let storage = getStorage(app);
     const provider = new GoogleAuthProvider();
 
+    // Fallback Function to swap databases automatically
     async function switchToNextFirebase() {
       if (currentAppIndex < firebaseConfigs.length - 1) {
         currentAppIndex++;
         app = initializeApp(firebaseConfigs[currentAppIndex], `app_${currentAppIndex}`);
         db = getFirestore(app);
         storage = getStorage(app);
-        alert(`Storage limit reached! Switched to Backup Firebase database ${currentAppIndex + 1}.`);
+        alert(`Storage limit reached! Switched to Backup Firebase ${currentAppIndex + 1}.`);
         return true;
       } else {
-        alert("Storage limit of 10 GB reached! Please clear all messages.");
+        alert("Critical: All 4 Firebase databases are completely full!");
         return false;
       }
     }
@@ -322,16 +333,16 @@
     let unsubscribeFriends = null;
     let incomingCallUnsubscribe = null;
     let activeCallDocUnsubscribe = null;
-    let currentFacingMode = "user";
+    let currentFacingMode = "user"; // Camera flip state
 
     const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
-    const MAX_STORAGE_BYTES = 10 * 1024 * 1024 * 1024; // 10 GB
+    const MAX_STORAGE_BYTES = 1048576; 
 
     const soundEffect = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
     const ringtone = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
     ringtone.loop = true;
 
-    const badWords = ["badword1", "badword2", "stupid", "idiot"];
+    const badWords = ["badword1", "badword2", "stupid", "idiot", "hate"];
     let localStream = null;
     let remoteStream = null;
     let pc = null;
@@ -342,11 +353,11 @@
       "hi": "Hey there! How is your day going?",
       "how are you": "I am feeling fantastic and fully charged!",
       "joke": "Why don't scientists trust atoms? Because they make up everything!",
-      "who are you": "I am an AI assistant!",
-      "default": "That sounds interesting! Tell me more."
+      "who are you": "I am an AI!",
+      "default": "That sounds interesting! Tell me more about it."
     };
 
-    function showCustomConfirm(title, message, onConfirm, okText = "Delete", okColor = "#dc3545") {
+    function showCustomConfirm(title, message, onConfirm, okText = "Delete All", okColor = "#dc3545") {
       const modal = document.getElementById('custom-confirm-modal');
       document.getElementById('confirm-title').innerText = title;
       document.getElementById('confirm-message').innerText = message;
@@ -375,13 +386,16 @@
 
     document.getElementById('modal-theme-toggle').onclick = () => {
       document.body.classList.toggle('dark-mode');
-      document.documentElement.classList.toggle('dark-mode');
-      localStorage.setItem('app_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+      if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('app_theme', 'dark');
+      } else {
+        localStorage.setItem('app_theme', 'light');
+      }
     };
 
     document.getElementById('modal-delete-account').onclick = () => {
        showCustomConfirm("⚠️ Delete Account", "Are you sure you want to delete this account?", () => {
-           alert("Account deletion request submitted.");
+           alert("Account deletion requested.");
        }, "Delete Account", "#dc3545");
     };
 
@@ -470,8 +484,9 @@
       }
       
       if (currentStorage + fileSize > MAX_STORAGE_BYTES) {
-          alert("Storage limit of 10 GB reached! Please clear all messages.");
-          return false; 
+          // Trigger the failover system if storage limits are hit
+          const switched = await switchToNextFirebase();
+          return switched; 
       }
       
       await updateDoc(userRef, { storageUsed: currentStorage + fileSize });
@@ -485,9 +500,6 @@
           localStorage.removeItem('bot_messages');
           loadLocalBotMessages();
         } else {
-          localStorage.removeItem(`chat_${currentRoom}`);
-          document.getElementById('chat-messages').innerHTML = '';
-          
           const q = query(collection(db, "messages"));
           const snapshot = await getDocs(q);
           const batchDeletes = [];
@@ -501,7 +513,7 @@
         }
 
         await updateDoc(doc(db, "users", currentUser.uid), { storageUsed: 0 });
-        alert("All messages wiped cleanly!");
+        alert("All your messages have been successfully cleared!");
         document.getElementById('profile-modal').style.display = 'none';
       } catch (err) {
         alert("Error clearing messages: " + err.message);
@@ -509,7 +521,7 @@
     }
 
     document.getElementById('profile-delete-all-btn').onclick = () => {
-      showCustomConfirm("🗑️ Clear All Messages", "Are you sure you want to delete all messages in this room?", () => {
+      showCustomConfirm("🗑️ Clear All Messages", "Are you sure you want to delete all your messages in this chat and reset your memory usage?", () => {
         executeDeleteAllMessages();
       }, "Delete All", "#dc3545");
     };
@@ -527,15 +539,8 @@
             storageUsed = snap.data().storageUsed;
         }
         
-        let displayStr = "";
-        if (storageUsed < 1024 * 1024) {
-            displayStr = (storageUsed / 1024).toFixed(1) + " KB";
-        } else if (storageUsed < 1024 * 1024 * 1024) {
-            displayStr = (storageUsed / (1024 * 1024)).toFixed(2) + " MB";
-        } else {
-            displayStr = (storageUsed / (1024 * 1024 * 1024)).toFixed(2) + " GB";
-        }
-        document.getElementById('storage-text').innerText = `${displayStr} / 10 GB`;
+        const kbUsed = (storageUsed / 1024).toFixed(1);
+        document.getElementById('storage-text').innerText = `${kbUsed} KB / 1024 KB`;
         
         let percentage = (storageUsed / MAX_STORAGE_BYTES) * 100;
         if (percentage > 100) percentage = 100;
@@ -543,19 +548,24 @@
         const storageBar = document.getElementById('storage-bar');
         storageBar.style.width = `${percentage}%`;
         
+        const deleteAllBtn = document.getElementById('profile-delete-all-btn');
         const warningText = document.getElementById('storage-warning-text');
 
         if (percentage >= 90) {
             storageBar.style.background = 'red';
-            warningText.innerText = "⚠️ Storage limit near 10 GB! Please clear all messages.";
+            warningText.innerText = "⚠️ Memory is almost full! Consider clearing messages.";
             warningText.style.color = "red";
+            deleteAllBtn.style.display = 'block';
         } else {
             storageBar.style.background = '#007bff';
-            warningText.innerText = "Maximum allowance: 10 GB per user";
+            warningText.innerText = "Maximum allowance: 1 MB per user";
             warningText.style.color = "inherit";
+            deleteAllBtn.style.display = 'block';
         }
 
-      } catch(e) { console.error("Error checking storage:", e); }
+      } catch(e) {
+        console.error("Error loading storage:", e);
+      }
 
       document.getElementById('profile-modal').style.display = 'flex';
     };
@@ -595,7 +605,7 @@
       if (selectedChatFile) {
         processedImageBlob = selectedChatFile;
         editPreview.src = URL.createObjectURL(selectedChatFile);
-        editStatus.innerText = `Size: ${(selectedChatFile.size / 1024).toFixed(1)} KB.`;
+        editStatus.innerText = `Size: ${(selectedChatFile.size / 1024).toFixed(1)} KB. Ready to send.`;
         mediaEditModal.style.display = 'flex';
       }
     };
@@ -606,7 +616,7 @@
 
     document.getElementById('remove-bg-btn').onclick = async () => {
       if (!selectedChatFile) return;
-      editStatus.innerText = "Processing background removal...";
+      editStatus.innerText = "Removing background with AI...";
       const formData = new FormData();
       formData.append('image', selectedChatFile);
       try {
@@ -617,9 +627,9 @@
           const blob = await resImg.blob();
           processedImageBlob = blob;
           editPreview.src = URL.createObjectURL(blob);
-          editStatus.innerText = "Background removed!";
-        } else { editStatus.innerText = "Done!"; }
-      } catch (err) { editStatus.innerText = "Fallback settings applied."; }
+          editStatus.innerText = "Background removed successfully!";
+        } else { editStatus.innerText = "Processed successfully!"; }
+      } catch (err) { editStatus.innerText = "Processed with fallback settings."; }
     };
 
     document.getElementById('apply-bg-color-btn').onclick = () => {
@@ -635,7 +645,7 @@
         canvas.toBlob((blob) => {
           processedImageBlob = blob;
           editPreview.src = URL.createObjectURL(blob);
-          editStatus.innerText = `Background color applied!`;
+          editStatus.innerText = `Applied background color: ${color}`;
         }, 'image/png');
       };
       img.src = URL.createObjectURL(processedImageBlob);
@@ -648,47 +658,31 @@
       a.download = 'edited-image.png';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
-  
+
     document.getElementById('send-edited-btn').onclick = async () => {
       if (!processedImageBlob) return;
       
       const fileSize = processedImageBlob.size;
       const hasSpace = await checkAndUpdateStorage(fileSize);
-      if (!hasSpace) { mediaEditModal.style.display = 'none'; return; }
+      
+      if (!hasSpace) {
+          mediaEditModal.style.display = 'none';
+          return;
+      }
 
       mediaEditModal.style.display = 'none';
-      messageInput.placeholder = "Sending image...";
+      messageInput.placeholder = "Uploading image...";
       try {
         const fileToUpload = new File([processedImageBlob], "edited_image.png", { type: "image/png" });
         const fileRef = ref(storage, 'chat_images/' + currentUser.uid + '_' + Date.now() + '.png');
         await uploadBytes(fileRef, fileToUpload);
         const imageUrl = await getDownloadURL(fileRef);
 
-        const tempId = Date.now().toString();
-        const localMsg = {
-          id: tempId,
-          text: "",
-          imageUrl: imageUrl,
-          audioUrl: null,
-          uid: currentUser.uid,
-          name: currentUser.displayName || "User",
-          photoURL: currentUser.photoURL || "",
-          room: currentRoom,
-          createdAt: Date.now()
-        };
-
-        const localRoomKey = `chat_${currentRoom}`;
-        let currentLocalMsgs = JSON.parse(localStorage.getItem(localRoomKey) || '[]');
-        currentLocalMsgs.push(localMsg);
-        localStorage.setItem(localRoomKey, JSON.stringify(currentLocalMsgs));
-        appendMessageToUI(localMsg, tempId);
-
-        const docRef = await addDoc(collection(db, "messages"), {
+        await addDoc(collection(db, "messages"), {
           text: "", imageUrl: imageUrl, audioUrl: null,
           fileSizeBytes: fileSize,
           uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
         });
-        await deleteDoc(doc(db, "messages", docRef.id)).catch(() => {});
       } catch (err) { alert("Upload error: " + err.message); } 
       finally { messageInput.placeholder = "Type a message..."; selectedChatFile = null; processedImageBlob = null; chatImageUpload.value = ''; }
     };
@@ -758,8 +752,9 @@
         const friendUid = uids[0] === currentUser.uid ? uids[1] : uids[0];
 
         removeBtn.onclick = async () => {
-          showCustomConfirm("❌ Remove Friend", `Remove ${roomName} from your friends list?`, async () => {
+          showCustomConfirm("❌ Remove Friend", `Are you sure you want to remove ${roomName} from your friends list?`, async () => {
             await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendUid));
+            alert(`${roomName} has been removed.`);
             switchRoom('global', 'Global Chat', 'global'); 
           }, "Remove", "#dc3545");
         };
@@ -779,7 +774,7 @@
     document.getElementById('video-call-btn').onclick = async () => {
       document.getElementById('video-call-screen').style.display = 'flex';
       document.getElementById('call-status').innerText = "Starting camera...";
-      currentFacingMode = "user";
+      currentFacingMode = "user"; // Reset to front camera
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
@@ -819,11 +814,14 @@
           status: 'ringing'
         });
         
-        document.getElementById('call-status').innerText = targetAudience === 'global' ? "Ringing global..." : `Ringing ${document.getElementById('room-label').innerText}...`;
+        document.getElementById('call-status').innerText = targetAudience === 'global' ? "Ringing everyone..." : `Ringing ${document.getElementById('room-label').innerText}...`;
 
         onSnapshot(callDoc, async (snapshot) => {
           const data = snapshot.data();
-          if (!data) { forceCloseCallUI(); return; }
+          if (!data) {
+             forceCloseCallUI();
+             return;
+          }
           if (!pc.currentRemoteDescription && data && data.answer) {
             await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
             document.getElementById('call-status').innerText = "Connected!";
@@ -843,20 +841,36 @@
         document.getElementById('video-call-screen').style.display = 'none';
       }
     };
-  
+
+    // Camera Flip Logic
     document.getElementById('flip-cam-btn').onclick = async () => {
       if (!pc || !localStream) return;
+      
       currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+      
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
+        const newStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: currentFacingMode }, 
+          audio: true 
+        });
+        
         const newVideoTrack = newStream.getVideoTracks()[0];
         const oldVideoTrack = localStream.getVideoTracks()[0];
+        
         document.getElementById('local-video').srcObject = newStream;
+        
         const sender = pc.getSenders().find(s => s.track.kind === 'video');
-        if (sender) await sender.replaceTrack(newVideoTrack);
+        if (sender) {
+          await sender.replaceTrack(newVideoTrack);
+        }
+        
         if (oldVideoTrack) oldVideoTrack.stop();
         localStream = newStream;
-      } catch (err) { alert("Camera flip unavailable."); }
+        
+      } catch (err) {
+        console.error("Could not flip camera:", err);
+        alert("Camera flip is not supported on this device.");
+      }
     };
 
     const muteMicBtn = document.getElementById('mute-mic-btn');
@@ -896,13 +910,14 @@
               if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
               
               const callerName = data.callerName || "Someone";
+              const callTypeStr = data.type === 'global' ? 'a Global Call' : 'a Private Call';
               
-              showCustomConfirm("📞 Incoming Call", `Call from ${callerName}. Answer?`, async () => {
+              showCustomConfirm("📞 Incoming Call", `Incoming ${callTypeStr} from ${callerName}. Do you want to answer?`, async () => {
                 ringtone.pause(); ringtone.currentTime = 0;
                 const callDocRef = change.doc.ref;
                 try {
                   const freshSnap = await getDoc(callDocRef);
-                  if (!freshSnap.exists() || freshSnap.data().answer) { alert("Call ended!"); return; }
+                  if (!freshSnap.exists() || freshSnap.data().answer) { alert("Call already answered or ended!"); return; }
 
                   document.getElementById('video-call-screen').style.display = 'flex';
                   document.getElementById('call-status').innerText = `Connected with ${callerName}`;
@@ -937,7 +952,7 @@
                   window.activeCallDoc = callDocRef;
                   listenToCallTermination(callDocRef);
                 } catch (err) {
-                  alert("Call connect error: " + err.message);
+                  alert("Could not connect call: " + err.message);
                   document.getElementById('video-call-screen').style.display = 'none';
                 }
               }, "Answer", "#28a745");
@@ -953,17 +968,16 @@
         if (!docSnap.exists()) forceCloseCallUI();
       });
     }
-    
+
     function forceCloseCallUI() {
       ringtone.pause(); ringtone.currentTime = 0;
       if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
       if (pc) { pc.close(); pc = null; }
       document.getElementById('video-call-screen').style.display = 'none';
-      if (window.activeCallDoc) deleteDoc(window.activeCallDoc).catch(() => {});
       if (activeCallDocUnsubscribe) { activeCallDocUnsubscribe(); activeCallDocUnsubscribe = null; }
       window.activeCallDoc = null;
     }
-
+  
     document.getElementById('end-call-btn').onclick = async () => {
       const docRefToDel = window.activeCallDoc;
       forceCloseCallUI();
@@ -976,10 +990,9 @@
       return date.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
-    function appendMessageToUI(data, docId) {
+    function appendMessageToUI(data, docId, isLocal = false) {
       const chatMessages = document.getElementById('chat-messages');
-      const isMe = currentUser && data.uid === currentUser.uid;
-      const messageId = docId || data.id || data._id || '';
+      const isMe = data.uid === currentUser.uid;
 
       const wrapper = document.createElement('div');
       wrapper.className = `message-wrapper ${isMe ? 'sent' : 'received'}`;
@@ -1015,51 +1028,39 @@
       copyBtn.title = 'Copy message';
       copyBtn.onclick = (e) => {
         e.stopPropagation();
-        const textToCopy = data.text || (data.imageUrl ? data.imageUrl : (data.audioUrl ? "Voice message" : ""));
+        const textToCopy = data.text || (data.imageUrl ? data.imageUrl : "Audio message");
         navigator.clipboard.writeText(textToCopy).then(() => {
           copyBtn.innerHTML = '✅';
           setTimeout(() => { copyBtn.innerHTML = '📋'; }, 1500);
-        }).catch(() => { alert('Failed to copy text.'); });
+        }).catch(err => { alert('Failed to copy text.'); });
       };
       msgRow.appendChild(copyBtn);
 
       msgBubble.onclick = async () => {
         const chosenEmoji = prompt("React to message (e.g. ❤️, 👍, 😂, 🔥):");
-        if (chosenEmoji && messageId && currentRoom !== 'bot') {
-          try { await updateDoc(doc(db, "messages", messageId), { reaction: chosenEmoji }); } catch(e) {}
+        if (chosenEmoji && docId && !isLocal) {
+          try { await updateDoc(doc(db, "messages", docId), { reaction: chosenEmoji }); } catch(e) {}
         }
       };
 
-      if (isMe || data.uid === "ai_bot_123") {
+      if ((isMe || data.uid === "ai_bot_123") && docId) {
         const delBtn = document.createElement('button');
-        delBtn.className = 'action-icon'; 
-        delBtn.innerHTML = '🗑️';
+        delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️';
         delBtn.title = 'Delete message';
-        
         delBtn.onclick = async (e) => {
           e.stopPropagation();
           showCustomConfirm("🗑️ Delete Message", "Are you sure you want to delete this message?", async () => {
-             try {
-               const storageKey = currentRoom === 'bot' ? 'bot_messages' : `chat_${currentRoom}`;
-               let localMsgs = JSON.parse(localStorage.getItem(storageKey) || '[]');
-               
-               // Thorough filter to clear the message and any potential duplicates
-               localMsgs = localMsgs.filter(m => {
-                 if (messageId && (m.id === messageId || m._id === messageId)) return false;
-                 if (data.text && m.text === data.text && Math.abs(m.createdAt - data.createdAt) < 10000) return false;
-                 if (data.imageUrl && m.imageUrl === data.imageUrl) return false;
-                 if (data.audioUrl && m.audioUrl === data.audioUrl) return false;
-                 return true;
-               });
-               
-               localStorage.setItem(storageKey, JSON.stringify(localMsgs));
-               wrapper.remove();
-             } catch (err) {
-               console.error("Delete error:", err);
-               wrapper.remove();
+             if (isLocal) {
+                 let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
+                 localMsgs = localMsgs.filter(m => m.id !== docId);
+                 localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
+                 loadLocalBotMessages(); 
+             } else {
+                 await deleteDoc(doc(db, "messages", docId));
              }
           }, "Delete", "#dc3545");
-        }; msgRow.appendChild(delBtn);
+        };
+        msgRow.appendChild(delBtn);
       }
 
       chatMessages.appendChild(wrapper);
@@ -1070,64 +1071,30 @@
         const chatMessages = document.getElementById('chat-messages');
         chatMessages.innerHTML = '';
         const localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-        localMsgs.forEach(msg => appendMessageToUI(msg, msg.id));
+        localMsgs.forEach(msg => appendMessageToUI(msg, msg.id, true));
     }
 
     function loadMessages() {
       if (unsubscribeMessages) unsubscribeMessages();
-
-      const localRoomKey = `chat_${currentRoom}`;
-      document.getElementById('chat-messages').innerHTML = '';
-      
-      let localMsgs = JSON.parse(localStorage.getItem(localRoomKey) || '[]');
-      localMsgs.forEach(msg => appendMessageToUI(msg, msg.id));
-
       const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
       let firstLoad = true;
 
       unsubscribeMessages = onSnapshot(q, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === 'added') {
-            const data = change.doc.data();
-            const docId = change.doc.id;
-            
-            if ((data.room || 'global') === currentRoom) {
-              let currentLocalMsgs = JSON.parse(localStorage.getItem(localRoomKey) || '[]');
-              
-              // Prevent duplicate loading of your own sent messages
-              const incomingTime = data.createdAt && data.createdAt.seconds ? data.createdAt.seconds * 1000 : Date.now();
-              const isDuplicate = currentLocalMsgs.some(m => 
-                m.uid === data.uid && 
-                ((m.text && m.text === data.text) || (m.imageUrl && m.imageUrl === data.imageUrl) || (m.audioUrl && m.audioUrl === data.audioUrl)) && 
-                Math.abs(m.createdAt - incomingTime) < 10000
-              );
-
-              if (!isDuplicate && !currentLocalMsgs.find(m => m.id === docId)) {
-                const localData = { ...data, id: docId };
-                localData.createdAt = incomingTime;
-
-                currentLocalMsgs.push(localData);
-                localStorage.setItem(localRoomKey, JSON.stringify(currentLocalMsgs));
-                
-                appendMessageToUI(localData, docId);
-
-                if (!firstLoad && data.uid !== currentUser.uid) {
-                  soundEffect.play().catch(() => {});
-                  if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
-                }
-              }
-              
-              // Clean up immediately from Firebase database while keeping on device storage
-              deleteDoc(doc(db, "messages", docId)).catch(err => console.log("Deletion error:", err));
-            }
-          }
+        document.getElementById('chat-messages').innerHTML = '';
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if ((data.room || 'global') === currentRoom) appendMessageToUI(data, docSnap.id, false);
         });
+
+        if (!firstLoad && snapshot.docChanges().some(change => change.type === 'added')) {
+          soundEffect.play().catch(() => {});
+          if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
+        }
         firstLoad = false;
       });
-      
       listenForIncomingCalls();
     }
-  
+
     document.getElementById('chat-form').onsubmit = async (e) => {
       e.preventDefault();
       let text = messageInput.value.trim();
@@ -1150,39 +1117,7 @@
               msgs.push(botMsg); localStorage.setItem('bot_messages', JSON.stringify(msgs)); loadLocalBotMessages();
           }, 1000);
       } else {
-          const fileSize = text.length;
-          const hasSpace = await checkAndUpdateStorage(fileSize);
-          if (!hasSpace) return;
-
-          const tempId = Date.now().toString();
-          const localMsg = {
-            id: tempId,
-            text: text,
-            imageUrl: null,
-            audioUrl: null,
-            uid: currentUser.uid,
-            name: currentUser.displayName || "User",
-            photoURL: currentUser.photoURL || "",
-            room: currentRoom,
-            createdAt: Date.now()
-          };
-
-          const localRoomKey = `chat_${currentRoom}`;
-          let currentLocalMsgs = JSON.parse(localStorage.getItem(localRoomKey) || '[]');
-          currentLocalMsgs.push(localMsg);
-          localStorage.setItem(localRoomKey, JSON.stringify(currentLocalMsgs));
-          appendMessageToUI(localMsg, tempId);
-
-          try {
-            const docRef = await addDoc(collection(db, "messages"), { 
-              text: text, imageUrl: null, audioUrl: null, 
-              fileSizeBytes: fileSize,
-              uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() 
-            });
-            await deleteDoc(doc(db, "messages", docRef.id)).catch(() => {});
-          } catch (err) {
-            console.log("Firebase sync skipped:", err);
-          }
+          await addDoc(collection(db, "messages"), { text: text, imageUrl: null, audioUrl: null, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
       }
       messageInput.value = '';
     };
@@ -1198,7 +1133,7 @@
 
                 mediaRecorder.start();
                 isRecording = true; micBtn.innerText = "🛑"; micBtn.classList.add("recording");
-                messageInput.placeholder = "Recording audio..."; messageInput.disabled = true;
+                messageInput.placeholder = "Recording..."; messageInput.disabled = true;
 
                 mediaRecorder.addEventListener("dataavailable", e => { if (e.data.size > 0) audioChunks.push(e.data); });
                 mediaRecorder.addEventListener("stop", async () => {
@@ -1211,41 +1146,16 @@
                         return;
                     }
 
-                    messageInput.placeholder = "Uploading voice note...";
+                    messageInput.placeholder = "Uploading audio...";
                     const audioRef = ref(storage, 'chat_audio/' + currentUser.uid + '_' + Date.now() + (mimeType.includes('mp4') ? '.mp4' : '.webm'));
                     try {
                         await uploadBytes(audioRef, audioBlob); 
                         const audioUrl = await getDownloadURL(audioRef);
-
-                        const tempId = Date.now().toString();
-                        const localMsg = {
-                          id: tempId,
-                          text: "",
-                          imageUrl: null,
-                          audioUrl: audioUrl,
-                          uid: currentUser.uid,
-                          name: currentUser.displayName || "User",
-                          photoURL: currentUser.photoURL || "",
-                          room: currentRoom,
-                          createdAt: Date.now()
-                        };
-
-                        const localRoomKey = `chat_${currentRoom}`;
-                        let currentLocalMsgs = JSON.parse(localStorage.getItem(localRoomKey) || '[]');
-                        currentLocalMsgs.push(localMsg);
-                        localStorage.setItem(localRoomKey, JSON.stringify(currentLocalMsgs));
-                        appendMessageToUI(localMsg, tempId);
-
-                        const docRef = await addDoc(collection(db, "messages"), { 
-                          text: "", imageUrl: null, audioUrl: audioUrl, 
-                          fileSizeBytes: fileSize, 
-                          uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() 
-                        });
-                        await deleteDoc(doc(db, "messages", docRef.id)).catch(() => {});
+                        await addDoc(collection(db, "messages"), { text: "", imageUrl: null, audioUrl: audioUrl, fileSizeBytes: fileSize, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
                     } catch (e) { alert("Audio error: " + e.message); } 
                     finally { messageInput.placeholder = "Type a message..."; messageInput.disabled = false; stream.getTracks().forEach(t => t.stop()); }
                 });
-            } catch(e) { alert("Microphone access is required."); }
+            } catch(e) { alert("Microphone access needed."); }
         } else {
             if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
             isRecording = false; micBtn.innerText = "🎤"; micBtn.classList.remove("recording");
