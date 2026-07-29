@@ -70,13 +70,14 @@
     
     .friends-bar { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 2px; width: 100%; scrollbar-width: none; }
     .friends-bar::-webkit-scrollbar { display: none; }
-    .friend-chip { display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); padding: 3px 8px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; border: 1px solid transparent; }
+    .friend-chip { display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.2); padding: 4px 10px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; border: 1px solid transparent; position: relative; }
     .friend-chip.active { background: white; color: #007bff; font-weight: bold; }
-    .friend-chip img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+    .friend-chip img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+    .friend-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .friend-notif-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 2px; margin-left: 2px; opacity: 0.9; }
 
     .user-profile img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid white; cursor: pointer; }
     .header-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; color: white; padding: 0 4px; }
-    #activity-btn { display: none; }
 
     .chat-messages { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--card-bg); }
     .message-wrapper { display: flex; gap: 8px; max-width: 88%; }
@@ -199,12 +200,18 @@
         <button id="profile-delete-all-btn" class="btn" style="background: #dc3545; color: white; margin-top: 10px; font-size: 13px; padding: 6px; display: none;">🗑️ Clear All Messages (Memory Full)</button>
       </div>
 
-      <!-- Activity Voice & Language Speech Options -->
+      <!-- Notification & Voice Speech Options -->
       <div style="margin-bottom: 15px; text-align: left; font-size: 13px; background: var(--msg-received); padding: 10px; border-radius: 8px;">
-        <label style="display: block; margin-bottom: 4px; font-weight: bold;">🗣️ Speak Activity Status:</label>
-        <select id="voice-announcement-toggle" class="btn btn-secondary" style="width: 100%; padding: 6px; margin-top: 0; margin-bottom: 8px; font-size: 13px;">
-          <option value="false">Disabled</option>
+        <label style="display: block; margin-bottom: 4px; font-weight: bold;">🔔 Notification Sound:</label>
+        <select id="notification-sound-toggle" class="btn btn-secondary" style="width: 100%; padding: 6px; margin-top: 0; margin-bottom: 8px; font-size: 13px;">
           <option value="true">Enabled</option>
+          <option value="false">Disabled</option>
+        </select>
+
+        <label style="display: block; margin-bottom: 4px; font-weight: bold;">🗣️ Speak Friend Activity Status:</label>
+        <select id="voice-announcement-toggle" class="btn btn-secondary" style="width: 100%; padding: 6px; margin-top: 0; margin-bottom: 8px; font-size: 13px;">
+          <option value="true">Enabled</option>
+          <option value="false">Disabled</option>
         </select>
 
         <label style="display: block; margin-bottom: 4px; font-weight: bold;">🌍 Speech Language:</label>
@@ -218,16 +225,6 @@
       <button id="modal-delete-account" class="btn" style="background: #dc3545; color: white; margin-bottom: 10px;">Request Account Deletion</button>
       <button id="profile-logout-btn" class="btn" style="background: #ff9800; color: white; margin-bottom: 10px;">🚪 Log Out</button>
       <button id="close-profile-modal" class="btn btn-primary">Close Profile</button>
-    </div>
-  </div>
-
-  <!-- Active Now Modal -->
-  <div id="activity-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3500; justify-content: center; align-items: center; padding: 15px;">
-    <div style="background: var(--card-bg); color: var(--text-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 80vh; display: flex; flex-direction: column;">
-      <h3 style="margin-bottom: 15px; font-size: 18px; text-align: center;">👥 Users Activity</h3>
-      <div id="active-users-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-      </div>
-      <button id="close-activity-modal" class="btn btn-primary">Close</button>
     </div>
   </div>
 
@@ -286,7 +283,6 @@
             <img id="user-pic" src="" alt="Profile" title="Open Profile & Settings">
           </div>
           <button id="remove-friend-btn" class="header-btn" title="Remove Friend" style="display: none; font-size: 14px;">❌</button>
-          <button id="activity-btn" class="header-btn" title="People Activity Status" style="font-size: 16px;">🔴</button>
           <button id="video-call-btn" class="header-btn" title="Start Video Call">🎥</button>
         </div>
       </div>
@@ -332,10 +328,12 @@
     let storage = getStorage(app);
     const provider = new GoogleAuthProvider();
 
-    // Voice & Language Settings State
+    // Voice & Language & Notification Settings State
     let speechLanguage = localStorage.getItem('speech_language') || 'en-US';
     let voiceAnnouncementsEnabled = localStorage.getItem('voice_announcements') === 'true';
-    let previousUserStatuses = {};
+    let notificationSoundEnabled = localStorage.getItem('notification_sound_enabled') !== 'false';
+    let friendStatusUnsubscribes = [];
+    let previousFriendStatuses = {};
 
     function speakStatus(name, isOnline, lang) {
       if (!window.speechSynthesis || !voiceAnnouncementsEnabled) return;
@@ -377,8 +375,6 @@
     let unsubscribeFriends = null;
     let incomingCallUnsubscribe = null;
     let activeCallDocUnsubscribe = null;
-    let unsubscribeActivity = null;
-    let globalActivityUnsubscribe = null;
     let currentFacingMode = "user";
 
     const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
@@ -522,40 +518,22 @@
       if (user) {
         currentUser = user;
         document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('activity-btn').style.display = 'block';
         document.getElementById('user-profile').style.display = 'flex';
         await saveUserToDatabase(user);
         updateActivityStatus('online'); 
         document.getElementById('user-pic').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "User")}&background=random`;
         
-        if (globalActivityUnsubscribe) globalActivityUnsubscribe();
-        globalActivityUnsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
-           let someoneIsOnline = false;
-           snapshot.forEach(docSnap => {
-             const u = docSnap.data();
-             if (u.uid !== currentUser.uid) {
-               if (u.isOnline) someoneIsOnline = true;
-               
-               // Check status change and announce via speech if enabled
-               if (previousUserStatuses[u.uid] !== undefined && previousUserStatuses[u.uid] !== u.isOnline) {
-                 speakStatus(u.name, u.isOnline, speechLanguage);
-               }
-               previousUserStatuses[u.uid] = u.isOnline;
-             }
-           });
-           document.getElementById('activity-btn').innerText = someoneIsOnline ? "🟢" : "🔴";
-        });
-
         loadSidebarItems();
         switchRoom('global', 'Global Chat', 'global');
         listenForIncomingCalls();
       } else {
         currentUser = null;
         document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('activity-btn').style.display = 'none';
         document.getElementById('user-profile').style.display = 'none';
         if (incomingCallUnsubscribe) { incomingCallUnsubscribe(); incomingCallUnsubscribe = null; }
-        if (globalActivityUnsubscribe) { globalActivityUnsubscribe(); globalActivityUnsubscribe = null; }
+        // Clean up friend listeners
+        friendStatusUnsubscribes.forEach(unsub => unsub());
+        friendStatusUnsubscribes = [];
       }
     });
 
@@ -614,7 +592,8 @@
       document.getElementById('modal-profile-name').innerText = currentUser.displayName || "User";
       document.getElementById('modal-profile-email').innerText = currentUser.email || "";
       
-      // Load Voice and Language settings into profile modal inputs
+      // Load settings into profile modal inputs
+      document.getElementById('notification-sound-toggle').value = notificationSoundEnabled ? 'true' : 'false';
       document.getElementById('voice-announcement-toggle').value = voiceAnnouncementsEnabled ? 'true' : 'false';
       document.getElementById('speech-lang-select').value = speechLanguage;
 
@@ -645,7 +624,12 @@
       document.getElementById('profile-modal').style.display = 'flex';
     };
 
-    // Event listeners for voice announcements and language selector
+    // Event listeners for settings options
+    document.getElementById('notification-sound-toggle').onchange = (e) => {
+      notificationSoundEnabled = e.target.value === 'true';
+      localStorage.setItem('notification_sound_enabled', notificationSoundEnabled);
+    };
+
     document.getElementById('voice-announcement-toggle').onchange = (e) => {
       voiceAnnouncementsEnabled = e.target.value === 'true';
       localStorage.setItem('voice_announcements', voiceAnnouncementsEnabled);
@@ -659,63 +643,57 @@
 
     document.getElementById('close-profile-modal').onclick = () => { document.getElementById('profile-modal').style.display = 'none'; };
 
-    document.getElementById('activity-btn').onclick = () => {
-      document.getElementById('activity-modal').style.display = 'flex';
-      const activeList = document.getElementById('active-users-list');
-      activeList.innerHTML = '<p style="text-align:center; font-size: 13px; opacity:0.7;">Loading...</p>';
-
-      if (unsubscribeActivity) unsubscribeActivity();
-      
-      unsubscribeActivity = onSnapshot(collection(db, "users"), (snapshot) => {
-        activeList.innerHTML = '';
-        let countUsers = 0;
-        
-        snapshot.forEach((docSnap) => {
-          const u = docSnap.data();
-          if (u.uid !== currentUser.uid) {
-             countUsers++;
-             const isOnline = u.isOnline === true;
-             const dotColor = isOnline ? '#28a745' : '#dc3545';
-             const statusText = isOnline ? 'Online now' : 'Offline';
-
-             const div = document.createElement('div');
-             div.style.cssText = "display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px;";
-             div.innerHTML = `
-                <div style="position:relative;">
-                  <img src="${u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-                  <div style="position:absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: ${dotColor}; border-radius: 50%; border: 2px solid var(--card-bg);"></div>
-                </div>
-                <div style="flex: 1;">
-                  <div style="font-size: 14px; font-weight: bold;">${u.name}</div>
-                  <div style="font-size: 11px; color: ${dotColor}; font-weight:bold;">${statusText}</div>
-                </div>
-                <button class="btn btn-primary" style="padding: 6px 10px; font-size: 12px; width: auto;" onclick="switchRoom('${[currentUser.uid, u.uid].sort().join('_')}', '${u.name}', 'private'); document.getElementById('activity-modal').style.display = 'none';">Chat</button>
-             `;
-             activeList.appendChild(div);
-          }
-        });
-
-        if (countUsers === 0) {
-            activeList.innerHTML = '<p style="text-align:center; font-size: 13px; opacity:0.7;">No other registered users found.</p>';
-        }
-      });
-    };
-
-    document.getElementById('close-activity-modal').onclick = () => {
-      document.getElementById('activity-modal').style.display = 'none';
-      if (unsubscribeActivity) { unsubscribeActivity(); unsubscribeActivity = null; }
-    };
-
     const emojiPicker = document.getElementById('emoji-picker');
     const emojiBtn = document.getElementById('emoji-btn');
     const messageInput = document.getElementById('message-input');
     const commonEmojis = [
-      "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "🤩", 
-      "😘", "😗", "😚", "😙", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", 
-      "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😷", "🤒", "🤕", "🤢", "🤮", "🤧", 
-      "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🫰", "🤟", "🤘", "🤙", "👈", "👉", 
-      "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗"
-    ];
+  // --- Smileys & Expressions ---
+  "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "🤩", 
+  "😘", "😗", "😚", "😙", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", 
+  "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😷", "🤒", "🤕", "🤢", "🤮", "🤧", 
+  "🥵", "🥶", "🥴", "🤯", "🤠", "🥳", "😎", "🤓", "🧐", "😕", "😟", "🙁", "😮", "😯", "😲", "😳", 
+  "🥺", "😦", "😧", "😨", "😰", "😥", "cry", "😭", "😱", "😖", "😣", "😞", "😓", "😩", "😫", "🥱", 
+  "😤", "😡", "😠", "🤬", "😈", "👿", "💀", "☠️", "💩", "🤡", "👹", "👺", "👻", "👽", "👾", "🤖",
+
+  // --- Hands & Gestures ---
+  "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🫰", "🤟", "🤘", "🤙", "👈", "👉", 
+  "👆", "🖕", "👇", "☝️", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝", "🙏", 
+  "✍️", "💅", "🤳", "💪", "🦾", "🦵", "🦿", "🦶", "👂", "🦻", "👃", "🧠", "🦷", "🦴", "👀", "👁️", 
+
+  // --- Hearts & Emotions ---
+  "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗", 
+  "💖", "💘", "💝", "💯", "💢", "💥", "💫", "💦", "💨", "🕳️", "💣", "💬", "👁️‍🗨️", "🗨️", "🗯️", "💭", "💤",
+
+  // --- Animals & Nature ---
+  "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", 
+  "🐧", "🐦", "🐤", "🦆", "🦅", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🐛", "🦋", "🐌", "🐞", 
+  "🐢", "🐍", "lizard", "🦕", "🐙", "🦑", "🦐", "🦞", "🦀", "🐠", "🐟", "🐡", "🦈", "🐳", "🐬", "seal", 
+  "💐", "🌸", "💮", "🌹", "🥀", "🌺", "🌻", "🌼", "🌷", "🌱", "🪴", "🌲", "🌳", "🌴", "🌵", "🌾",
+
+  // --- Food & Drink ---
+  "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", 
+  "🥝", "🥑", "🍅", "🍆", "🥒", "🥕", "🌽", "🌶️", "🧄", "🧅", "🍄", "🍞", "🥐", "🥖", "🥨", "🥯", 
+  "🥞", "🧇", "🧀", "🍖", "🍗", "🥩", "🥓", "🍔", "🍟", "🍕", "🌭", "🥪", "🌮", "🌯", "🧆", "🥚", 
+  "🍿", "🧈", "🧂", "🍱", "rice_cracker", "🍙", "🍚", "🍛", "🍜", "🍝", "🍢", "🍣", "🍤", "🥮", "🍡", 
+  "🥟", "🥠", "🥡", "🦀", "🦞", "🍦", "🍧", "🍨", "🍩", "🍪", "🎂", "🍰", "🧁", "🥧", "🍫", "🍬", 
+  "🍭", "🍮", "🍯", "🍼", "🥛", "☕", "🍵", "🍶", "🍾", "🍷", "🍸", "🍹", "🍺", "🍻", "🥂", "🥃",
+
+  // --- Travel & Places ---
+  "🌍", "🌎", "🌏", "🗺️", "🧭", "🏔️", "⛰️", "🌋", "🗻", "🏕️", "🏖️", "🏜️", "🏝️", "🏟️", "🏛️", "🏗️", 
+  "🧱", "🏘️", "🏚️", "🏠", "🏡", "🏢", "🏣", "🏤", "🏥", "🏦", "🏨", "🏩", "🏪", "🏫", "🏬", "🏭", 
+  "🏯", "🏰", "💒", "🗼", "🗽", "⛪", "🕌", "🛕", "🕍", "🕋", "⛩️", "⛲", "⛺", "🌁", "🌃", "🏙️", 
+  "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🛵", "🏍️", 
+  "🚲", "🛴", "🛺", "🚄", "🚅", "🚆", "🚇", "🚈", "🚉", "🚊", "🚂", "✈️", "🚀", "🛸", "🛰️", "⛵",
+
+  // --- Activities & Objects ---
+  "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🏓", "🏸", "🏒", "🏑", "🥍", "🏏", 
+  "🪃", "🥅", "⛳", "⛸️", "🎣", "🤿", "🎽", "🎿", "🛷", "🥌", "🎯", "🪀", "🪁", "🎱", "🔮", "🎮", 
+  "🕹️", "🎰", "🎲", "🧩", "🧸", "🪅", "🪆", "♠️", "♥️", "♦️", "♣️", "♟️", "🃏", "🀄", "🎴", "🎭", 
+  "🎨", "🎬", "🎤", "🎧", "🎷", "🪗", "🎸", "🎹", "🎺", "🎻", "🪕", "🥁", "📱", "📲", "💻", "⌨️", 
+  "🖨️", "🖱️", "🖲️", "💾", "💿", "📀", "📷", "📸", "📹", "🎥", "📽️", "🎞️", "📞", "☎️", "📟", "📠", 
+  "📺", "📻", "🎙️", "⏱️", "⏲️", "⏰", "🕰️", "⌛", "⏳", "📡", "🔋", "🔌", "💡", "🔦", "🕯️", "🪔",
+  "🧯", "🛢️", "💸", "💵", "💴", "💶", "💷", "🪙", "💰", "💳", "💎", "⚖️", "🪜", "🧰"
+];
 
     commonEmojis.forEach(emoji => {
       const span = document.createElement('span');
@@ -822,7 +800,7 @@
               <button style="background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Add</button>
             `;
             div.onclick = async () => {
-              await setDoc(doc(db, "users", currentUser.uid, "friends", u.uid), { uid: u.uid, name: u.name, photoURL: u.photoURL || "" });
+              await setDoc(doc(db, "users", currentUser.uid, "friends", u.uid), { uid: u.uid, name: u.name, photoURL: u.photoURL || "", notificationsEnabled: true });
               switchRoom([currentUser.uid, u.uid].sort().join('_'), u.name, 'private');
               searchResults.style.display = 'none'; searchInput.value = '';
             };
@@ -836,6 +814,9 @@
 
     function loadSidebarItems() {
       if (unsubscribeFriends) unsubscribeFriends();
+      friendStatusUnsubscribes.forEach(unsub => unsub());
+      friendStatusUnsubscribes = [];
+
       const bar = document.getElementById('friends-bar');
       
       unsubscribeFriends = onSnapshot(collection(db, "users", currentUser.uid, "friends"), async (snapshot) => {
@@ -848,11 +829,50 @@
           const f = docSnap.data();
           const roomId = [currentUser.uid, f.uid].sort().join('_');
           const pic = f.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.name)}&background=random`;
-          friendsHTML += `<div class="friend-chip ${currentRoom === roomId ? 'active' : ''}" onclick="switchRoom('${roomId}', '${f.name}', 'private')"><img src="${pic}"><span>${f.name}</span></div>`;
+          const notifIcon = f.notificationsEnabled !== false ? "🔔" : "🔕";
+          
+          friendsHTML += `
+            <div class="friend-chip ${currentRoom === roomId ? 'active' : ''}" id="friend-chip-${f.uid}">
+              <div style="display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="switchRoom('${roomId}', '${f.name}', 'private')">
+                <img src="${pic}">
+                <span>${f.name}</span>
+                <span class="friend-status-dot" id="dot-${f.uid}" style="background: #dc3545;" title="Offline"></span>
+              </div>
+              <button class="friend-notif-btn" title="Toggle Notifications" onclick="toggleFriendNotification('${f.uid}', ${f.notificationsEnabled !== false})">${notifIcon}</button>
+            </div>
+          `;
+
+          // Monitor online status specifically for each added friend
+          const unsubFriendDoc = onSnapshot(doc(db, "users", f.uid), (userDoc) => {
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const isOnline = userData.isOnline === true;
+              const dotEl = document.getElementById(`dot-${f.uid}`);
+              if (dotEl) {
+                dotEl.style.background = isOnline ? '#28a745' : '#dc3545';
+                dotEl.title = isOnline ? 'Online' : 'Offline';
+              }
+
+              // Announce status change via voice only for friends if enabled
+              if (previousFriendStatuses[f.uid] !== undefined && previousFriendStatuses[f.uid] !== isOnline) {
+                speakStatus(f.name, isOnline, speechLanguage);
+              }
+              previousFriendStatuses[f.uid] = isOnline;
+            }
+          });
+          friendStatusUnsubscribes.push(unsubFriendDoc);
         });
         bar.innerHTML = friendsHTML;
       });
     }
+
+    window.toggleFriendNotification = async function(friendUid, currentState) {
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid, "friends", friendUid), {
+          notificationsEnabled: !currentState
+        });
+      } catch(e) { console.error("Error updating friend notification setting:", e); }
+    };
 
     window.switchRoom = async function(roomId, roomName, roomType) {
       currentRoom = roomId; currentRoomType = roomType;
@@ -964,7 +984,7 @@
             if (data.type === 'private' && data.targetUser === currentUser.uid) isForMe = true;
 
             if (data.caller !== currentUser.uid && !pc && isForMe) {
-              ringtone.play().catch(() => {});
+              if (notificationSoundEnabled) ringtone.play().catch(() => {});
               if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
               const callerName = data.callerName || "Someone"; const callTypeStr = data.type === 'global' ? 'a Global Call' : 'a Private Call';
               
@@ -997,7 +1017,7 @@
         });
       });
     }
-
+  
     function listenToCallTermination(callDocRef) {
       if (activeCallDocUnsubscribe) activeCallDocUnsubscribe();
       activeCallDocUnsubscribe = onSnapshot(callDocRef, (docSnap) => { if (!docSnap.exists()) forceCloseCallUI(); });
@@ -1071,7 +1091,10 @@
       unsubscribeMessages = onSnapshot(q, (snapshot) => {
         document.getElementById('chat-messages').innerHTML = '';
         snapshot.forEach((docSnap) => { const data = docSnap.data(); if ((data.room || 'global') === currentRoom) appendMessageToUI(data, docSnap.id, false); });
-        if (!firstLoad && snapshot.docChanges().some(change => change.type === 'added')) { soundEffect.play().catch(() => {}); if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]); }
+        if (!firstLoad && snapshot.docChanges().some(change => change.type === 'added')) { 
+          if (notificationSoundEnabled) soundEffect.play().catch(() => {}); 
+          if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]); 
+        }
         firstLoad = false;
       });
       listenForIncomingCalls();
