@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google AI Studio Chat</title>
+    <title>OpenAI AI Chat</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f7f7f8;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -26,21 +26,28 @@
             height: 90vh;
             background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border: 1px solid #e5e5e5;
         }
 
         .header {
-            background: #1a73e8;
+            background: #10a37f;
             color: white;
-            padding: 18px;
+            padding: 16px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
         }
 
         .chat-history {
@@ -50,10 +57,11 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+            background-color: #ffffff;
         }
 
         .message {
-            max-width: 75%;
+            max-width: 80%;
             padding: 12px 16px;
             border-radius: 12px;
             line-height: 1.5;
@@ -64,29 +72,29 @@
 
         .message.user {
             align-self: flex-end;
-            background-color: #1a73e8;
+            background-color: #10a37f;
             color: white;
             border-bottom-right-radius: 2px;
         }
 
-        .message.model {
+        .message.assistant {
             align-self: flex-start;
-            background-color: #f1f3f4;
+            background-color: #f0f0f0;
             color: #202124;
             border-bottom-left-radius: 2px;
         }
 
         .message.error {
             align-self: center;
-            background-color: #fce8e6;
-            color: #c5221f;
-            border: 1px solid #fad2cf;
+            background-color: #fde8e8;
+            color: #9b1c1c;
+            border: 1px solid #f8b4b4;
             font-size: 0.85rem;
         }
 
         .input-area {
             padding: 16px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #e5e5e5;
             display: flex;
             gap: 10px;
             background: #ffffff;
@@ -95,7 +103,7 @@
         .input-area textarea {
             flex: 1;
             padding: 12px;
-            border: 1px solid #dadce0;
+            border: 1px solid #d9d9e3;
             border-radius: 8px;
             resize: none;
             height: 48px;
@@ -105,11 +113,11 @@
         }
 
         .input-area textarea:focus {
-            border-color: #1a73e8;
+            border-color: #10a37f;
         }
 
         .input-area button {
-            background-color: #1a73e8;
+            background-color: #10a37f;
             color: white;
             border: none;
             padding: 0 20px;
@@ -120,11 +128,11 @@
         }
 
         .input-area button:hover {
-            background-color: #1557b0;
+            background-color: #0e8e6d;
         }
 
         .input-area button:disabled {
-            background-color: #bdc1c6;
+            background-color: #c5c5d2;
             cursor: not-allowed;
         }
     </style>
@@ -133,11 +141,12 @@
 
 <div class="chat-container">
     <div class="header">
-        <h1>Google AI Studio Chat</h1>
+        <h1>OpenAI Chat Assistant</h1>
+        <p>Powered by GPT-4o Mini</p>
     </div>
 
     <div class="chat-history" id="chatHistory">
-        <div class="message model">Hello! Ask me anything to get started.</div>
+        <div class="message assistant">Hello! I am your AI assistant powered by OpenAI. How can I help you today?</div>
     </div>
 
     <div class="input-area">
@@ -147,71 +156,65 @@
 </div>
 
 <script>
-    // 🔑 PASTE YOUR GOOGLE AI STUDIO API KEY HERE (Starts with AIzaSy...)
-    const GOOGLE_API_KEY = "AQ.Ab8RN6IUG-_iENiMXoXMZQ_1_ZLTFJks7QHNGUy2OW-ytZ1Y4A";
+    // Embedded OpenAI API Key
+    const OPENAI_API_KEY = "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";
 
     const chatHistory = document.getElementById('chatHistory');
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
 
-    let conversationHistory = [];
+    // System prompt & conversation context
+    let conversationHistory = [
+        { role: "system", content: "You are a helpful, friendly AI assistant." }
+    ];
 
     async function sendMessage() {
         const messageText = userInput.value.trim();
 
-        if (!GOOGLE_API_KEY || GOOGLE_API_KEY === "PASTE_YOUR_GOOGLE_AI_STUDIO_KEY_HERE") {
-            alert("Please edit index.html and replace 'PASTE_YOUR_GOOGLE_AI_STUDIO_KEY_HERE' with your actual Google AI Studio key.");
-            return;
-        }
-
         if (!messageText) return;
 
-        // 1. Render User Message
+        // 1. Add User Message to UI & Memory
         appendMessage(messageText, 'user');
-        conversationHistory.push({
-            role: "user",
-            parts: [{ text: messageText }]
-        });
+        conversationHistory.push({ role: "user", content: messageText });
 
         userInput.value = '';
         sendBtn.disabled = true;
 
-        // 2. Render Loading State
-        const loadingMessageDiv = appendMessage("Thinking...", 'model');
+        // 2. Add loading state to UI
+        const loadingDiv = appendMessage("Thinking...", 'assistant');
 
         try {
-            // 3. Call Google AI Studio Gemini API
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`, {
+            // 3. Request completion from OpenAI Chat API
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`
                 },
                 body: JSON.stringify({
-                    contents: conversationHistory
+                    model: "gpt-4o-mini",
+                    messages: conversationHistory
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error?.message || "Failed to communicate with Google AI API.");
+                throw new Error(errorData.error?.message || "Failed to call OpenAI API.");
             }
 
             const data = await response.json();
-            const aiResponseText = data.candidates[0].content.parts[0].text;
+            const aiResponseText = data.choices[0].message.content;
 
-            // 4. Update UI
-            loadingMessageDiv.textContent = aiResponseText;
+            // 4. Update UI with response
+            loadingDiv.textContent = aiResponseText;
 
-            // 5. Update Conversation History
-            conversationHistory.push({
-                role: "model",
-                parts: [{ text: aiResponseText }]
-            });
+            // 5. Add AI Message to Memory
+            conversationHistory.push({ role: "assistant", content: aiResponseText });
 
         } catch (error) {
             console.error(error);
-            loadingMessageDiv.textContent = `Error: ${error.message}`;
-            loadingMessageDiv.classList.add('error');
+            loadingDiv.textContent = `Error: ${error.message}`;
+            loadingDiv.classList.add('error');
         } finally {
             sendBtn.disabled = false;
             chatHistory.scrollTop = chatHistory.scrollHeight;
