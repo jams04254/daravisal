@@ -3,262 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1-Minute AI Video Generator</title>
+    <title>Google AI Studio Chat</title>
     <style>
-        body { 
-            font-family: system-ui, -apple-system, sans-serif; 
-            max-width: 750px; 
-            margin: 2rem auto; 
-            padding: 0 1rem; 
-            background: #f8fafc; 
-            color: #0f172a; 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        .card { 
-            background: white; 
-            padding: 2rem; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .form-group { 
-            margin-bottom: 1.2rem; 
-            text-align: left; 
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        label { 
-            font-weight: 600; 
-            display: block; 
-            margin-bottom: 0.4rem; 
+
+        .header {
+            background: #1a73e8;
+            color: white;
+            padding: 18px;
+            text-align: center;
         }
-        input[type="text"], input[type="password"] { 
-            width: 100%; 
-            padding: 10px 12px; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 6px; 
-            box-sizing: border-box; 
-            font-size: 15px; 
+
+        .header h1 {
+            font-size: 1.3rem;
         }
-        button { 
-            background: #10a37f; 
-            color: white; 
-            border: none; 
-            padding: 12px 24px; 
-            font-size: 16px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            width: 100%; 
+
+        .chat-history {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
-        button:disabled { 
-            background: #94a3b8; 
-            cursor: not-allowed; 
+
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
-        #status { 
-            font-weight: 600; 
-            margin: 1rem 0; 
-            color: #2563eb; 
-            text-align: center; 
+
+        .message.user {
+            align-self: flex-end;
+            background-color: #1a73e8;
+            color: white;
+            border-bottom-right-radius: 2px;
         }
-        canvas { 
-            border: 1px solid #cbd5e1; 
-            border-radius: 8px; 
-            margin: 1rem auto; 
-            display: block; 
-            background: #000; 
-            max-width: 100%; 
+
+        .message.model {
+            align-self: flex-start;
+            background-color: #f1f3f4;
+            color: #202124;
+            border-bottom-left-radius: 2px;
         }
-        video { 
-            display: block; 
-            margin: 1rem auto; 
-            max-width: 100%; 
-            border-radius: 8px; 
-            border: 1px solid #cbd5e1; 
+
+        .message.error {
+            align-self: center;
+            background-color: #fce8e6;
+            color: #c5221f;
+            border: 1px solid #fad2cf;
+            font-size: 0.85rem;
         }
-        .download-btn { 
-            background: #2563eb; 
-            color: white; 
-            text-decoration: none; 
-            padding: 12px 24px; 
-            display: block; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            text-align: center; 
-            margin-top: 10px; 
-            box-sizing: border-box; 
+
+        .input-area {
+            padding: 16px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            background: #ffffff;
         }
-        .security-note { 
-            background: #fef3c7; 
-            border-left: 4px solid #f59e0b; 
-            padding: 10px 14px; 
-            margin-bottom: 1.5rem; 
-            border-radius: 4px; 
-            font-size: 14px; 
+
+        .input-area textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            resize: none;
+            height: 48px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .input-area textarea:focus {
+            border-color: #1a73e8;
+        }
+
+        .input-area button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .input-area button:hover {
+            background-color: #1557b0;
+        }
+
+        .input-area button:disabled {
+            background-color: #bdc1c6;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>AI 1-Minute Video Generator</h2>
-    <p>Enter your OpenAI API key and a prompt. The app will generate AI scenes and compile them into a 60-second video ready for download.</p>
-
-    <div class="security-note">
-        🔒 <strong>Privacy:</strong> Your API key stays in your local browser and is sent directly to OpenAI's server.
+<div class="chat-container">
+    <div class="header">
+        <h1>Google AI Studio Chat</h1>
     </div>
 
-    <div class="form-group">
-        <label for="apiKey">OpenAI API Key:</label>
-        <input type="password" id="apiKey" placeholder="sk-proj-..." />
+    <div class="chat-history" id="chatHistory">
+        <div class="message model">Hello! Ask me anything to get started.</div>
     </div>
 
-    <div class="form-group">
-        <label for="prompt">Video Subject / Topic:</label>
-        <input type="text" id="prompt" value="A futuristic city with flying cars and glowing neon architecture" />
+    <div class="input-area">
+        <textarea id="userInput" placeholder="Type your message here..." rows="1"></textarea>
+        <button id="sendBtn">Send</button>
     </div>
-
-    <button id="generateBtn">Generate 1-Minute AI Video</button>
-
-    <div id="status"></div>
-
-    <!-- Hidden Canvas used to record video frames -->
-    <canvas id="videoCanvas" width="1024" height="1024" style="display:none;"></canvas>
-
-    <!-- Output Video & Download Button -->
-    <video id="outputVideo" controls style="display: none;"></video>
-    <a id="downloadBtn" class="download-btn" style="display: none;">⬇️ Download Video (.webm)</a>
 </div>
 
 <script>
-    const apiKeyInput = document.getElementById('apiKey');
-    const promptInput = document.getElementById('prompt');
-    const generateBtn = document.getElementById('generateBtn');
-    const statusDiv = document.getElementById('status');
-    const canvas = document.getElementById('videoCanvas');
-    const ctx = canvas.getContext('2d');
-    const outputVideo = document.getElementById('outputVideo');
-    const downloadBtn = document.getElementById('downloadBtn');
+    // 🔑 PASTE YOUR GOOGLE AI STUDIO API KEY HERE (Starts with AIzaSy...)
+    const GOOGLE_API_KEY = "AQ.Ab8RN6LGOw1cZle8JLU8zagxu78dGEEDETFcYK3ojXTzMFKZZA";
 
-    const TOTAL_VIDEO_SECONDS = 60; // Total length: 1 minute
-    const SCENE_COUNT = 6;          // 6 scenes x 10 seconds = 60 seconds total
-    const DISPLAY_TIME_PER_SCENE = (TOTAL_VIDEO_SECONDS / SCENE_COUNT) * 1000; // 10,000ms per scene
+    const chatHistory = document.getElementById('chatHistory');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
 
-    generateBtn.addEventListener('click', async () => {
-        const apiKey = apiKeyInput.value.trim();
-        const userPrompt = promptInput.value.trim();
+    let conversationHistory = [];
 
-        if (!apiKey) {
-            alert('Please enter your OpenAI API Key.');
-            return;
-        }
-        if (!userPrompt) {
-            alert('Please enter a topic prompt.');
+    async function sendMessage() {
+        const messageText = userInput.value.trim();
+
+        if (!GOOGLE_API_KEY || GOOGLE_API_KEY === "PASTE_YOUR_GOOGLE_AI_STUDIO_KEY_HERE") {
+            alert("Please edit index.html and replace 'PASTE_YOUR_GOOGLE_AI_STUDIO_KEY_HERE' with your actual Google AI Studio key.");
             return;
         }
 
-        generateBtn.disabled = true;
-        outputVideo.style.display = 'none';
-        downloadBtn.style.display = 'none';
-        canvas.style.display = 'block';
+        if (!messageText) return;
+
+        // 1. Render User Message
+        appendMessage(messageText, 'user');
+        conversationHistory.push({
+            role: "user",
+            parts: [{ text: messageText }]
+        });
+
+        userInput.value = '';
+        sendBtn.disabled = true;
+
+        // 2. Render Loading State
+        const loadingMessageDiv = appendMessage("Thinking...", 'model');
 
         try {
-            statusDiv.innerText = `Step 1/2: Generating ${SCENE_COUNT} AI scenes via OpenAI API...`;
+            // 3. Call Google AI Studio Gemini API
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: conversationHistory
+                })
+            });
 
-            // 1. Fetch AI generated images from OpenAI API
-            const loadedImages = [];
-            for (let i = 0; i < SCENE_COUNT; i++) {
-                statusDiv.innerText = `Generating AI Scene ${i + 1} of ${SCENE_COUNT} with OpenAI...`;
-                
-                const scenePrompt = `${userPrompt}, cinematic frame ${i + 1} of ${SCENE_COUNT}, high detail 8k shot`;
-
-                const response = await fetch('https://api.openai.com/v1/images/generations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: "dall-e-3",
-                        prompt: scenePrompt,
-                        n: 1,
-                        size: "1024x1024",
-                        response_format: "b64_json"
-                    })
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error?.message || 'Failed to call OpenAI API');
-                }
-
-                const data = await response.json();
-                const base64Image = `data:image/png;base64,${data.data[0].b64_json}`;
-                
-                const img = await loadImage(base64Image);
-                loadedImages.push(img);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || "Failed to communicate with Google AI API.");
             }
 
-            // 2. Stitch pictures into a 60-second video stream using Canvas + MediaRecorder
-            statusDiv.innerText = `Step 2/2: Recording 60-second video stream... Please wait.`;
-            
-            const stream = canvas.captureStream(30); // Capture canvas at 30 FPS
-            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-            const recordedChunks = [];
+            const data = await response.json();
+            const aiResponseText = data.candidates[0].content.parts[0].text;
 
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
+            // 4. Update UI
+            loadingMessageDiv.textContent = aiResponseText;
 
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const videoUrl = URL.createObjectURL(blob);
-
-                outputVideo.src = videoUrl;
-                outputVideo.style.display = 'block';
-
-                downloadBtn.href = videoUrl;
-                downloadBtn.download = 'ai_1minute_video.webm';
-                downloadBtn.style.display = 'block';
-
-                statusDiv.innerText = "✨ Video rendering complete! Preview below or download your video.";
-                generateBtn.disabled = false;
-            };
-
-            // Start recording canvas
-            mediaRecorder.start();
-
-            // Draw scene 1
-            drawImageToCanvas(loadedImages[0]);
-
-            let currentSceneIndex = 0;
-            const sceneInterval = setInterval(() => {
-                currentSceneIndex++;
-                if (currentSceneIndex < loadedImages.length) {
-                    drawImageToCanvas(loadedImages[currentSceneIndex]);
-                    statusDiv.innerText = `Recording Scene ${currentSceneIndex + 1} of ${SCENE_COUNT} (Total duration: 60s)...`;
-                } else {
-                    clearInterval(sceneInterval);
-                    mediaRecorder.stop();
-                }
-            }, DISPLAY_TIME_PER_SCENE);
+            // 5. Update Conversation History
+            conversationHistory.push({
+                role: "model",
+                parts: [{ text: aiResponseText }]
+            });
 
         } catch (error) {
             console.error(error);
-            statusDiv.innerText = `❌ Error: ${error.message}`;
-            generateBtn.disabled = false;
+            loadingMessageDiv.textContent = `Error: ${error.message}`;
+            loadingMessageDiv.classList.add('error');
+        } finally {
+            sendBtn.disabled = false;
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    }
+
+    function appendMessage(text, role) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', role);
+        messageDiv.textContent = text;
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        return messageDiv;
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
         }
     });
-
-    function loadImage(src) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error('Failed to load generated AI image.'));
-            img.src = src;
-        });
-    }
-
-    function drawImageToCanvas(img) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    }
 </script>
 
 </body>
