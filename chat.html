@@ -107,25 +107,25 @@
     .icon-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-color); padding: 2px; opacity: 0.8; flex-shrink: 0; }
     #mic-btn.recording { color: red; opacity: 1; }
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; flex-shrink: 0; }
-#emoji-picker { 
-  display: none; 
-  position: absolute; 
-  bottom: 55px; 
-  left: 10px; 
-  background: var(--card-bg); 
-  border: 1px solid var(--border-color); 
-  border-radius: 12px; 
-  padding: 12px; 
-  box-shadow: 0 5px 20px rgba(0,0,0,0.2); 
-  width: 260px; 
-  max-height: 220px;       /* Limits the height so it fits on screen */
-  overflow-y: auto;        /* Enables smooth scrolling up and down */
-  grid-template-columns: repeat(6, 1fr); 
-  gap: 10px; 
-  z-index: 1000; 
-}
+    #emoji-picker { 
+      display: none; 
+      position: absolute; 
+      bottom: 55px; 
+      left: 10px; 
+      background: var(--card-bg); 
+      border: 1px solid var(--border-color); 
+      border-radius: 12px; 
+      padding: 12px; 
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2); 
+      width: 260px; 
+      max-height: 220px;       
+      overflow-y: auto;        
+      grid-template-columns: repeat(6, 1fr); 
+      gap: 10px; 
+      z-index: 1000; 
+    }
 
-   .emoji-item { cursor: pointer; font-size: 22px; text-align: center; user-select: none; transition: transform 0.1s; }
+    .emoji-item { cursor: pointer; font-size: 22px; text-align: center; user-select: none; transition: transform 0.1s; }
     .emoji-item:hover { transform: scale(1.2); }
 
     #video-call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; }
@@ -183,12 +183,12 @@
 
   <!-- Profile Modal -->
   <div id="profile-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3500; justify-content: center; align-items: center;">
-    <div style="background: var(--card-bg); color: var(--text-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+    <div style="background: var(--card-bg); color: var(--text-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
       <img id="modal-profile-pic" src="" alt="Profile" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; border: 2px solid #007bff;">
       <h3 id="modal-profile-name" style="margin-bottom: 6px; font-size: 18px;">Account Name</h3>
       <p id="modal-profile-email" style="font-size: 13px; opacity: 0.7; margin-bottom: 15px;"></p>
       
-      <div style="margin-bottom: 20px; font-size: 14px; text-align: left; background: var(--msg-received); padding: 10px; border-radius: 8px;">
+      <div style="margin-bottom: 15px; font-size: 14px; text-align: left; background: var(--msg-received); padding: 10px; border-radius: 8px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
           <strong>Cloud Storage:</strong> <span id="storage-text">0 KB / 1024 KB</span>
         </div>
@@ -196,8 +196,22 @@
           <div id="storage-bar" style="width: 0%; height: 100%; background: #007bff; border-radius: 5px; transition: width 0.3s, background 0.3s;"></div>
         </div>
         <p id="storage-warning-text" style="font-size: 11px; margin-top: 5px; opacity: 0.8; text-align: center;">Maximum allowance: 1 MB per user</p>
-        
         <button id="profile-delete-all-btn" class="btn" style="background: #dc3545; color: white; margin-top: 10px; font-size: 13px; padding: 6px; display: none;">🗑️ Clear All Messages (Memory Full)</button>
+      </div>
+
+      <!-- Activity Voice & Language Speech Options -->
+      <div style="margin-bottom: 15px; text-align: left; font-size: 13px; background: var(--msg-received); padding: 10px; border-radius: 8px;">
+        <label style="display: block; margin-bottom: 4px; font-weight: bold;">🗣️ Speak Activity Status:</label>
+        <select id="voice-announcement-toggle" class="btn btn-secondary" style="width: 100%; padding: 6px; margin-top: 0; margin-bottom: 8px; font-size: 13px;">
+          <option value="false">Disabled</option>
+          <option value="true">Enabled</option>
+        </select>
+
+        <label style="display: block; margin-bottom: 4px; font-weight: bold;">🌍 Speech Language:</label>
+        <select id="speech-lang-select" class="btn btn-secondary" style="width: 100%; padding: 6px; margin-top: 0; font-size: 13px;">
+          <option value="en-US">English</option>
+          <option value="km-KH">Khmer (ភាសាខ្មែរ)</option>
+        </select>
       </div>
 
       <button id="modal-theme-toggle" class="btn btn-secondary" style="margin-bottom: 10px;">Toggle Dark Mode</button>
@@ -212,7 +226,6 @@
     <div style="background: var(--card-bg); color: var(--text-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 80vh; display: flex; flex-direction: column;">
       <h3 style="margin-bottom: 15px; font-size: 18px; text-align: center;">👥 Users Activity</h3>
       <div id="active-users-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-        <!-- Online and offline users populated here -->
       </div>
       <button id="close-activity-modal" class="btn btn-primary">Close</button>
     </div>
@@ -305,7 +318,6 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-    // Four Firebase Project Configurations for memory failover
     const firebaseConfigs = [
       {  apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4", authDomain: "visal-eaeea.firebaseapp.com", projectId: "visal-eaeea", storageBucket: "visal-eaeea.firebasestorage.app", messagingSenderId: "77752028345", appId: "1:77752028345:web:81c423c896b0701bfc9f68", measurementId: "G-H2DBRZ8R8X"}, 
       {  apiKey: "AIzaSyDvPPVr22NsVwd_yTOndKlY9iAP_Iczj9Y", authDomain: "chat-4f98f.firebaseapp.com", projectId: "chat-4f98f", storageBucket: "chat-4f98f.firebasestorage.app", messagingSenderId: "675567156910", appId: "1:675567156910:web:053d1bf316d313cd72f73f", measurementId: "G-CBG87WNF2G" }, 
@@ -319,6 +331,30 @@
     let auth = getAuth(app);
     let storage = getStorage(app);
     const provider = new GoogleAuthProvider();
+
+    // Voice & Language Settings State
+    let speechLanguage = localStorage.getItem('speech_language') || 'en-US';
+    let voiceAnnouncementsEnabled = localStorage.getItem('voice_announcements') === 'true';
+    let previousUserStatuses = {};
+
+    function speakStatus(name, isOnline, lang) {
+      if (!window.speechSynthesis || !voiceAnnouncementsEnabled) return;
+      const statusWord = isOnline 
+        ? (lang === 'km-KH' ? 'អនឡាញ' : 'online') 
+        : (lang === 'km-KH' ? 'អហ្វឡាញ' : 'offline');
+      const textToSpeak = `${name} ${statusWord}`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = lang;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakLanguagePrompt(lang) {
+      if (!window.speechSynthesis) return;
+      const text = lang === 'km-KH' ? 'ភាសា' : 'Language';
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      window.speechSynthesis.speak(utterance);
+    }
 
     async function switchToNextFirebase() {
       if (currentAppIndex < firebaseConfigs.length - 1) {
@@ -359,34 +395,30 @@
     const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
     const brain = {
-            "I am cute" : "Yes you so cute.🥰",
-            "I'm cute" : "Yes you so cute.🥰",
-            "you think i am cute" : "Yes you so cute.🥰",
-            "you think i'm cute" : "Yes you so cute.🥰",
-            "hello": "Hello ! Nice to meet you.",
-            "hi": "Hey there! How is your day going?",
-            "how are you": "I am feeling fantastic and fully charged!",
-            "joke": "Why don't scientists trust atoms? Because they make up everything!",
-            "name": "Daravisal kong",
-            "bye": "Goodbye! Come talk to me again soon.",
-            "crazy" : "Is a bad word!?",
-            "bitch" : "Is a bad word!",
-            "fuck" : "Is a bad word!",
-            "google": "<a href='https://google.com' target='_blank'>Google</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s'>",
-            "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s'>",
-            "you so cute" : "Thank you!",
-            "you're so cute" : "Thank you!",
-            "story" : "    The lion and the mouse.  A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy,  promising to one day repay the favor. Amused by the idea that such a tiny creature could help   him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the  thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth,   setting the King of the Jungle free.  The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
-            "who are you" : "I am an ai!",
-            "cute" : "❤️❤️❤️❤️",
-            "សួស្ដី" : "សួស្ដីអ្នក!",
-            "សួស្តី" : "សួស្ដីអ្នក!",
+      "I am cute" : "Yes you so cute.🥰",
+      "I'm cute" : "Yes you so cute.🥰",
+      "you think i am cute" : "Yes you so cute.🥰",
+      "you think i'm cute" : "Yes you so cute.🥰",
+      "hello": "Hello ! Nice to meet you.",
+      "hi": "Hey there! How is your day going?",
+      "how are you": "I am feeling fantastic and fully charged!",
+      "joke": "Why don't scientists trust atoms? Because they make up everything!",
+      "name": "Daravisal kong",
+      "bye": "Goodbye! Come talk to me again soon.",
+      "crazy" : "Is a bad word!?",
+      "bitch" : "Is a bad word!",
+      "fuck" : "Is a bad word!",
+      "google": "<a href='https://google.com' target='_blank'>Google</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s'>",
+      "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s'>",
+      "you so cute" : "Thank you!",
+      "you're so cute" : "Thank you!",
+      "story" : "The lion and the mouse. A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy, promising to one day repay the favor. Amused by the idea that such a tiny creature could help him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth, setting the King of the Jungle free. The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
+      "who are you" : "I am an ai!",
+      "cute" : "❤️❤️❤️❤️",
+      "សួស្ដី" : "សួស្ដីអ្នក!",
+      "សួស្តី" : "សួស្ដីអ្នក!",
       "happy": "Happy is an emotional state characterized by feelings of joy.",
-        "hello": "Hello! Nice to meet you.",
-        "hi": "Hey there! How is your day going?",
-        "joke": "Why don't scientists trust atoms? Because they make up everything!",
-        "who are you": "I am an AI!",
-        "default": "That sounds interesting! Tell me more about it."
+      "default": "That sounds interesting! Tell me more about it."
     };
 
     async function updateActivityStatus(status) {
@@ -496,14 +528,19 @@
         updateActivityStatus('online'); 
         document.getElementById('user-pic').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "User")}&background=random`;
         
-        // Listen to network globally to change the header button (Green if someone online, Red if no one)
         if (globalActivityUnsubscribe) globalActivityUnsubscribe();
         globalActivityUnsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
            let someoneIsOnline = false;
            snapshot.forEach(docSnap => {
              const u = docSnap.data();
-             if (u.uid !== currentUser.uid && u.isOnline) {
-               someoneIsOnline = true;
+             if (u.uid !== currentUser.uid) {
+               if (u.isOnline) someoneIsOnline = true;
+               
+               // Check status change and announce via speech if enabled
+               if (previousUserStatuses[u.uid] !== undefined && previousUserStatuses[u.uid] !== u.isOnline) {
+                 speakStatus(u.name, u.isOnline, speechLanguage);
+               }
+               previousUserStatuses[u.uid] = u.isOnline;
              }
            });
            document.getElementById('activity-btn').innerText = someoneIsOnline ? "🟢" : "🔴";
@@ -577,6 +614,10 @@
       document.getElementById('modal-profile-name').innerText = currentUser.displayName || "User";
       document.getElementById('modal-profile-email').innerText = currentUser.email || "";
       
+      // Load Voice and Language settings into profile modal inputs
+      document.getElementById('voice-announcement-toggle').value = voiceAnnouncementsEnabled ? 'true' : 'false';
+      document.getElementById('speech-lang-select').value = speechLanguage;
+
       try {
         const snap = await getDoc(doc(db, "users", currentUser.uid));
         let storageUsed = 0;
@@ -604,9 +645,20 @@
       document.getElementById('profile-modal').style.display = 'flex';
     };
 
+    // Event listeners for voice announcements and language selector
+    document.getElementById('voice-announcement-toggle').onchange = (e) => {
+      voiceAnnouncementsEnabled = e.target.value === 'true';
+      localStorage.setItem('voice_announcements', voiceAnnouncementsEnabled);
+    };
+
+    document.getElementById('speech-lang-select').onchange = (e) => {
+      speechLanguage = e.target.value;
+      localStorage.setItem('speech_language', speechLanguage);
+      speakLanguagePrompt(speechLanguage);
+    };
+
     document.getElementById('close-profile-modal').onclick = () => { document.getElementById('profile-modal').style.display = 'none'; };
 
-    // Updated Active Users Modal Logic (Shows everyone, Green if online, Red if offline)
     document.getElementById('activity-btn').onclick = () => {
       document.getElementById('activity-modal').style.display = 'flex';
       const activeList = document.getElementById('active-users-list');
@@ -622,8 +674,6 @@
           const u = docSnap.data();
           if (u.uid !== currentUser.uid) {
              countUsers++;
-             
-             // Check if user is online or offline
              const isOnline = u.isOnline === true;
              const dotColor = isOnline ? '#28a745' : '#dc3545';
              const statusText = isOnline ? 'Online now' : 'Offline';
@@ -659,56 +709,14 @@
     const emojiPicker = document.getElementById('emoji-picker');
     const emojiBtn = document.getElementById('emoji-btn');
     const messageInput = document.getElementById('message-input');
-const commonEmojis = [
-  // --- Smileys & Expressions ---
-  "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "🤩", 
-  "😘", "😗", "😚", "😙", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", 
-  "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😷", "🤒", "🤕", "🤢", "🤮", "🤧", 
-  "🥵", "🥶", "🥴", "🤯", "🤠", "🥳", "😎", "🤓", "🧐", "😕", "😟", "🙁", "😮", "😯", "😲", "😳", 
-  "🥺", "😦", "😧", "😨", "😰", "😥", "cry", "😭", "😱", "😖", "😣", "😞", "😓", "😩", "😫", "🥱", 
-  "😤", "😡", "😠", "🤬", "😈", "👿", "💀", "☠️", "💩", "🤡", "👹", "👺", "👻", "👽", "👾", "🤖",
+    const commonEmojis = [
+      "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "🤩", 
+      "😘", "😗", "😚", "😙", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", 
+      "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😷", "🤒", "🤕", "🤢", "🤮", "🤧", 
+      "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🫰", "🤟", "🤘", "🤙", "👈", "👉", 
+      "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗"
+    ];
 
-  // --- Hands & Gestures ---
-  "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🫰", "🤟", "🤘", "🤙", "👈", "👉", 
-  "👆", "🖕", "👇", "☝️", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝", "🙏", 
-  "✍️", "💅", "🤳", "💪", "🦾", "🦵", "🦿", "🦶", "👂", "🦻", "👃", "🧠", "🦷", "🦴", "👀", "👁️", 
-
-  // --- Hearts & Emotions ---
-  "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗", 
-  "💖", "💘", "💝", "💯", "💢", "💥", "💫", "💦", "💨", "🕳️", "💣", "💬", "👁️‍🗨️", "🗨️", "🗯️", "💭", "💤",
-
-  // --- Animals & Nature ---
-  "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", 
-  "🐧", "🐦", "🐤", "🦆", "🦅", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🐛", "🦋", "🐌", "🐞", 
-  "🐢", "🐍", "lizard", "🦕", "🐙", "🦑", "🦐", "🦞", "🦀", "🐠", "🐟", "🐡", "🦈", "🐳", "🐬", "seal", 
-  "💐", "🌸", "💮", "🌹", "🥀", "🌺", "🌻", "🌼", "🌷", "🌱", "🪴", "🌲", "🌳", "🌴", "🌵", "🌾",
-
-  // --- Food & Drink ---
-  "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", 
-  "🥝", "🥑", "🍅", "🍆", "🥒", "🥕", "🌽", "🌶️", "🧄", "🧅", "🍄", "🍞", "🥐", "🥖", "🥨", "🥯", 
-  "🥞", "🧇", "🧀", "🍖", "🍗", "🥩", "🥓", "🍔", "🍟", "🍕", "🌭", "🥪", "🌮", "🌯", "🧆", "🥚", 
-  "🍿", "🧈", "🧂", "🍱", "rice_cracker", "🍙", "🍚", "🍛", "🍜", "🍝", "🍢", "🍣", "🍤", "🥮", "🍡", 
-  "🥟", "🥠", "🥡", "🦀", "🦞", "🍦", "🍧", "🍨", "🍩", "🍪", "🎂", "🍰", "🧁", "🥧", "🍫", "🍬", 
-  "🍭", "🍮", "🍯", "🍼", "🥛", "☕", "🍵", "🍶", "🍾", "🍷", "🍸", "🍹", "🍺", "🍻", "🥂", "🥃",
-
-  // --- Travel & Places ---
-  "🌍", "🌎", "🌏", "🗺️", "🧭", "🏔️", "⛰️", "🌋", "🗻", "🏕️", "🏖️", "🏜️", "🏝️", "🏟️", "🏛️", "🏗️", 
-  "🧱", "🏘️", "🏚️", "🏠", "🏡", "🏢", "🏣", "🏤", "🏥", "🏦", "🏨", "🏩", "🏪", "🏫", "🏬", "🏭", 
-  "🏯", "🏰", "💒", "🗼", "🗽", "⛪", "🕌", "🛕", "🕍", "🕋", "⛩️", "⛲", "⛺", "🌁", "🌃", "🏙️", 
-  "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🛵", "🏍️", 
-  "🚲", "🛴", "🛺", "🚄", "🚅", "🚆", "🚇", "🚈", "🚉", "🚊", "🚂", "✈️", "🚀", "🛸", "🛰️", "⛵",
-
-  // --- Activities & Objects ---
-  "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🏓", "🏸", "🏒", "🏑", "🥍", "🏏", 
-  "🪃", "🥅", "⛳", "⛸️", "🎣", "🤿", "🎽", "🎿", "🛷", "🥌", "🎯", "🪀", "🪁", "🎱", "🔮", "🎮", 
-  "🕹️", "🎰", "🎲", "🧩", "🧸", "🪅", "🪆", "♠️", "♥️", "♦️", "♣️", "♟️", "🃏", "🀄", "🎴", "🎭", 
-  "🎨", "🎬", "🎤", "🎧", "🎷", "🪗", "🎸", "🎹", "🎺", "🎻", "🪕", "🥁", "📱", "📲", "💻", "⌨️", 
-  "🖨️", "🖱️", "🖲️", "💾", "💿", "📀", "📷", "📸", "📹", "🎥", "📽️", "🎞️", "📞", "☎️", "📟", "📠", 
-  "📺", "📻", "🎙️", "⏱️", "⏲️", "⏰", "🕰️", "⌛", "⏳", "📡", "🔋", "🔌", "💡", "🔦", "🕯️", "🪔",
-  "🧯", "🛢️", "💸", "💵", "💴", "💶", "💷", "🪙", "💰", "💳", "💎", "⚖️", "🪜", "🧰"
-];
-
-    
     commonEmojis.forEach(emoji => {
       const span = document.createElement('span');
       span.className = 'emoji-item'; span.innerText = emoji;
