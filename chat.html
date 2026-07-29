@@ -1043,23 +1043,23 @@
                const storageKey = currentRoom === 'bot' ? 'bot_messages' : `chat_${currentRoom}`;
                let localMsgs = JSON.parse(localStorage.getItem(storageKey) || '[]');
                
+               // Thorough filter to clear the message and any potential duplicates
                localMsgs = localMsgs.filter(m => {
-                 if (messageId && m.id === messageId) return false;
-                 if (m.text && m.text === data.text && m.createdAt === data.createdAt) return false;
-                 if (m.audioUrl && m.audioUrl === data.audioUrl) return false;
-                 if (m.imageUrl && m.imageUrl === data.imageUrl) return false;
+                 if (messageId && (m.id === messageId || m._id === messageId)) return false;
+                 if (data.text && m.text === data.text && Math.abs(m.createdAt - data.createdAt) < 10000) return false;
+                 if (data.imageUrl && m.imageUrl === data.imageUrl) return false;
+                 if (data.audioUrl && m.audioUrl === data.audioUrl) return false;
                  return true;
                });
+               
                localStorage.setItem(storageKey, JSON.stringify(localMsgs));
-
                wrapper.remove();
              } catch (err) {
                console.error("Delete error:", err);
                wrapper.remove();
              }
           }, "Delete", "#dc3545");
-        };
-        msgRow.appendChild(delBtn);
+        }; msgRow.appendChild(delBtn);
       }
 
       chatMessages.appendChild(wrapper);
@@ -1094,13 +1094,17 @@
             if ((data.room || 'global') === currentRoom) {
               let currentLocalMsgs = JSON.parse(localStorage.getItem(localRoomKey) || '[]');
               
-              if (!currentLocalMsgs.find(m => m.id === docId)) {
+              // Prevent duplicate loading of your own sent messages
+              const incomingTime = data.createdAt && data.createdAt.seconds ? data.createdAt.seconds * 1000 : Date.now();
+              const isDuplicate = currentLocalMsgs.some(m => 
+                m.uid === data.uid && 
+                ((m.text && m.text === data.text) || (m.imageUrl && m.imageUrl === data.imageUrl) || (m.audioUrl && m.audioUrl === data.audioUrl)) && 
+                Math.abs(m.createdAt - incomingTime) < 10000
+              );
+
+              if (!isDuplicate && !currentLocalMsgs.find(m => m.id === docId)) {
                 const localData = { ...data, id: docId };
-                if (data.createdAt && data.createdAt.seconds) {
-                    localData.createdAt = data.createdAt.seconds * 1000;
-                } else {
-                    localData.createdAt = Date.now();
-                }
+                localData.createdAt = incomingTime;
 
                 currentLocalMsgs.push(localData);
                 localStorage.setItem(localRoomKey, JSON.stringify(currentLocalMsgs));
@@ -1112,7 +1116,8 @@
                   if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
                 }
               }
-              // Immediately remove from Firebase database and keep on device storage
+              
+              // Clean up immediately from Firebase database while keeping on device storage
               deleteDoc(doc(db, "messages", docId)).catch(err => console.log("Deletion error:", err));
             }
           }
@@ -1122,7 +1127,7 @@
       
       listenForIncomingCalls();
     }
-
+  
     document.getElementById('chat-form').onsubmit = async (e) => {
       e.preventDefault();
       let text = messageInput.value.trim();
