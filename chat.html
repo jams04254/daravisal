@@ -48,7 +48,6 @@
     .toggle-text { margin-top: 12px; font-size: 13px; opacity: 0.8; }
     .toggle-text span { color: #007bff; cursor: pointer; font-weight: bold; }
 
-    /* Custom Confirm Modal Style */
     #custom-confirm-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
     .confirm-box { background: var(--card-bg); color: var(--text-color); padding: 22px; border-radius: 14px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popUp 0.2s ease-in-out; }
     @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -77,7 +76,7 @@
 
     .user-profile img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid white; cursor: pointer; }
     .header-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; color: white; padding: 0 4px; }
-    #logout-btn { background: transparent; color: white; border: 1px solid white; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    #activity-btn { display: none; }
 
     .chat-messages { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--card-bg); }
     .message-wrapper { display: flex; gap: 8px; max-width: 88%; }
@@ -108,9 +107,25 @@
     .icon-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-color); padding: 2px; opacity: 0.8; flex-shrink: 0; }
     #mic-btn.recording { color: red; opacity: 1; }
     .send-btn { background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; flex-shrink: 0; }
+#emoji-picker { 
+  display: none; 
+  position: absolute; 
+  bottom: 55px; 
+  left: 10px; 
+  background: var(--card-bg); 
+  border: 1px solid var(--border-color); 
+  border-radius: 12px; 
+  padding: 12px; 
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2); 
+  width: 260px; 
+  max-height: 220px;       /* Limits the height so it fits on screen */
+  overflow-y: auto;        /* Enables smooth scrolling up and down */
+  grid-template-columns: repeat(6, 1fr); 
+  gap: 10px; 
+  z-index: 1000; 
+}
 
-    #emoji-picker { display: none; position: absolute; bottom: 55px; left: 10px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 240px; grid-template-columns: repeat(6, 1fr); gap: 10px; z-index: 1000; }
-    .emoji-item { cursor: pointer; font-size: 22px; text-align: center; user-select: none; transition: transform 0.1s; }
+   .emoji-item { cursor: pointer; font-size: 22px; text-align: center; user-select: none; transition: transform 0.1s; }
     .emoji-item:hover { transform: scale(1.2); }
 
     #video-call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; }
@@ -166,6 +181,7 @@
     </div>
   </div>
 
+  <!-- Profile Modal -->
   <div id="profile-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3500; justify-content: center; align-items: center;">
     <div style="background: var(--card-bg); color: var(--text-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
       <img id="modal-profile-pic" src="" alt="Profile" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; border: 2px solid #007bff;">
@@ -186,7 +202,19 @@
 
       <button id="modal-theme-toggle" class="btn btn-secondary" style="margin-bottom: 10px;">Toggle Dark Mode</button>
       <button id="modal-delete-account" class="btn" style="background: #dc3545; color: white; margin-bottom: 10px;">Request Account Deletion</button>
+      <button id="profile-logout-btn" class="btn" style="background: #ff9800; color: white; margin-bottom: 10px;">🚪 Log Out</button>
       <button id="close-profile-modal" class="btn btn-primary">Close Profile</button>
+    </div>
+  </div>
+
+  <!-- Active Now Modal -->
+  <div id="activity-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3500; justify-content: center; align-items: center; padding: 15px;">
+    <div style="background: var(--card-bg); color: var(--text-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 80vh; display: flex; flex-direction: column;">
+      <h3 style="margin-bottom: 15px; font-size: 18px; text-align: center;">👥 Users Activity</h3>
+      <div id="active-users-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+        <!-- Online and offline users populated here -->
+      </div>
+      <button id="close-activity-modal" class="btn btn-primary">Close</button>
     </div>
   </div>
 
@@ -245,8 +273,8 @@
             <img id="user-pic" src="" alt="Profile" title="Open Profile & Settings">
           </div>
           <button id="remove-friend-btn" class="header-btn" title="Remove Friend" style="display: none; font-size: 14px;">❌</button>
+          <button id="activity-btn" class="header-btn" title="People Activity Status" style="font-size: 16px;">🔴</button>
           <button id="video-call-btn" class="header-btn" title="Start Video Call">🎥</button>
-          <button id="logout-btn" style="display:none;">Logout</button>
         </div>
       </div>
       <div class="friends-bar" id="friends-bar">
@@ -263,7 +291,7 @@
       
       <button type="button" id="mic-btn" class="icon-btn" title="Record Voice">🎤</button>
       <button type="button" id="emoji-btn" class="icon-btn" title="Emojis">😀</button>
-      
+          
       <div id="emoji-picker"></div>
 
       <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
@@ -279,39 +307,19 @@
 
     // Four Firebase Project Configurations for memory failover
     const firebaseConfigs = [
-      {  apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4",
-  authDomain: "visal-eaeea.firebaseapp.com",
-  projectId: "visal-eaeea",
-  storageBucket: "visal-eaeea.firebasestorage.app",
-  messagingSenderId: "77752028345",
-  appId: "1:77752028345:web:81c423c896b0701bfc9f68",
-  measurementId: "G-H2DBRZ8R8X"}, 
-      {  apiKey: "AIzaSyDvPPVr22NsVwd_yTOndKlY9iAP_Iczj9Y",
-  authDomain: "chat-4f98f.firebaseapp.com",
-  projectId: "chat-4f98f",
-  storageBucket: "chat-4f98f.firebasestorage.app",
-  messagingSenderId: "675567156910",
-  appId: "1:675567156910:web:053d1bf316d313cd72f73f",
-  measurementId: "G-CBG87WNF2G" }, 
-      {  apiKey: "AIzaSyCw7-4HO7-m2yKEiu0OJlH6IUrwqUtQ_Yk",
-  authDomain: "damm-87625.firebaseapp.com",
-  projectId: "damm-87625",
-  storageBucket: "damm-87625.firebasestorage.app",
-  messagingSenderId: "409640965902",
-  appId: "1:409640965902:web:fc2cc0a6e82cc70cd2e95f" }, 
+      {  apiKey: "AIzaSyB1Dbs7G-G-Gt5xCLNM9FDb9Wqsy_1tRT4", authDomain: "visal-eaeea.firebaseapp.com", projectId: "visal-eaeea", storageBucket: "visal-eaeea.firebasestorage.app", messagingSenderId: "77752028345", appId: "1:77752028345:web:81c423c896b0701bfc9f68", measurementId: "G-H2DBRZ8R8X"}, 
+      {  apiKey: "AIzaSyDvPPVr22NsVwd_yTOndKlY9iAP_Iczj9Y", authDomain: "chat-4f98f.firebaseapp.com", projectId: "chat-4f98f", storageBucket: "chat-4f98f.firebasestorage.app", messagingSenderId: "675567156910", appId: "1:675567156910:web:053d1bf316d313cd72f73f", measurementId: "G-CBG87WNF2G" }, 
+      {  apiKey: "AIzaSyCw7-4HO7-m2yKEiu0OJlH6IUrwqUtQ_Yk", authDomain: "damm-87625.firebaseapp.com", projectId: "damm-87625", storageBucket: "damm-87625.firebasestorage.app", messagingSenderId: "409640965902", appId: "1:409640965902:web:fc2cc0a6e82cc70cd2e95f" }, 
       { apiKey: "API_KEY_4", authDomain: "project-4.firebaseapp.com", projectId: "project-4", storageBucket: "project-4.firebasestorage.app" }  
     ];
 
     let currentAppIndex = 0;
-
-    // Initialize with a unique name to avoid conflicts
     let app = initializeApp(firebaseConfigs[currentAppIndex], `app_${currentAppIndex}`); 
     let db = getFirestore(app);
     let auth = getAuth(app);
     let storage = getStorage(app);
     const provider = new GoogleAuthProvider();
 
-    // Fallback Function to swap databases automatically
     async function switchToNextFirebase() {
       if (currentAppIndex < firebaseConfigs.length - 1) {
         currentAppIndex++;
@@ -333,7 +341,9 @@
     let unsubscribeFriends = null;
     let incomingCallUnsubscribe = null;
     let activeCallDocUnsubscribe = null;
-    let currentFacingMode = "user"; // Camera flip state
+    let unsubscribeActivity = null;
+    let globalActivityUnsubscribe = null;
+    let currentFacingMode = "user";
 
     const API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
     const MAX_STORAGE_BYTES = 1048576; 
@@ -349,13 +359,54 @@
     const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
     const brain = {
-      "hello": "Hello! Nice to meet you.",
-      "hi": "Hey there! How is your day going?",
-      "how are you": "I am feeling fantastic and fully charged!",
-      "joke": "Why don't scientists trust atoms? Because they make up everything!",
-      "who are you": "I am an AI!",
-      "default": "That sounds interesting! Tell me more about it."
+            "I am cute" : "Yes you so cute.🥰",
+            "I'm cute" : "Yes you so cute.🥰",
+            "you think i am cute" : "Yes you so cute.🥰",
+            "you think i'm cute" : "Yes you so cute.🥰",
+            "hello": "Hello ! Nice to meet you.",
+            "hi": "Hey there! How is your day going?",
+            "how are you": "I am feeling fantastic and fully charged!",
+            "joke": "Why don't scientists trust atoms? Because they make up everything!",
+            "name": "Daravisal kong",
+            "bye": "Goodbye! Come talk to me again soon.",
+            "crazy" : "Is a bad word!?",
+            "bitch" : "Is a bad word!",
+            "fuck" : "Is a bad word!",
+            "google": "<a href='https://google.com' target='_blank'>Google</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSifcM3HiwNTXF8iC4Ed8AnszWGngiFXkXBOA&s'>",
+            "youtube": "<a href='https://youtube.com' target='_blank'>Youtube</a> <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoiMtJG_PC4lsb3-GZAiTZkUXAm3VlkJC1Ag&s'>",
+            "you so cute" : "Thank you!",
+            "you're so cute" : "Thank you!",
+            "story" : "    The lion and the mouse.  A lion once caught a Mouse who had woken him from a nap. The Mouse begged for mercy,  promising to one day repay the favor. Amused by the idea that such a tiny creature could help   him, the lion laughed and let her go. Shortly after, the lion was caught in a hunters net. He roared in frustration, unable to break the  thick ropes. The Mouse heard him and quickly gnawed through the mesh with her sharp teeth,   setting the King of the Jungle free.  The lion realized then that even the smallest friend can be a mighty ally. Moral: Kindness is never wasted, and size does not define strength.",
+            "who are you" : "I am an ai!",
+            "cute" : "❤️❤️❤️❤️",
+            "សួស្ដី" : "សួស្ដីអ្នក!",
+            "សួស្តី" : "សួស្ដីអ្នក!",
+      "happy": "Happy is an emotional state characterized by feelings of joy.",
+        "hello": "Hello! Nice to meet you.",
+        "hi": "Hey there! How is your day going?",
+        "joke": "Why don't scientists trust atoms? Because they make up everything!",
+        "who are you": "I am an AI!",
+        "default": "That sounds interesting! Tell me more about it."
     };
+
+    async function updateActivityStatus(status) {
+      if (currentUser) {
+        try {
+          await updateDoc(doc(db, "users", currentUser.uid), {
+            isOnline: status === 'online',
+            lastActive: serverTimestamp()
+          });
+        } catch(e) { console.error("Could not update activity:", e); }
+      }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      updateActivityStatus(document.visibilityState === "visible" ? 'online' : 'offline');
+    });
+    
+    window.addEventListener('beforeunload', () => {
+      updateActivityStatus('offline');
+    });
 
     function showCustomConfirm(title, message, onConfirm, okText = "Delete All", okColor = "#dc3545") {
       const modal = document.getElementById('custom-confirm-modal');
@@ -367,7 +418,6 @@
       okBtn.style.background = okColor;
 
       modal.style.display = 'flex';
-
       const cancelBtn = document.getElementById('confirm-cancel-btn');
 
       const newOkBtn = okBtn.cloneNode(true);
@@ -375,22 +425,13 @@
       const newCancelBtn = cancelBtn.cloneNode(true);
       cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
 
-      newOkBtn.onclick = () => {
-        modal.style.display = 'none';
-        onConfirm();
-      };
-      newCancelBtn.onclick = () => {
-        modal.style.display = 'none';
-      };
+      newOkBtn.onclick = () => { modal.style.display = 'none'; onConfirm(); };
+      newCancelBtn.onclick = () => { modal.style.display = 'none'; };
     }
 
     document.getElementById('modal-theme-toggle').onclick = () => {
       document.body.classList.toggle('dark-mode');
-      if (document.body.classList.contains('dark-mode')) {
-        localStorage.setItem('app_theme', 'dark');
-      } else {
-        localStorage.setItem('app_theme', 'light');
-      }
+      localStorage.setItem('app_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
     };
 
     document.getElementById('modal-delete-account').onclick = () => {
@@ -437,27 +478,47 @@
       catch (error) { alert("Error: " + error.message); }
     };
 
-    document.getElementById('logout-btn').onclick = () => { 
-      showCustomConfirm("🚪 Logout", "Are you sure you want to log out?", () => signOut(auth), "Logout", "#007bff"); 
+    document.getElementById('profile-logout-btn').onclick = () => { 
+      document.getElementById('profile-modal').style.display = 'none';
+      showCustomConfirm("🚪 Logout", "Are you sure you want to log out?", async () => {
+        updateActivityStatus('offline');
+        await signOut(auth);
+      }, "Logout", "#ff9800"); 
     };
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
         document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('logout-btn').style.display = 'block';
+        document.getElementById('activity-btn').style.display = 'block';
         document.getElementById('user-profile').style.display = 'flex';
         await saveUserToDatabase(user);
+        updateActivityStatus('online'); 
         document.getElementById('user-pic').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "User")}&background=random`;
+        
+        // Listen to network globally to change the header button (Green if someone online, Red if no one)
+        if (globalActivityUnsubscribe) globalActivityUnsubscribe();
+        globalActivityUnsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+           let someoneIsOnline = false;
+           snapshot.forEach(docSnap => {
+             const u = docSnap.data();
+             if (u.uid !== currentUser.uid && u.isOnline) {
+               someoneIsOnline = true;
+             }
+           });
+           document.getElementById('activity-btn').innerText = someoneIsOnline ? "🟢" : "🔴";
+        });
+
         loadSidebarItems();
         switchRoom('global', 'Global Chat', 'global');
         listenForIncomingCalls();
       } else {
         currentUser = null;
         document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('logout-btn').style.display = 'none';
+        document.getElementById('activity-btn').style.display = 'none';
         document.getElementById('user-profile').style.display = 'none';
         if (incomingCallUnsubscribe) { incomingCallUnsubscribe(); incomingCallUnsubscribe = null; }
+        if (globalActivityUnsubscribe) { globalActivityUnsubscribe(); globalActivityUnsubscribe = null; }
       }
     });
 
@@ -466,9 +527,9 @@
         const userRef = doc(db, "users", user.uid);
         const snap = await getDoc(userRef);
         if (!snap.exists()) {
-           await setDoc(userRef, { uid: user.uid, name: user.displayName || "User", email: user.email, photoURL: user.photoURL || "", storageUsed: 0 });
+           await setDoc(userRef, { uid: user.uid, name: user.displayName || "User", email: user.email, photoURL: user.photoURL || "", storageUsed: 0, isOnline: true, lastActive: serverTimestamp() });
         } else {
-           await setDoc(userRef, { uid: user.uid, name: user.displayName || "User", email: user.email, photoURL: user.photoURL || "" }, { merge: true });
+           await setDoc(userRef, { uid: user.uid, name: user.displayName || "User", email: user.email, photoURL: user.photoURL || "", isOnline: true, lastActive: serverTimestamp() }, { merge: true });
         }
       } 
       catch (err) { console.error(err); }
@@ -479,16 +540,8 @@
       const userRef = doc(db, "users", currentUser.uid);
       const snap = await getDoc(userRef);
       let currentStorage = 0;
-      if (snap.exists() && snap.data().storageUsed) {
-          currentStorage = snap.data().storageUsed;
-      }
-      
-      if (currentStorage + fileSize > MAX_STORAGE_BYTES) {
-          // Trigger the failover system if storage limits are hit
-          const switched = await switchToNextFirebase();
-          return switched; 
-      }
-      
+      if (snap.exists() && snap.data().storageUsed) currentStorage = snap.data().storageUsed;
+      if (currentStorage + fileSize > MAX_STORAGE_BYTES) return await switchToNextFirebase();
       await updateDoc(userRef, { storageUsed: currentStorage + fileSize });
       return true;
     }
@@ -497,33 +550,25 @@
       if (!currentUser) return;
       try {
         if (currentRoom === 'bot') {
-          localStorage.removeItem('bot_messages');
-          loadLocalBotMessages();
+          localStorage.removeItem('bot_messages'); loadLocalBotMessages();
         } else {
           const q = query(collection(db, "messages"));
           const snapshot = await getDocs(q);
           const batchDeletes = [];
           snapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            if (data.uid === currentUser.uid && (data.room || 'global') === currentRoom) {
-              batchDeletes.push(deleteDoc(doc(db, "messages", docSnap.id)));
-            }
+            if (data.uid === currentUser.uid && (data.room || 'global') === currentRoom) batchDeletes.push(deleteDoc(doc(db, "messages", docSnap.id)));
           });
           await Promise.all(batchDeletes);
         }
-
         await updateDoc(doc(db, "users", currentUser.uid), { storageUsed: 0 });
         alert("All your messages have been successfully cleared!");
         document.getElementById('profile-modal').style.display = 'none';
-      } catch (err) {
-        alert("Error clearing messages: " + err.message);
-      }
+      } catch (err) { alert("Error clearing messages: " + err.message); }
     }
 
     document.getElementById('profile-delete-all-btn').onclick = () => {
-      showCustomConfirm("🗑️ Clear All Messages", "Are you sure you want to delete all your messages in this chat and reset your memory usage?", () => {
-        executeDeleteAllMessages();
-      }, "Delete All", "#dc3545");
+      showCustomConfirm("🗑️ Clear All Messages", "Are you sure you want to delete all your messages in this chat and reset your memory usage?", () => { executeDeleteAllMessages(); }, "Delete All", "#dc3545");
     };
 
     document.getElementById('user-profile').onclick = async () => {
@@ -535,9 +580,7 @@
       try {
         const snap = await getDoc(doc(db, "users", currentUser.uid));
         let storageUsed = 0;
-        if (snap.exists() && snap.data().storageUsed) {
-            storageUsed = snap.data().storageUsed;
-        }
+        if (snap.exists() && snap.data().storageUsed) storageUsed = snap.data().storageUsed;
         
         const kbUsed = (storageUsed / 1024).toFixed(1);
         document.getElementById('storage-text').innerText = `${kbUsed} KB / 1024 KB`;
@@ -552,30 +595,119 @@
         const warningText = document.getElementById('storage-warning-text');
 
         if (percentage >= 90) {
-            storageBar.style.background = 'red';
-            warningText.innerText = "⚠️ Memory is almost full! Consider clearing messages.";
-            warningText.style.color = "red";
-            deleteAllBtn.style.display = 'block';
+            storageBar.style.background = 'red'; warningText.innerText = "⚠️ Memory is almost full! Consider clearing messages."; warningText.style.color = "red"; deleteAllBtn.style.display = 'block';
         } else {
-            storageBar.style.background = '#007bff';
-            warningText.innerText = "Maximum allowance: 1 MB per user";
-            warningText.style.color = "inherit";
-            deleteAllBtn.style.display = 'block';
+            storageBar.style.background = '#007bff'; warningText.innerText = "Maximum allowance: 1 MB per user"; warningText.style.color = "inherit"; deleteAllBtn.style.display = 'block';
         }
-
-      } catch(e) {
-        console.error("Error loading storage:", e);
-      }
+      } catch(e) { console.error("Error loading storage:", e); }
 
       document.getElementById('profile-modal').style.display = 'flex';
     };
 
     document.getElementById('close-profile-modal').onclick = () => { document.getElementById('profile-modal').style.display = 'none'; };
 
+    // Updated Active Users Modal Logic (Shows everyone, Green if online, Red if offline)
+    document.getElementById('activity-btn').onclick = () => {
+      document.getElementById('activity-modal').style.display = 'flex';
+      const activeList = document.getElementById('active-users-list');
+      activeList.innerHTML = '<p style="text-align:center; font-size: 13px; opacity:0.7;">Loading...</p>';
+
+      if (unsubscribeActivity) unsubscribeActivity();
+      
+      unsubscribeActivity = onSnapshot(collection(db, "users"), (snapshot) => {
+        activeList.innerHTML = '';
+        let countUsers = 0;
+        
+        snapshot.forEach((docSnap) => {
+          const u = docSnap.data();
+          if (u.uid !== currentUser.uid) {
+             countUsers++;
+             
+             // Check if user is online or offline
+             const isOnline = u.isOnline === true;
+             const dotColor = isOnline ? '#28a745' : '#dc3545';
+             const statusText = isOnline ? 'Online now' : 'Offline';
+
+             const div = document.createElement('div');
+             div.style.cssText = "display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px;";
+             div.innerHTML = `
+                <div style="position:relative;">
+                  <img src="${u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                  <div style="position:absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: ${dotColor}; border-radius: 50%; border: 2px solid var(--card-bg);"></div>
+                </div>
+                <div style="flex: 1;">
+                  <div style="font-size: 14px; font-weight: bold;">${u.name}</div>
+                  <div style="font-size: 11px; color: ${dotColor}; font-weight:bold;">${statusText}</div>
+                </div>
+                <button class="btn btn-primary" style="padding: 6px 10px; font-size: 12px; width: auto;" onclick="switchRoom('${[currentUser.uid, u.uid].sort().join('_')}', '${u.name}', 'private'); document.getElementById('activity-modal').style.display = 'none';">Chat</button>
+             `;
+             activeList.appendChild(div);
+          }
+        });
+
+        if (countUsers === 0) {
+            activeList.innerHTML = '<p style="text-align:center; font-size: 13px; opacity:0.7;">No other registered users found.</p>';
+        }
+      });
+    };
+
+    document.getElementById('close-activity-modal').onclick = () => {
+      document.getElementById('activity-modal').style.display = 'none';
+      if (unsubscribeActivity) { unsubscribeActivity(); unsubscribeActivity = null; }
+    };
+
     const emojiPicker = document.getElementById('emoji-picker');
     const emojiBtn = document.getElementById('emoji-btn');
     const messageInput = document.getElementById('message-input');
-    const commonEmojis = ["😀", "😂", "🥰", "😎", "😭", "🥺", "😡", "👍", "❤️", "🔥", "✨", "🎉", "💀", "👀", "🤔", "🙌", "😊", "👋", "🙏", "💯"];
+const commonEmojis = [
+  // --- Smileys & Expressions ---
+  "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "🤩", 
+  "😘", "😗", "😚", "😙", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", 
+  "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😷", "🤒", "🤕", "🤢", "🤮", "🤧", 
+  "🥵", "🥶", "🥴", "🤯", "🤠", "🥳", "😎", "🤓", "🧐", "😕", "😟", "🙁", "😮", "😯", "😲", "😳", 
+  "🥺", "😦", "😧", "😨", "😰", "😥", "cry", "😭", "😱", "😖", "😣", "😞", "😓", "😩", "😫", "🥱", 
+  "😤", "😡", "😠", "🤬", "😈", "👿", "💀", "☠️", "💩", "🤡", "👹", "👺", "👻", "👽", "👾", "🤖",
+
+  // --- Hands & Gestures ---
+  "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🫰", "🤟", "🤘", "🤙", "👈", "👉", 
+  "👆", "🖕", "👇", "☝️", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝", "🙏", 
+  "✍️", "💅", "🤳", "💪", "🦾", "🦵", "🦿", "🦶", "👂", "🦻", "👃", "🧠", "🦷", "🦴", "👀", "👁️", 
+
+  // --- Hearts & Emotions ---
+  "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗", 
+  "💖", "💘", "💝", "💯", "💢", "💥", "💫", "💦", "💨", "🕳️", "💣", "💬", "👁️‍🗨️", "🗨️", "🗯️", "💭", "💤",
+
+  // --- Animals & Nature ---
+  "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", 
+  "🐧", "🐦", "🐤", "🦆", "🦅", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🐛", "🦋", "🐌", "🐞", 
+  "🐢", "🐍", "lizard", "🦕", "🐙", "🦑", "🦐", "🦞", "🦀", "🐠", "🐟", "🐡", "🦈", "🐳", "🐬", "seal", 
+  "💐", "🌸", "💮", "🌹", "🥀", "🌺", "🌻", "🌼", "🌷", "🌱", "🪴", "🌲", "🌳", "🌴", "🌵", "🌾",
+
+  // --- Food & Drink ---
+  "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", 
+  "🥝", "🥑", "🍅", "🍆", "🥒", "🥕", "🌽", "🌶️", "🧄", "🧅", "🍄", "🍞", "🥐", "🥖", "🥨", "🥯", 
+  "🥞", "🧇", "🧀", "🍖", "🍗", "🥩", "🥓", "🍔", "🍟", "🍕", "🌭", "🥪", "🌮", "🌯", "🧆", "🥚", 
+  "🍿", "🧈", "🧂", "🍱", "rice_cracker", "🍙", "🍚", "🍛", "🍜", "🍝", "🍢", "🍣", "🍤", "🥮", "🍡", 
+  "🥟", "🥠", "🥡", "🦀", "🦞", "🍦", "🍧", "🍨", "🍩", "🍪", "🎂", "🍰", "🧁", "🥧", "🍫", "🍬", 
+  "🍭", "🍮", "🍯", "🍼", "🥛", "☕", "🍵", "🍶", "🍾", "🍷", "🍸", "🍹", "🍺", "🍻", "🥂", "🥃",
+
+  // --- Travel & Places ---
+  "🌍", "🌎", "🌏", "🗺️", "🧭", "🏔️", "⛰️", "🌋", "🗻", "🏕️", "🏖️", "🏜️", "🏝️", "🏟️", "🏛️", "🏗️", 
+  "🧱", "🏘️", "🏚️", "🏠", "🏡", "🏢", "🏣", "🏤", "🏥", "🏦", "🏨", "🏩", "🏪", "🏫", "🏬", "🏭", 
+  "🏯", "🏰", "💒", "🗼", "🗽", "⛪", "🕌", "🛕", "🕍", "🕋", "⛩️", "⛲", "⛺", "🌁", "🌃", "🏙️", 
+  "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🛵", "🏍️", 
+  "🚲", "🛴", "🛺", "🚄", "🚅", "🚆", "🚇", "🚈", "🚉", "🚊", "🚂", "✈️", "🚀", "🛸", "🛰️", "⛵",
+
+  // --- Activities & Objects ---
+  "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🏓", "🏸", "🏒", "🏑", "🥍", "🏏", 
+  "🪃", "🥅", "⛳", "⛸️", "🎣", "🤿", "🎽", "🎿", "🛷", "🥌", "🎯", "🪀", "🪁", "🎱", "🔮", "🎮", 
+  "🕹️", "🎰", "🎲", "🧩", "🧸", "🪅", "🪆", "♠️", "♥️", "♦️", "♣️", "♟️", "🃏", "🀄", "🎴", "🎭", 
+  "🎨", "🎬", "🎤", "🎧", "🎷", "🪗", "🎸", "🎹", "🎺", "🎻", "🪕", "🥁", "📱", "📲", "💻", "⌨️", 
+  "🖨️", "🖱️", "🖲️", "💾", "💿", "📀", "📷", "📸", "📹", "🎥", "📽️", "🎞️", "📞", "☎️", "📟", "📠", 
+  "📺", "📻", "🎙️", "⏱️", "⏲️", "⏰", "🕰️", "⌛", "⏳", "📡", "🔋", "🔌", "💡", "🔦", "🕯️", "🪔",
+  "🧯", "🛢️", "💸", "💵", "💴", "💶", "💷", "🪙", "💰", "💳", "💎", "⚖️", "🪜", "🧰"
+];
+
     
     commonEmojis.forEach(emoji => {
       const span = document.createElement('span');
@@ -584,17 +716,10 @@
       emojiPicker.appendChild(span);
     });
 
-    emojiBtn.onclick = (e) => {
-      e.preventDefault();
-      emojiPicker.style.display = emojiPicker.style.display === 'grid' ? 'none' : 'grid';
-    };
+    emojiBtn.onclick = (e) => { e.preventDefault(); emojiPicker.style.display = emojiPicker.style.display === 'grid' ? 'none' : 'grid'; };
+    document.addEventListener('click', (e) => { if (e.target !== emojiBtn && !emojiPicker.contains(e.target)) emojiPicker.style.display = 'none'; });
 
-    document.addEventListener('click', (e) => {
-      if (e.target !== emojiBtn && !emojiPicker.contains(e.target)) { emojiPicker.style.display = 'none'; }
-    });
-
-    let selectedChatFile = null;
-    let processedImageBlob = null;
+    let selectedChatFile = null; let processedImageBlob = null;
     const chatImageUpload = document.getElementById('chat-image-upload');
     const mediaEditModal = document.getElementById('media-edit-modal');
     const editPreview = document.getElementById('edit-preview');
@@ -609,7 +734,7 @@
         mediaEditModal.style.display = 'flex';
       }
     };
-
+  
     document.getElementById('cancel-edit-btn').onclick = () => {
       mediaEditModal.style.display = 'none'; selectedChatFile = null; processedImageBlob = null; chatImageUpload.value = '';
     };
@@ -637,38 +762,24 @@
       const color = document.getElementById('bg-replace-color').value;
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = color; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob((blob) => {
-          processedImageBlob = blob;
-          editPreview.src = URL.createObjectURL(blob);
-          editStatus.innerText = `Applied background color: ${color}`;
-        }, 'image/png');
+        const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d'); ctx.fillStyle = color; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => { processedImageBlob = blob; editPreview.src = URL.createObjectURL(blob); editStatus.innerText = `Applied background color: ${color}`; }, 'image/png');
       };
       img.src = URL.createObjectURL(processedImageBlob);
     };
 
     document.getElementById('download-edited-btn').onclick = () => {
       if (!processedImageBlob) return;
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(processedImageBlob);
-      a.download = 'edited-image.png';
+      const a = document.createElement('a'); a.href = URL.createObjectURL(processedImageBlob); a.download = 'edited-image.png';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
 
     document.getElementById('send-edited-btn').onclick = async () => {
       if (!processedImageBlob) return;
-      
       const fileSize = processedImageBlob.size;
       const hasSpace = await checkAndUpdateStorage(fileSize);
-      
-      if (!hasSpace) {
-          mediaEditModal.style.display = 'none';
-          return;
-      }
+      if (!hasSpace) { mediaEditModal.style.display = 'none'; return; }
 
       mediaEditModal.style.display = 'none';
       messageInput.placeholder = "Uploading image...";
@@ -678,11 +789,7 @@
         await uploadBytes(fileRef, fileToUpload);
         const imageUrl = await getDownloadURL(fileRef);
 
-        await addDoc(collection(db, "messages"), {
-          text: "", imageUrl: imageUrl, audioUrl: null,
-          fileSizeBytes: fileSize,
-          uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp()
-        });
+        await addDoc(collection(db, "messages"), { text: "", imageUrl: imageUrl, audioUrl: null, fileSizeBytes: fileSize, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
       } catch (err) { alert("Upload error: " + err.message); } 
       finally { messageInput.placeholder = "Type a message..."; selectedChatFile = null; processedImageBlob = null; chatImageUpload.value = ''; }
     };
@@ -700,8 +807,7 @@
           const u = docSnap.data();
           if (u.uid !== currentUser.uid && u.name.toLowerCase().includes(val)) {
             matches++;
-            const div = document.createElement('div');
-            div.className = 'search-item';
+            const div = document.createElement('div'); div.className = 'search-item';
             div.innerHTML = `
               <img src="${u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`}">
               <span style="flex: 1;">${u.name}</span>
@@ -741,40 +847,32 @@
     }
 
     window.switchRoom = async function(roomId, roomName, roomType) {
-      currentRoom = roomId;
-      currentRoomType = roomType;
+      currentRoom = roomId; currentRoomType = roomType;
       document.getElementById('room-label').innerText = roomName;
-
       const removeBtn = document.getElementById('remove-friend-btn');
+
       if (roomType === 'private') {
         removeBtn.style.display = 'block';
         const uids = roomId.split('_');
         const friendUid = uids[0] === currentUser.uid ? uids[1] : uids[0];
 
         removeBtn.onclick = async () => {
-          showCustomConfirm("❌ Remove Friend", `Are you sure you want to remove ${roomName} from your friends list?`, async () => {
+          showCustomConfirm("❌ Remove Friend", `Are you sure you want to remove ${roomName}?`, async () => {
             await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendUid));
-            alert(`${roomName} has been removed.`);
-            switchRoom('global', 'Global Chat', 'global'); 
+            alert(`${roomName} has been removed.`); switchRoom('global', 'Global Chat', 'global'); 
           }, "Remove", "#dc3545");
         };
-      } else {
-        removeBtn.style.display = 'none';
-      }
+      } else { removeBtn.style.display = 'none'; }
 
       emojiPicker.style.display = 'none';
-      if (roomId === 'bot') {
-        if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
-        loadLocalBotMessages();
-      } else {
-        loadMessages();
-      }
+      if (roomId === 'bot') { if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; } loadLocalBotMessages(); } 
+      else { loadMessages(); }
     };
 
     document.getElementById('video-call-btn').onclick = async () => {
       document.getElementById('video-call-screen').style.display = 'flex';
       document.getElementById('call-status').innerText = "Starting camera...";
-      currentFacingMode = "user"; // Reset to front camera
+      currentFacingMode = "user"; 
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
@@ -792,107 +890,59 @@
 
         pc.onicecandidate = event => { if (event.candidate) addDoc(offerCandidates, event.candidate.toJSON()); };
 
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
+        const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
         
-        let targetAudience = 'global';
-        let targetUid = null;
-
+        let targetAudience = 'global'; let targetUid = null;
         if (currentRoomType === 'private') {
-           targetAudience = 'private';
-           const uids = currentRoom.split('_');
-           targetUid = uids[0] === currentUser.uid ? uids[1] : uids[0];
+           targetAudience = 'private'; const uids = currentRoom.split('_'); targetUid = uids[0] === currentUser.uid ? uids[1] : uids[0];
         }
 
-        await setDoc(callDoc, { 
-          offer: { type: offer.type, sdp: offer.sdp }, 
-          caller: currentUser.uid, 
-          callerName: currentUser.displayName || "Someone",
-          room: currentRoom,
-          type: targetAudience,
-          targetUser: targetUid,
-          status: 'ringing'
-        });
-        
+        await setDoc(callDoc, { offer: { type: offer.type, sdp: offer.sdp }, caller: currentUser.uid, callerName: currentUser.displayName || "Someone", room: currentRoom, type: targetAudience, targetUser: targetUid, status: 'ringing' });
         document.getElementById('call-status').innerText = targetAudience === 'global' ? "Ringing everyone..." : `Ringing ${document.getElementById('room-label').innerText}...`;
 
         onSnapshot(callDoc, async (snapshot) => {
           const data = snapshot.data();
-          if (!data) {
-             forceCloseCallUI();
-             return;
-          }
+          if (!data) { forceCloseCallUI(); return; }
           if (!pc.currentRemoteDescription && data && data.answer) {
-            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-            document.getElementById('call-status').innerText = "Connected!";
+            await pc.setRemoteDescription(new RTCSessionDescription(data.answer)); document.getElementById('call-status').innerText = "Connected!";
           }
         });
 
         onSnapshot(collection(callDoc, "answerCandidates"), (snapshot) => {
-          snapshot.docChanges().forEach(change => {
-            if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-          });
+          snapshot.docChanges().forEach(change => { if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data())); });
         });
 
-        window.activeCallDoc = callDoc;
-        listenToCallTermination(callDoc);
-      } catch (err) {
-        alert("Camera error: " + err.message);
-        document.getElementById('video-call-screen').style.display = 'none';
-      }
+        window.activeCallDoc = callDoc; listenToCallTermination(callDoc);
+      } catch (err) { alert("Camera error: " + err.message); document.getElementById('video-call-screen').style.display = 'none'; }
     };
 
-    // Camera Flip Logic
     document.getElementById('flip-cam-btn').onclick = async () => {
       if (!pc || !localStream) return;
-      
       currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
-      
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: currentFacingMode }, 
-          audio: true 
-        });
-        
-        const newVideoTrack = newStream.getVideoTracks()[0];
-        const oldVideoTrack = localStream.getVideoTracks()[0];
-        
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
+        const newVideoTrack = newStream.getVideoTracks()[0]; const oldVideoTrack = localStream.getVideoTracks()[0];
         document.getElementById('local-video').srcObject = newStream;
         
         const sender = pc.getSenders().find(s => s.track.kind === 'video');
-        if (sender) {
-          await sender.replaceTrack(newVideoTrack);
-        }
-        
+        if (sender) await sender.replaceTrack(newVideoTrack);
         if (oldVideoTrack) oldVideoTrack.stop();
         localStream = newStream;
-        
-      } catch (err) {
-        console.error("Could not flip camera:", err);
-        alert("Camera flip is not supported on this device.");
-      }
+      } catch (err) { alert("Camera flip is not supported on this device."); }
     };
 
     const muteMicBtn = document.getElementById('mute-mic-btn');
     muteMicBtn.onclick = () => {
       if (!localStream) return;
       const audioTrack = localStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        muteMicBtn.classList.toggle('active-off', !audioTrack.enabled);
-        muteMicBtn.innerText = audioTrack.enabled ? "🎤 Muted" : "🎤 Mute";
-      }
+      if (audioTrack) { audioTrack.enabled = !audioTrack.enabled; muteMicBtn.classList.toggle('active-off', !audioTrack.enabled); muteMicBtn.innerText = audioTrack.enabled ? "🎤 Muted" : "🎤 Mute"; }
     };
 
     const toggleCamBtn = document.getElementById('toggle-cam-btn');
     toggleCamBtn.onclick = () => {
       if (!localStream) return;
       const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        toggleCamBtn.classList.toggle('active-off', !videoTrack.enabled);
-        toggleCamBtn.innerText = videoTrack.enabled ? "📷 Cam Off" : "📷 Cam On";
-      }
+      if (videoTrack) { videoTrack.enabled = !videoTrack.enabled; toggleCamBtn.classList.toggle('active-off', !videoTrack.enabled); toggleCamBtn.innerText = videoTrack.enabled ? "📷 Cam Off" : "📷 Cam On"; }
     };
 
     function listenForIncomingCalls() {
@@ -908,53 +958,31 @@
             if (data.caller !== currentUser.uid && !pc && isForMe) {
               ringtone.play().catch(() => {});
               if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
+              const callerName = data.callerName || "Someone"; const callTypeStr = data.type === 'global' ? 'a Global Call' : 'a Private Call';
               
-              const callerName = data.callerName || "Someone";
-              const callTypeStr = data.type === 'global' ? 'a Global Call' : 'a Private Call';
-              
-              showCustomConfirm("📞 Incoming Call", `Incoming ${callTypeStr} from ${callerName}. Do you want to answer?`, async () => {
-                ringtone.pause(); ringtone.currentTime = 0;
-                const callDocRef = change.doc.ref;
+              showCustomConfirm("📞 Incoming Call", `Incoming ${callTypeStr} from ${callerName}. Answer?`, async () => {
+                ringtone.pause(); ringtone.currentTime = 0; const callDocRef = change.doc.ref;
                 try {
                   const freshSnap = await getDoc(callDocRef);
                   if (!freshSnap.exists() || freshSnap.data().answer) { alert("Call already answered or ended!"); return; }
 
-                  document.getElementById('video-call-screen').style.display = 'flex';
-                  document.getElementById('call-status').innerText = `Connected with ${callerName}`;
-                  currentFacingMode = "user";
-
-                  localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
-                  document.getElementById('local-video').srcObject = localStream;
-
-                  pc = new RTCPeerConnection(servers);
-                  remoteStream = new MediaStream();
-                  document.getElementById('remote-video').srcObject = remoteStream;
+                  document.getElementById('video-call-screen').style.display = 'flex'; document.getElementById('call-status').innerText = `Connected with ${callerName}`; currentFacingMode = "user";
+                  localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true }); document.getElementById('local-video').srcObject = localStream;
+                  pc = new RTCPeerConnection(servers); remoteStream = new MediaStream(); document.getElementById('remote-video').srcObject = remoteStream;
 
                   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
                   pc.ontrack = event => { event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track)); };
 
-                  const offerCandidates = collection(callDocRef, "offerCandidates");
-                  const answerCandidates = collection(callDocRef, "answerCandidates");
-
+                  const offerCandidates = collection(callDocRef, "offerCandidates"); const answerCandidates = collection(callDocRef, "answerCandidates");
                   pc.onicecandidate = event => { if (event.candidate) addDoc(answerCandidates, event.candidate.toJSON()); };
 
                   await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-                  const answer = await pc.createAnswer();
-                  await pc.setLocalDescription(answer);
+                  const answer = await pc.createAnswer(); await pc.setLocalDescription(answer);
                   await setDoc(callDocRef, { answer: { type: answer.type, sdp: answer.sdp }, answeredBy: currentUser.uid }, { merge: true });
 
-                  onSnapshot(offerCandidates, (snapshot) => {
-                    snapshot.docChanges().forEach(async (change) => {
-                      if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-                    });
-                  });
-
-                  window.activeCallDoc = callDocRef;
-                  listenToCallTermination(callDocRef);
-                } catch (err) {
-                  alert("Could not connect call: " + err.message);
-                  document.getElementById('video-call-screen').style.display = 'none';
-                }
+                  onSnapshot(offerCandidates, (snapshot) => { snapshot.docChanges().forEach(async (change) => { if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data())); }); });
+                  window.activeCallDoc = callDocRef; listenToCallTermination(callDocRef);
+                } catch (err) { alert("Could not connect: " + err.message); document.getElementById('video-call-screen').style.display = 'none'; }
               }, "Answer", "#28a745");
             }
           }
@@ -964,9 +992,7 @@
 
     function listenToCallTermination(callDocRef) {
       if (activeCallDocUnsubscribe) activeCallDocUnsubscribe();
-      activeCallDocUnsubscribe = onSnapshot(callDocRef, (docSnap) => {
-        if (!docSnap.exists()) forceCloseCallUI();
-      });
+      activeCallDocUnsubscribe = onSnapshot(callDocRef, (docSnap) => { if (!docSnap.exists()) forceCloseCallUI(); });
     }
 
     function forceCloseCallUI() {
@@ -978,11 +1004,7 @@
       window.activeCallDoc = null;
     }
   
-    document.getElementById('end-call-btn').onclick = async () => {
-      const docRefToDel = window.activeCallDoc;
-      forceCloseCallUI();
-      if (docRefToDel) { try { await deleteDoc(docRefToDel); } catch (err) {} }
-    };
+    document.getElementById('end-call-btn').onclick = async () => { const docRefToDel = window.activeCallDoc; forceCloseCallUI(); if (docRefToDel) { try { await deleteDoc(docRefToDel); } catch (err) {} } };
 
     function formatTime(timestamp) {
       if (!timestamp) return new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -991,134 +1013,76 @@
     }
 
     function appendMessageToUI(data, docId, isLocal = false) {
-      const chatMessages = document.getElementById('chat-messages');
-      const isMe = data.uid === currentUser.uid;
+      const chatMessages = document.getElementById('chat-messages'); const isMe = data.uid === currentUser.uid;
+      const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${isMe ? 'sent' : 'received'}`;
 
-      const wrapper = document.createElement('div');
-      wrapper.className = `message-wrapper ${isMe ? 'sent' : 'received'}`;
-
-      const name = data.name || 'User';
-      const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+      const name = data.name || 'User'; const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
       
-      let textContent = data.text ? `<div>${data.text}</div>` : '';
-      let imageContent = data.imageUrl ? `<img src="${data.imageUrl}" class="chat-image">` : '';
-      let audioContent = data.audioUrl ? `<audio controls src="${data.audioUrl}"></audio>` : '';
-      let timeFormatted = formatTime(data.createdAt);
-      let reaction = data.reaction ? `<div class="reactions-bar"><span class="reaction-badge">${data.reaction}</span></div>` : '';
+      let textContent = data.text ? `<div>${data.text}</div>` : ''; let imageContent = data.imageUrl ? `<img src="${data.imageUrl}" class="chat-image">` : ''; let audioContent = data.audioUrl ? `<audio controls src="${data.audioUrl}"></audio>` : '';
+      let timeFormatted = formatTime(data.createdAt); let reaction = data.reaction ? `<div class="reactions-bar"><span class="reaction-badge">${data.reaction}</span></div>` : '';
 
       wrapper.innerHTML = `
         <img src="${avatar}" class="avatar">
         <div class="message-content">
           <span class="sender-name">${name}</span>
-          <div class="message-row">
-            <div class="message">
-              ${textContent}${imageContent}${audioContent}
-              <div class="msg-timestamp">${timeFormatted}</div>
-              ${reaction}
-            </div>
-          </div>
+          <div class="message-row"><div class="message">${textContent}${imageContent}${audioContent}<div class="msg-timestamp">${timeFormatted}</div>${reaction}</div></div>
         </div>`;
 
-      const msgRow = wrapper.querySelector('.message-row');
-      const msgBubble = wrapper.querySelector('.message');
-
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'action-icon';
-      copyBtn.innerHTML = '📋';
-      copyBtn.title = 'Copy message';
+      const msgRow = wrapper.querySelector('.message-row'); const msgBubble = wrapper.querySelector('.message');
+      const copyBtn = document.createElement('button'); copyBtn.className = 'action-icon'; copyBtn.innerHTML = '📋'; copyBtn.title = 'Copy message';
       copyBtn.onclick = (e) => {
-        e.stopPropagation();
-        const textToCopy = data.text || (data.imageUrl ? data.imageUrl : "Audio message");
-        navigator.clipboard.writeText(textToCopy).then(() => {
-          copyBtn.innerHTML = '✅';
-          setTimeout(() => { copyBtn.innerHTML = '📋'; }, 1500);
-        }).catch(err => { alert('Failed to copy text.'); });
+        e.stopPropagation(); const textToCopy = data.text || (data.imageUrl ? data.imageUrl : "Audio message");
+        navigator.clipboard.writeText(textToCopy).then(() => { copyBtn.innerHTML = '✅'; setTimeout(() => { copyBtn.innerHTML = '📋'; }, 1500); }).catch(err => { alert('Failed to copy text.'); });
       };
       msgRow.appendChild(copyBtn);
 
       msgBubble.onclick = async () => {
         const chosenEmoji = prompt("React to message (e.g. ❤️, 👍, 😂, 🔥):");
-        if (chosenEmoji && docId && !isLocal) {
-          try { await updateDoc(doc(db, "messages", docId), { reaction: chosenEmoji }); } catch(e) {}
-        }
+        if (chosenEmoji && docId && !isLocal) { try { await updateDoc(doc(db, "messages", docId), { reaction: chosenEmoji }); } catch(e) {} }
       };
 
       if ((isMe || data.uid === "ai_bot_123") && docId) {
-        const delBtn = document.createElement('button');
-        delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️';
-        delBtn.title = 'Delete message';
+        const delBtn = document.createElement('button'); delBtn.className = 'action-icon'; delBtn.innerHTML = '🗑️'; delBtn.title = 'Delete message';
         delBtn.onclick = async (e) => {
           e.stopPropagation();
           showCustomConfirm("🗑️ Delete Message", "Are you sure you want to delete this message?", async () => {
-             if (isLocal) {
-                 let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-                 localMsgs = localMsgs.filter(m => m.id !== docId);
-                 localStorage.setItem('bot_messages', JSON.stringify(localMsgs));
-                 loadLocalBotMessages(); 
-             } else {
-                 await deleteDoc(doc(db, "messages", docId));
-             }
+             if (isLocal) { let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]'); localMsgs = localMsgs.filter(m => m.id !== docId); localStorage.setItem('bot_messages', JSON.stringify(localMsgs)); loadLocalBotMessages(); } 
+             else { await deleteDoc(doc(db, "messages", docId)); }
           }, "Delete", "#dc3545");
         };
         msgRow.appendChild(delBtn);
       }
-
-      chatMessages.appendChild(wrapper);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      chatMessages.appendChild(wrapper); chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function loadLocalBotMessages() {
-        const chatMessages = document.getElementById('chat-messages');
-        chatMessages.innerHTML = '';
-        const localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-        localMsgs.forEach(msg => appendMessageToUI(msg, msg.id, true));
-    }
+    function loadLocalBotMessages() { const chatMessages = document.getElementById('chat-messages'); chatMessages.innerHTML = ''; const localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]'); localMsgs.forEach(msg => appendMessageToUI(msg, msg.id, true)); }
 
     function loadMessages() {
       if (unsubscribeMessages) unsubscribeMessages();
-      const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
-      let firstLoad = true;
-
+      const q = query(collection(db, "messages"), orderBy("createdAt", "asc")); let firstLoad = true;
       unsubscribeMessages = onSnapshot(q, (snapshot) => {
         document.getElementById('chat-messages').innerHTML = '';
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if ((data.room || 'global') === currentRoom) appendMessageToUI(data, docSnap.id, false);
-        });
-
-        if (!firstLoad && snapshot.docChanges().some(change => change.type === 'added')) {
-          soundEffect.play().catch(() => {});
-          if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
-        }
+        snapshot.forEach((docSnap) => { const data = docSnap.data(); if ((data.room || 'global') === currentRoom) appendMessageToUI(data, docSnap.id, false); });
+        if (!firstLoad && snapshot.docChanges().some(change => change.type === 'added')) { soundEffect.play().catch(() => {}); if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]); }
         firstLoad = false;
       });
       listenForIncomingCalls();
     }
 
     document.getElementById('chat-form').onsubmit = async (e) => {
-      e.preventDefault();
-      let text = messageInput.value.trim();
-      emojiPicker.style.display = 'none';
-      if (!text) return;
-
+      e.preventDefault(); let text = messageInput.value.trim(); emojiPicker.style.display = 'none'; if (!text) return;
       badWords.forEach(word => { const reg = new RegExp(word, 'gi'); text = text.replace(reg, '***'); });
 
       if (currentRoom === 'bot') {
           const userMsg = { id: Date.now().toString(), text: text, imageUrl: null, audioUrl: null, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: "bot", createdAt: Date.now() };
-          let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-          localMsgs.push(userMsg); localStorage.setItem('bot_messages', JSON.stringify(localMsgs)); loadLocalBotMessages();
-          
-          const normalizedInput = text.toLowerCase().trim();
-          const botReply = brain[normalizedInput] || brain["default"];
+          let localMsgs = JSON.parse(localStorage.getItem('bot_messages') || '[]'); localMsgs.push(userMsg); localStorage.setItem('bot_messages', JSON.stringify(localMsgs)); loadLocalBotMessages();
+          const normalizedInput = text.toLowerCase().trim(); const botReply = brain[normalizedInput] || brain["default"];
 
           setTimeout(() => {
               const botMsg = { id: (Date.now() + 1).toString(), text: botReply, imageUrl: null, audioUrl: null, uid: "ai_bot_123", name: "AI Bot", photoURL: "https://ui-avatars.com/api/?name=Bot&background=0D8ABC&color=fff", room: "bot", createdAt: Date.now() + 1000 };
-              let msgs = JSON.parse(localStorage.getItem('bot_messages') || '[]');
-              msgs.push(botMsg); localStorage.setItem('bot_messages', JSON.stringify(msgs)); loadLocalBotMessages();
+              let msgs = JSON.parse(localStorage.getItem('bot_messages') || '[]'); msgs.push(botMsg); localStorage.setItem('bot_messages', JSON.stringify(msgs)); loadLocalBotMessages();
           }, 1000);
-      } else {
-          await addDoc(collection(db, "messages"), { text: text, imageUrl: null, audioUrl: null, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
-      }
+      } else { await addDoc(collection(db, "messages"), { text: text, imageUrl: null, audioUrl: null, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() }); }
       messageInput.value = '';
     };
 
@@ -1127,30 +1091,20 @@
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                let mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-                mediaRecorder = new MediaRecorder(stream, { mimeType });
-                audioChunks = [];
+                let mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'; mediaRecorder = new MediaRecorder(stream, { mimeType }); audioChunks = [];
 
-                mediaRecorder.start();
-                isRecording = true; micBtn.innerText = "🛑"; micBtn.classList.add("recording");
-                messageInput.placeholder = "Recording..."; messageInput.disabled = true;
+                mediaRecorder.start(); isRecording = true; micBtn.innerText = "🛑"; micBtn.classList.add("recording"); messageInput.placeholder = "Recording..."; messageInput.disabled = true;
 
                 mediaRecorder.addEventListener("dataavailable", e => { if (e.data.size > 0) audioChunks.push(e.data); });
                 mediaRecorder.addEventListener("stop", async () => {
-                    const audioBlob = new Blob(audioChunks, { type: mimeType });
-                    const fileSize = audioBlob.size;
-                    
+                    const audioBlob = new Blob(audioChunks, { type: mimeType }); const fileSize = audioBlob.size;
                     const hasSpace = await checkAndUpdateStorage(fileSize);
-                    if (!hasSpace) {
-                        messageInput.placeholder = "Type a message..."; messageInput.disabled = false; stream.getTracks().forEach(t => t.stop());
-                        return;
-                    }
+                    if (!hasSpace) { messageInput.placeholder = "Type a message..."; messageInput.disabled = false; stream.getTracks().forEach(t => t.stop()); return; }
 
                     messageInput.placeholder = "Uploading audio...";
                     const audioRef = ref(storage, 'chat_audio/' + currentUser.uid + '_' + Date.now() + (mimeType.includes('mp4') ? '.mp4' : '.webm'));
                     try {
-                        await uploadBytes(audioRef, audioBlob); 
-                        const audioUrl = await getDownloadURL(audioRef);
+                        await uploadBytes(audioRef, audioBlob); const audioUrl = await getDownloadURL(audioRef);
                         await addDoc(collection(db, "messages"), { text: "", imageUrl: null, audioUrl: audioUrl, fileSizeBytes: fileSize, uid: currentUser.uid, name: currentUser.displayName || "User", photoURL: currentUser.photoURL || "", room: currentRoom, createdAt: serverTimestamp() });
                     } catch (e) { alert("Audio error: " + e.message); } 
                     finally { messageInput.placeholder = "Type a message..."; messageInput.disabled = false; stream.getTracks().forEach(t => t.stop()); }
