@@ -1,182 +1,73 @@
-<body style="
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-    margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-">
-
-    <!-- Centered Window Container Chassis -->
-    <div style="
-        background-color: #111827;
-        width: 100%;
-        max-width: 420px;
-        min-height: 250px;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-        border: 1px solid #374151;
-        box-sizing: border-box;
-    ">
-        
-        <!-- INSERT YOUR CUSTOM CONTENT CODE HERE -->
-
-    </div>
-
-</body>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic HTML Calendar</title>
+    <title>Time-Based Background</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* Base styles for smooth transition */
+        body {
             margin: 0;
             padding: 0;
-        }
-
-        body {
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background-color: #f4f7f6;
+            font-family: Arial, sans-serif;
+            transition: background 1s ease, color 1s ease;
         }
 
-        .calendar-container {
-            width: 350px;
-            background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+        /* Night theme (6 PM to 5:59 AM) */
+        body.night {
+            background-color: #000000;
+            color: #ffffff;
         }
 
-        .calendar-header {
-            background-color: #007bff;
-            color: white;
+        /* Day theme (6 AM to 5:59 PM) */
+        body.day {
+            background-color: #f0f2f5;
+            color: #333333;
+        }
+
+        .container {
+            text-align: center;
             padding: 20px;
-            text-align: center;
-        }
-
-        .calendar-header h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            padding: 15px;
-            text-align: center;
-        }
-
-        .day-name {
-            font-weight: bold;
-            color: #6c757d;
-            padding-bottom: 10px;
-            font-size: 0.9rem;
-        }
-
-        .calendar-day {
-            padding: 12px 0;
-            font-size: 0.95rem;
-            color: #333;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background 0.2s;
-        }
-
-        .calendar-day:hover:not(.empty) {
-            background-color: #e9ecef;
-        }
-
-        /* Highlights the current date today */
-        .calendar-day.today {
-            background-color: #007bff;
-            color: white;
-            font-weight: bold;
-        }
-
-        .empty {
-            cursor: default;
         }
     </style>
 </head>
 <body>
 
-    <div class="calendar-container">
-        <div class="calendar-header">
-            <h2 id="month-year-display"></h2>
-        </div>
-        <div class="calendar-grid" id="calendar-days-grid">
-            <!-- Weekday Headers -->
-            <div class="day-name">Sun</div>
-            <div class="day-name">Mon</div>
-            <div class="day-name">Tue</div>
-            <div class="day-name">Wed</div>
-            <div class="day-name">Thu</div>
-            <div class="day-name">Fri</div>
-            <div class="day-name">Sat</div>
-            <!-- Dynamic Date Cells Will Inject Here -->
-        </div>
+    <div class="container">
+        <h1 id="greeting">Loading...</h1>
+        <p id="clock"></p>
     </div>
 
     <script>
-        function generateCalendar() {
-            const display = document.getElementById("month-year-display");
-            const grid = document.getElementById("calendar-days-grid");
-            
-            const today = new Date();
-            const currentYear = today.getFullYear();
-            const currentMonth = today.getMonth(); // 0-indexed (Jan = 0)
-            const currentDate = today.getDate();
+        function updateTheme() {
+            const now = new Date();
+            const hours = now.getHours();
+            const body = document.body;
+            const greeting = document.getElementById('greeting');
+            const clock = document.getElementById('clock');
 
-            // Month list array for heading
-            const months = [
-                "January", "February", "March", "April", "May", "June", 
-                "July", "August", "September", "October", "November", "December"
-            ];
+            // Format clock text
+            clock.innerText = now.toLocaleTimeString();
 
-            // Set the month and year header text
-            display.innerText = `${months[currentMonth]} ${currentYear}`;
-
-            // Get day index of the 1st of the month (0 = Sun, 1 = Mon, etc.)
-            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
-
-            // Get total days in current month
-            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-            // 1. Add blank spaces to pad grid before day 1 starts
-            for (let i = 0; i < firstDayIndex; i++) {
-                const emptyCell = document.createElement("div");
-                emptyCell.classList.add("calendar-day", "empty");
-                grid.appendChild(emptyCell);
-            }
-
-            // 2. Loop through and add all the numerical dates
-            for (let day = 1; day <= totalDays; day++) {
-                const dayCell = document.createElement("div");
-                dayCell.classList.add("calendar-day");
-                dayCell.innerText = day;
-
-                // Mark today's exact date with a visual class highlight
-                if (day === currentDate) {
-                    dayCell.classList.add("today");
-                }
-
-                grid.appendChild(dayCell);
+            // Check time: Morning to Evening (6 AM - 5 PM / 06:00 - 17:59)
+            if (hours >= 6 && hours < 18) {
+                body.className = 'day';
+                greeting.innerText = 'Good Day! Light Background Active.';
+            } else {
+                body.className = 'night';
+                greeting.innerText = 'Good Night! Black Background Active.';
             }
         }
 
-        // Run calendar initialization on page load
-        generateCalendar();
+        // Run immediately on page load
+        updateTheme();
+
+        // Update every second to keep clock accurate and handle time changes
+        setInterval(updateTheme, 1000);
     </script>
 </body>
 </html>
