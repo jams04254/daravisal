@@ -623,7 +623,7 @@ function getTimeAnswer() {
     return `🕒 Current local time is: ${now.toLocaleTimeString()} (${now.toLocaleDateString()})`;
 }
 
-async function fetchWithTimeout(resource, options = {}, timeout = 4000) {
+async function fetchWithTimeout(resource, options = {}, timeout = 8000) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
     try {
@@ -694,64 +694,68 @@ async function fetchTranslation(text) {
     return "Here is the translation for your request.";
 }
 
-async function fetchCodeFromGitHub(queryText) {
-    const token = "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";
-    const cleanQuery = queryText.replace(/code|write|make|create|find|search|please|can you|for|me|script|program|github/gi, '').trim();
-    if (!cleanQuery) return "Please specify what kind of code you want to search for on GitHub.";
+// Groq AI API Code & Answer Generator
+async function fetchCodeFromGroq(queryText) {
+    const apiKey = "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";
+    
+    const cleanQuery = queryText.replace(/code|write|make|create|find|search|please|can you|for|me|script|program|groq|ai/gi, '').trim();
+    if (!cleanQuery) return "Please specify what you would like Groq AI to write or search for.";
 
-    let extension = "";
+    let generatedContent = "";
+    let fileName = "solution.js";
+
     const lower = queryText.toLowerCase();
-    if (lower.includes('html')) extension = " extension:html";
-    else if (lower.includes('css')) extension = " extension:css";
-    else if (lower.includes('python') || lower.includes('py')) extension = " extension:py";
-    else if (lower.includes('javascript') || lower.includes('js')) extension = " extension:js";
+    if (lower.includes('html')) fileName = "index.html";
+    else if (lower.includes('python') || lower.includes('py')) fileName = "script.py";
+    else if (lower.includes('css')) fileName = "styles.css";
 
     try {
-        const searchQuery = encodeURIComponent(cleanQuery + extension);
-        const response = await fetch(`https://api.github.com/search/code?q=${searchQuery}`, {
+        const groqRes = await fetchWithTimeout(`https://api.groq.com/openai/v1/chat/completions`, {
+            method: "POST",
             headers: {
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/vnd.github+json",
-                "X-GitHub-Api-Version": "2022-11-28"
-            }
+                "content-type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are a helpful assistant and expert programmer. Provide clean, production-ready code or clear answers for the user's request."
+                    },
+                    {
+                        role: "user",
+                        content: queryText
+                    }
+                ],
+                temperature: 0.7
+            })
         });
 
-        if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
-        const data = await response.json();
-        
-        if (!data.items || data.items.length === 0) {
-            return `No code files found on GitHub matching "${cleanQuery}".`;
-        }
-
-        let fileItem = null;
-        for (let item of data.items) {
-            const name = item.name.toLowerCase();
-            if (!name.includes('readme') && !name.includes('news') && !name.includes('license')) {
-                fileItem = item;
-                break;
+        if (groqRes.ok) {
+            const groqData = await groqRes.json();
+            if (groqData.choices && groqData.choices[0] && groqData.choices[0].message) {
+                generatedContent = groqData.choices[0].message.content.trim();
             }
+        } else {
+            const errBody = await groqRes.text();
+            console.error("Groq API error response:", errBody);
+            return `API Error (${groqRes.status}): Please check your API key or request limits.`;
         }
-        if (!fileItem) fileItem = data.items[0];
-
-        // Use the repository contents API endpoint instead of the search result URL to get raw text properly
-        const contentsUrl = `https://api.github.com/repos/${fileItem.repository.full_name}/contents/${fileItem.path}`;
-        const rawResponse = await fetch(contentsUrl, {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/vnd.github.raw+json",
-                "X-GitHub-Api-Version": "2022-11-28"
-            }
-        });
-
-        if (!rawResponse.ok) throw new Error("Failed to fetch raw file content");
-        const rawCodeText = await rawResponse.text();
-
-        const escaped = rawCodeText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        return `<strong>Found Code: ${fileItem.name}</strong> (${fileItem.repository.full_name})<br><pre style="background:#f4f4f4; padding:8px; border-radius:4px; text-align:left; overflow-x:auto; max-height:300px;"><code>${escaped}</code></pre>`;
-    } catch (err) {
-        console.error("GitHub code fetch error:", err);
-        return "Sorry, I couldn't retrieve the raw code snippet right now.";
+    } catch (groqErr) {
+        console.error("Groq network error:", groqErr);
+        return `Network or CORS error connecting directly to API.`;
     }
+
+    if (!generatedContent) {
+        return `AI did not return a response for this request.`;
+    }
+
+    const match = generatedContent.match(/```[\w]*\n([\s\S]*?)```/);
+    const displayContent = match ? match[1].trim() : generatedContent;
+    const escaped = displayContent.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    return `<div style="max-width: 100%; overflow: hidden; word-break: break-word;"><strong>Groq AI Response (${fileName})</strong><br><pre style="background:#f4f4f4; padding:8px; border-radius:4px; text-align:left; overflow-x:auto; max-height:350px; max-width: 100%; white-space: pre-wrap; word-wrap: break-word;"><code>${escaped}</code></pre></div>`;
 }
 
 async function fetchWebAnswer(query) {
@@ -763,28 +767,12 @@ async function fetchWebAnswer(query) {
         if (res.ok) {
             const data = await res.json();
             if (data.extract) {
-                return `<strong>Answer from search:</strong><br>${data.extract}`;
-            }
-        }
-        
-        const searchRes = await fetchWithTimeout(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&format=json&origin=*`);
-        if (searchRes.ok) {
-            const searchData = await searchRes.json();
-            if (searchData.query && searchData.query.search && searchData.query.search.length > 0) {
-                const title = searchData.query.search[0].title;
-                const summaryRes = await fetchWithTimeout(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
-                if (summaryRes.ok) {
-                    const sumData = await summaryRes.json();
-                    if (sumData.extract) {
-                        return `<strong>Answer from search:</strong><br>${sumData.extract}`;
-                    }
-                }
+                return `<strong>Answer:</strong><br>${data.extract}`;
             }
         }
         
         return getBotReply(query);
     } catch (err) {
-        console.error("Web search error:", err);
         return getBotReply(query);
     }
 }
@@ -847,8 +835,8 @@ function appendMessageAndReply(text, isHTML = false) {
                 botReply = await fetchTranslation(text);
             } else if (lowerText.includes('meaning')) {
                 botReply = await fetchDictionaryMeaning(text);
-            } else if (lowerText.includes('code') || lowerText.includes('script') || lowerText.includes('html') || lowerText.includes('css') || lowerText.includes('python') || lowerText.includes('javascript') || lowerText.includes('github')) {
-                botReply = await fetchCodeFromGitHub(text);
+            } else if (lowerText.includes('code') || lowerText.includes('script') || lowerText.includes('html') || lowerText.includes('css') || lowerText.includes('python') || lowerText.includes('javascript') || lowerText.includes('write') || lowerText.includes('make') || lowerText.includes('search') || lowerText.includes('groq')) {
+                botReply = await fetchCodeFromGroq(text);
             } else {
                 const cleanText = text.toLowerCase().replace(/[?!.,]/g, "").trim();
                 const directMatch = text.toLowerCase().trim();
@@ -859,7 +847,6 @@ function appendMessageAndReply(text, isHTML = false) {
                 }
             }
         } catch (err) {
-            console.error("Bot reply generation error:", err);
             botReply = "Sorry, something went wrong while processing your request.";
         }
 
@@ -966,10 +953,9 @@ function startDictation() {
 
         recognition.onerror = function(e) {
             if (micBtn) micBtn.classList.remove("recording");
-            console.error("Microphone error: ", e.error);
         };
     } else {
-        alert("Your browser does not support Speech Recognition. Please try using Google Chrome.");
+        alert("Your browser does not support Speech Recognition.");
     }
 }
 
