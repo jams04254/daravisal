@@ -1,0 +1,323 @@
+<!-- File Name: index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Connection Test</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<style>
+        
+:root {
+            --primary: #007bff;
+            --bg-color: #f4f7f6;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ecf0f1;
+            --chat-bg: #ffffff;
+            --msg-user: #007bff;
+            --msg-bot: #e9ecef;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: var(--bg-color);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-bottom: 1px solid #1a252f;
+            text-align: center;
+        }
+
+        .persona-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+        }
+
+        .persona-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #34495e;
+            transition: background 0.2s;
+        }
+
+        .persona-item:hover, .persona-item.active {
+            background-color: #34495e;
+        }
+
+        .sidebar-actions {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-actions button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-reset { background-color: #c0392b; color: white; }
+
+        /* Chat Area Styles */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--chat-bg);
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn-clear {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 70%;
+        }
+
+        .wrapper-user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .wrapper-bot {
+            align-self: flex-start;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message img {
+            max-width: 250px;
+            display: block;
+            margin-top: 5px;
+            border-radius: 8px;
+        }
+
+        .message a {
+            color: inherit;
+            font-weight: bold;
+        }
+
+        .msg-user {
+            background-color: var(--msg-user);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg-bot {
+            background-color: var(--msg-bot);
+            color: #333;
+            border-bottom-left-radius: 2px;
+        }
+
+        /* Delete Button for Individual Messages */
+        .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            padding: 5px;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+        }
+
+        /* Input Area & Features */
+        .input-area {
+            padding: 15px 20px;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background-color: #f1f1f1;
+        }
+
+        .input-area input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .input-area button.send-btn {
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .input-area button.send-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Emoji Picker */
+        .emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 70px;
+            left: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .emoji-picker.show { display: grid; }
+
+        .emoji-picker span {
+            font-size: 1.5em;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .emoji-picker span:hover { background-color: #f1f1f1; }
+
+        .recording {
+            color: red;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+</style>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">My AI Chats</div>
+        <ul class="persona-list" id="personaList"></ul>
+        <div class="sidebar-actions">
+            <button class="btn-reset" onclick="resetApp()">Reset App</button>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2 id="currentChatTitle">Loading...</h2>
+            <button class="btn-clear" onclick="clearCurrentChat()">Clear Chat</button>
+        </div>
+        
+        <div class="chat-box" id="chatBox"></div>
+
+        <div class="input-area">
+            <button class="icon-btn" onclick="toggleEmojiPicker()">😀</button>
+            <div class="emoji-picker" id="emojiPicker">
+                <span onclick="insertEmoji('😀')">😀</span>
+                <span onclick="insertEmoji('😂')">😂</span>
+                <span onclick="insertEmoji('🥰')">🥰</span>
+                <span onclick="insertEmoji('😎')">😎</span>
+                <span onclick="insertEmoji('🤔')">🤔</span>
+                <span onclick="insertEmoji('👍')">👍</span>
+                <span onclick="insertEmoji('🎉')">🎉</span>
+                <span onclick="insertEmoji('❤️')">❤️</span>
+                <span onclick="insertEmoji('🔥')">🔥</span>
+                <span onclick="insertEmoji('💯')">💯</span>
+            </div>
+
+            <label for="imageUpload" class="icon-btn" title="Upload Photo">📷</label>
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
+
+            <button class="icon-btn" id="micBtn" onclick="startDictation()" title="Record Voice">🎤</button>
+
+            <input type="text" id="userInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- 1. Load the helper file FIRST -->
+    <script src="JavaScript.js"></script>
+    
+    <!-- 2. Load the main file SECOND -->
+</body>
+</html>
