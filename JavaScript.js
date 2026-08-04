@@ -618,7 +618,6 @@
                 return `Sorry, I couldn't find the dictionary meaning for the word "${targetWord}".`;
             }
         }
-
 function getTimeAnswer() {
     const now = new Date();
     return `🕒 Current local time is: ${now.toLocaleTimeString()} (${now.toLocaleDateString()})`;
@@ -642,8 +641,11 @@ async function fetchWithTimeout(resource, options = {}, timeout = 4000) {
 
 async function fetchWeather(text) {
     try {
-        const city = text.replace(/weather|in|forecast|temperature|today|what is the|current|report/gi, '').trim() || 'Phnom Penh';
+        let city = text.replace(/how's|how|what's|what|is|the|tell|me|about|weather|forecast|temperature|today|current|report|in|for|like|show|\?|!|\./gi, '').trim();
+        if (!city) city = 'Phnom Penh';
+
         const geoRes = await fetchWithTimeout(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+        if (!geoRes.ok) throw new Error('Geocoding request failed');
         const geoData = await geoRes.json();
         
         if (!geoData.results || geoData.results.length === 0) {
@@ -657,6 +659,7 @@ async function fetchWeather(text) {
         const country = location.country || '';
         
         const weatherRes = await fetchWithTimeout(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        if (!weatherRes.ok) throw new Error('Weather forecast request failed');
         const weatherData = await weatherRes.json();
         
         const current = weatherData.current_weather;
@@ -667,16 +670,18 @@ async function fetchWeather(text) {
         return `🌤️ Weather in ${name}, ${country}: Temperature ${current.temperature}°C, Wind Speed ${current.windspeed} km/h.`;
     } catch (error) {
         console.error("Weather API error:", error);
-        return `Sorry, I couldn't fetch the weather data right now. Check your internet connection.`;
+        return `Sorry, I couldn't fetch the weather data right now. Please check your internet connection.`;
     }
 }
 
 async function fetchDictionaryMeaning(text) {
     try {
         const words = text.split(" ");
-        const targetWord = words[words.length - 1];
+        const targetWord = words[words.length - 1].replace(/[^a-zA-Z]/g, '');
+        if (!targetWord) return `Please specify a word to look up.`;
+        
         const response = await fetchWithTimeout(`https://api.dictionaryapi.dev/api/v2/entries/en/${targetWord}`);
-        if (!response.ok) throw new Error('Not found');
+        if (!response.ok) throw new Error('Definition not found');
         const data = await response.json();
         const definition = data[0].meanings[0].definitions[0].definition;
         return `Definition of ${targetWord}: ${definition}`;
@@ -689,29 +694,71 @@ async function fetchTranslation(text) {
     return "Here is the translation for your request.";
 }
 
-async function fetchOrGenerateCode(query) {
-    const lower = query.toLowerCase();
-    const topic = query.replace(/code|write|make|create|please|can you|for|me/gi, '').trim() || 'javascript function';
-    const funcName = topic.replace(/[^a-zA-Z0-9]/g, '') || 'myFunction';
+async function fetchCodeFromGitHub(queryText) {
+    const token = "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";
+    const cleanQuery = queryText.replace(/code|write|make|create|find|search|please|can you|for|me|script|program|github/gi, '').trim();
+    if (!cleanQuery) return "Please specify what kind of code you want to search for on GitHub.";
 
-    let codeContent = "";
-    if (lower.includes('html') || lower.includes('form') || lower.includes('button') || lower.includes('web')) {
-        codeContent = `<!DOCTYPE html>\n<html>\n<head>\n    <title>${topic}</title>\n    <style>\n        body { font-family: Arial, sans-serif; padding: 20px; }\n    </style>\n</head>\n<body>\n    <h1>${topic}</h1>\n    <button onclick="alert('Button clicked!')">Click Me</button>\n</body>\n</html>`;
-    } else if (lower.includes('css') || lower.includes('style')) {
-        codeContent = `/* Styles for ${topic} */\nbody {\n    margin: 0;\n    padding: 20px;\n    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n    background-color: #f9f9f9;\n    color: #333;\n}`;
-    } else if (lower.includes('python') || lower.includes('py')) {
-        codeContent = `# Python code for ${topic}\ndef ${funcName.toLowerCase()}():\n    print("Executing ${topic}...")\n    return True\n\nif __name__ == "__main__":\n    ${funcName.toLowerCase()}()`;
-    } else {
-        codeContent = `// Generated Code for: ${topic}\nfunction ${funcName}() {\n    console.log("Running ${topic}...");\n    return "Task completed successfully!";\n}\n\n// Example usage:\n${funcName}();`;
+    let extension = "";
+    const lower = queryText.toLowerCase();
+    if (lower.includes('html')) extension = " extension:html";
+    else if (lower.includes('css')) extension = " extension:css";
+    else if (lower.includes('python') || lower.includes('py')) extension = " extension:py";
+    else if (lower.includes('javascript') || lower.includes('js')) extension = " extension:js";
+
+    try {
+        const searchQuery = encodeURIComponent(cleanQuery + extension);
+        const response = await fetch(`https://api.github.com/search/code?q=${searchQuery}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28"
+            }
+        });
+
+        if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+        const data = await response.json();
+        
+        if (!data.items || data.items.length === 0) {
+            return `No code files found on GitHub matching "${cleanQuery}".`;
+        }
+
+        let fileItem = null;
+        for (let item of data.items) {
+            const name = item.name.toLowerCase();
+            if (!name.includes('readme') && !name.includes('news') && !name.includes('license')) {
+                fileItem = item;
+                break;
+            }
+        }
+        if (!fileItem) fileItem = data.items[0];
+
+        // Use the repository contents API endpoint instead of the search result URL to get raw text properly
+        const contentsUrl = `https://api.github.com/repos/${fileItem.repository.full_name}/contents/${fileItem.path}`;
+        const rawResponse = await fetch(contentsUrl, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/vnd.github.raw+json",
+                "X-GitHub-Api-Version": "2022-11-28"
+            }
+        });
+
+        if (!rawResponse.ok) throw new Error("Failed to fetch raw file content");
+        const rawCodeText = await rawResponse.text();
+
+        const escaped = rawCodeText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return `<strong>Found Code: ${fileItem.name}</strong> (${fileItem.repository.full_name})<br><pre style="background:#f4f4f4; padding:8px; border-radius:4px; text-align:left; overflow-x:auto; max-height:300px;"><code>${escaped}</code></pre>`;
+    } catch (err) {
+        console.error("GitHub code fetch error:", err);
+        return "Sorry, I couldn't retrieve the raw code snippet right now.";
     }
-
-    const escaped = codeContent.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return `<strong>Generated Code for "${topic}":</strong><br><pre style="background:#f4f4f4; padding:8px; border-radius:4px; text-align:left; overflow-x:auto;"><code>${escaped}</code></pre>`;
 }
 
 async function fetchWebAnswer(query) {
     try {
         const cleanQuery = query.replace(/[?!.,]/g, "").trim();
+        if (!cleanQuery) return getBotReply(query);
+
         const res = await fetchWithTimeout(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQuery)}`);
         if (res.ok) {
             const data = await res.json();
@@ -721,14 +768,16 @@ async function fetchWebAnswer(query) {
         }
         
         const searchRes = await fetchWithTimeout(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&format=json&origin=*`);
-        const searchData = await searchRes.json();
-        if (searchData.query && searchData.query.search.length > 0) {
-            const title = searchData.query.search[0].title;
-            const summaryRes = await fetchWithTimeout(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
-            if (summaryRes.ok) {
-                const sumData = await summaryRes.json();
-                if (sumData.extract) {
-                    return `<strong>Answer from search:</strong><br>${sumData.extract}`;
+        if (searchRes.ok) {
+            const searchData = await searchRes.json();
+            if (searchData.query && searchData.query.search && searchData.query.search.length > 0) {
+                const title = searchData.query.search[0].title;
+                const summaryRes = await fetchWithTimeout(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+                if (summaryRes.ok) {
+                    const sumData = await summaryRes.json();
+                    if (sumData.extract) {
+                        return `<strong>Answer from search:</strong><br>${sumData.extract}`;
+                    }
                 }
             }
         }
@@ -779,33 +828,39 @@ function appendMessageAndReply(text, isHTML = false) {
         </div>
     `;
 
+    if (!chatsData[currentPersona]) chatsData[currentPersona] = [];
     chatsData[currentPersona].push({ sender: 'user', text: userMessageHTML });
     renderChat();
 
     setTimeout(async () => {
         let botReply = "";
-        const lowerText = text.toLowerCase();
+        try {
+            const lowerText = text.toLowerCase();
 
-        if (isHTML) {
-            botReply = text.includes("cool!") ? "The tree and the green grass it's so cool!" : "What a lovely day!";
-        } else if (lowerText.includes('time') || lowerText.includes('clock')) {
-            botReply = getTimeAnswer();
-        } else if (lowerText.includes('weather') || lowerText.includes('temperature') || lowerText.includes('forecast')) {
-            botReply = await fetchWeather(text);
-        } else if (lowerText.includes('translation')) {
-            botReply = await fetchTranslation(text);
-        } else if (lowerText.includes('meaning')) {
-            botReply = await fetchDictionaryMeaning(text);
-        } else if (lowerText.includes('code') || lowerText.includes('write') || lowerText.includes('make') || lowerText.includes('snippet')) {
-            botReply = await fetchOrGenerateCode(text);
-        } else {
-            const cleanText = text.toLowerCase().replace(/[?!.,]/g, "").trim();
-            const directMatch = text.toLowerCase().trim();
-            if (lowerBrain[directMatch] || lowerBrain[cleanText]) {
-                botReply = getBotReply(text);
+            if (isHTML) {
+                botReply = text.includes("cool!") ? "The tree and the green grass it's so cool!" : "What a lovely day!";
+            } else if (lowerText.includes('time') || lowerText.includes('clock')) {
+                botReply = getTimeAnswer();
+            } else if (lowerText.includes('weather') || lowerText.includes('temperature') || lowerText.includes('forecast')) {
+                botReply = await fetchWeather(text);
+            } else if (lowerText.includes('translation')) {
+                botReply = await fetchTranslation(text);
+            } else if (lowerText.includes('meaning')) {
+                botReply = await fetchDictionaryMeaning(text);
+            } else if (lowerText.includes('code') || lowerText.includes('script') || lowerText.includes('html') || lowerText.includes('css') || lowerText.includes('python') || lowerText.includes('javascript') || lowerText.includes('github')) {
+                botReply = await fetchCodeFromGitHub(text);
             } else {
-                botReply = await fetchWebAnswer(text);
+                const cleanText = text.toLowerCase().replace(/[?!.,]/g, "").trim();
+                const directMatch = text.toLowerCase().trim();
+                if (typeof lowerBrain !== 'undefined' && (lowerBrain[directMatch] || lowerBrain[cleanText])) {
+                    botReply = getBotReply(text);
+                } else {
+                    botReply = await fetchWebAnswer(text);
+                }
             }
+        } catch (err) {
+            console.error("Bot reply generation error:", err);
+            botReply = "Sorry, something went wrong while processing your request.";
         }
 
         const cleanBotText = botReply.replace(/<[^>]*>/g, '');
@@ -820,8 +875,8 @@ function appendMessageAndReply(text, isHTML = false) {
         `;
 
         chatsData[currentPersona].push({ sender: 'bot', text: botMessageHTML });
-        saveData();
-        renderChat();
+        if (typeof saveData === 'function') saveData();
+        if (typeof renderChat === 'function') renderChat();
     }, 200);
 }
 
@@ -832,42 +887,50 @@ function sendMessage() {
 
     appendMessageAndReply(rawText, false);
     inputField.value = "";
-    id("emojiPicker").classList.remove("show");
+    const emojiPicker = id("emojiPicker");
+    if (emojiPicker) emojiPicker.classList.remove("show");
 }
 
 function getBotReply(text) {
+    if (typeof lowerBrain === 'undefined') return "Hello!";
     const cleanText = text.toLowerCase().replace(/[?!.,]/g, "").trim();
     const directMatch = text.toLowerCase().trim();
 
     if (lowerBrain[directMatch]) return lowerBrain[directMatch];
     if (lowerBrain[cleanText]) return lowerBrain[cleanText];
-    return lowerBrain["default"];
+    return lowerBrain["default"] || "I am here to help!";
 }
 
 function handleKeyPress(e) {
     if (e.key === 'Enter') sendMessage();
 }
 
-function toggleEmojiPicker() { id("emojiPicker").classList.toggle("show"); }
+function toggleEmojiPicker() { 
+    const picker = id("emojiPicker");
+    if (picker) picker.classList.toggle("show"); 
+}
 
 function insertEmoji(emoji) {
     const input = id("userInput");
-    input.value += emoji;
-    input.focus();
+    if (input) {
+        input.value += emoji;
+        input.focus();
+    }
 }
 
 function handlePhotoUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const userInputText = prompt("What is in this picture? (Type: tree, girl, or man):", "").toLowerCase();
+    const userInputText = prompt("What is in this picture? (Type: tree, girl, or man):", "") || "";
+    const lowerInput = userInputText.toLowerCase();
     let botReply = "What a lovely day!";
 
-    if (userInputText.includes('tree') || userInputText.includes('grass') || userInputText.includes('nature')) {
+    if (lowerInput.includes('tree') || lowerInput.includes('grass') || lowerInput.includes('nature')) {
         botReply = "The tree and the green grass it's so cool!";
-    } else if (userInputText.includes('girl') || userInputText.includes('woman') || userInputText.includes('she') || userInputText.includes('female')) {
+    } else if (lowerInput.includes('girl') || lowerInput.includes('woman') || lowerInput.includes('she') || lowerInput.includes('female')) {
         botReply = "She's so beautiful!";
-    } else if (userInputText.includes('boy') || userInputText.includes('man') || userInputText.includes('he') || userInputText.includes('male')) {
+    } else if (lowerInput.includes('boy') || lowerInput.includes('man') || lowerInput.includes('he') || lowerInput.includes('male')) {
         botReply = "He's so beautiful!";
     }
 
@@ -890,19 +953,19 @@ function startDictation() {
         recognition.interimResults = false;
 
         const micBtn = id("micBtn");
-        micBtn.classList.add("recording");
+        if (micBtn) micBtn.classList.add("recording");
 
         recognition.start();
 
         recognition.onresult = function(e) {
-            micBtn.classList.remove("recording");
+            if (micBtn) micBtn.classList.remove("recording");
             const transcript = e.results[0][0].transcript;
             id("userInput").value = transcript;
             sendMessage();
         };
 
         recognition.onerror = function(e) {
-            micBtn.classList.remove("recording");
+            if (micBtn) micBtn.classList.remove("recording");
             console.error("Microphone error: ", e.error);
         };
     } else {
@@ -914,8 +977,8 @@ function clearCurrentChat() {
     if (!currentPersona) return;
     if (confirm(`Are you sure you want to delete all messages in ${currentPersona}?`)) {
         chatsData[currentPersona] = [];
-        saveData();
-        renderChat();
+        if (typeof saveData === 'function') saveData();
+        if (typeof renderChat === 'function') renderChat();
     }
 }
 
@@ -923,12 +986,14 @@ function resetApp() {
     if (confirm('WARNING: This will delete ALL data. Are you sure?')) {
         chatsData = { "Main Bot": [] };
         currentPersona = "Main Bot";
-        saveData();
-        renderPersonasList();
-        renderChat();
+        if (typeof saveData === 'function') saveData();
+        if (typeof renderPersonasList === 'function') renderPersonasList();
+        if (typeof renderChat === 'function') renderChat();
     }
 }
 
 const id = (eid) => document.getElementById(eid);
 
-initDatabase();
+if (typeof initDatabase === 'function') {
+    initDatabase();
+}
