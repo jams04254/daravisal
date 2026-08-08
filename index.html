@@ -695,7 +695,7 @@
  </div>
  </div>
  </div>
-  <script>
+ <script>
  const id = (eid) => document.getElementById(eid);
 
  // ==========================================
@@ -954,7 +954,7 @@
 
  const inputField = id("userInput");
  if (inputField && !inputField.value) {
- inputField.placeholder = "Type 'remove background' or ask question about image...";
+ inputField.placeholder = "Solve problem in picture, math equation, or ask question...";
  inputField.focus();
  }
  };
@@ -1019,7 +1019,7 @@
  if (id("removeBgImageBtn")) id("removeBgImageBtn").style.display = "none";
  if (id("downloadBgImageBtn")) id("downloadBgImageBtn").style.display = "none";
  id("filePreviewContainer").classList.remove("show");
- id("userInput").placeholder = "Type message, image prompt, or code...";
+ id("userInput").placeholder = "Type message, image problem, or code...";
  }
 
  // ==========================================
@@ -1709,7 +1709,7 @@
  }
 
  // ==========================================
- // 9. GROQ AI ENGINE (`const brain`)
+ // 9. GROQ AI ENGINE (`const brain` with 2-Min Timeout & Advanced Math/Code/Vision Solving)
  // ==========================================
  const brain = async function(userText, fileData, fileName, imageData) {
  if (!navigator.onLine) {
@@ -1731,17 +1731,20 @@
  const wantsAllInOne = lowerText.includes("put all in one") || lowerText.includes("all in one");
  const isInfoQuery = lowerText.includes("information") || lowerText.includes("who is") || lowerText.includes("what is") || lowerText.includes("search");
  const isDictionaryQuery = lowerText.startsWith("meaning of") || lowerText.includes("meaning of ");
+ const isMathQuery = lowerText.includes("math") || lowerText.includes("solve") || lowerText.includes("equation") || lowerText.includes("calculate") || /[0-9]+\s*[\+\-\*\/\^=]\s*[0-9]+/.test(userText);
  let systemPrompt = "";
 
  if (imageData) {
- systemPrompt = "You are an intelligent vision assistant capable of analyzing images in detail and accurately answering questions about them in any language.";
+ systemPrompt = "You are an advanced expert vision, math, and problem-solving assistant. Carefully analyze the uploaded image (whether it contains math equations, complex charts, programming code, or general problem statements). Break down the problem step-by-step, verify your logic thoroughly, and provide the complete, accurate solution and answer.";
+ } else if (isMathQuery || currentAiMode === 'pro') {
+ systemPrompt = "You are an elite expert mathematician, programmer, and problem solver. When presented with hard math, coding puzzles, or complex questions, think through every step carefully, double-check all calculations and logic, and provide a comprehensive, infallible, and clearly explained solution.";
  } else if (isDictionaryQuery) {
  systemPrompt = "You are an authoritative dictionary assistant. Provide definition, part of speech, phonetic pronunciation, example sentence, and synonyms.";
  } else if (isInfoQuery) {
  systemPrompt = "You are a knowledgeable researcher. Provide factual, concise details.";
  } else if (fileData) {
  if (currentAiMode === 'pro') {
- systemPrompt = "You are an elite expert software architect. You are given an existing code file. Output the *complete* refactored, highly optimized, professional version of the entire code file implementing the user's request. Return the full code.";
+ systemPrompt = "You are an elite expert software architect and problem solver. You are given an existing code file. Output the *complete* refactored, highly optimized, professional version of the entire code file implementing the user's request. Return the full code.";
  } else {
  systemPrompt = "You are an expert developer. You are given an existing code file. Output the *complete* file code, incorporating only the minor corrections or changes requested by the user, without omitting or summarizing any parts of the code. Return the full code.";
  }
@@ -1780,7 +1783,9 @@
 
  let generatedContent = "";
  const controller = new AbortController();
- const timeoutId = setTimeout(() => controller.abort(), 30000);
+ // 2 Minutes Timeout (120000ms) for Pro mode or hard problems
+ const timeoutDuration = (currentAiMode === 'pro' || isMathQuery || imageData) ? 120000 : 30000;
+ const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
  for (let i = 0; i < GROQ_API_KEYS.length; i++) {
  try {
@@ -1793,7 +1798,7 @@
  body: JSON.stringify({
  model: apiModel,
  messages: apiMessages,
- temperature: currentAiMode === 'pro' ? 0.4 : 0.2
+ temperature: currentAiMode === 'pro' ? 0.3 : 0.2
  }),
  signal: controller.signal
  });
@@ -1808,7 +1813,7 @@
  } catch (err) {
  if (err.name === 'AbortError') {
  clearTimeout(timeoutId);
- return "⚠️ Request timed out after 30 seconds.";
+ return "⚠️ Request timed out after 2 minutes of processing. The problem was extremely complex, please try simplifying or breaking it down.";
  }
  }
  }
@@ -1816,7 +1821,7 @@
  clearTimeout(timeoutId);
 
  if (!generatedContent) {
- return "⚠️ Connection error or timed out. Please try again.";
+ return "⚠️ Connection error or timed out after 2 minutes. Please try again.";
  }
 
  return generatedContent
@@ -1835,7 +1840,7 @@
  const text = inputField.value.trim();
  if (!text && !attachedFileContent && !attachedImageContent) return;
 
- const userPrompt = text || "Analyze this attachment.";
+ const userPrompt = text || "Analyze this attachment and solve the problem.";
  const fileToSend = attachedFileContent;
  const imageToSend = attachedImageContent;
  const nameToSend = attachedFileName;
@@ -1934,7 +1939,7 @@
  chatsData[currentPersona].push({ sender: 'user', text: displayHtml });
  
  const loadingIndex = chatsData[currentPersona].length;
- chatsData[currentPersona].push({ sender: 'bot', text: `<div style="font-style: italic; color: #888;">⏳ Thinking...</div>` });
+ chatsData[currentPersona].push({ sender: 'bot', text: `<div style="font-style: italic; color: #888;">⏳ Analyzing and solving problem (up to 2 minutes if complex)...</div>` });
  renderChat();
 
  let botReply = "";
