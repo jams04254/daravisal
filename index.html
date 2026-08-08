@@ -616,6 +616,73 @@
  </div>
  <ul class="persona-list" id="personaList"></ul>
  <div class="sidebar-actions">
+  <!-- About Modal Overlay -->
+<div id="aboutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+    <h3 style="margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">ℹ️ About AI Pro Assistant</h3>
+    <p style="color: #475569; font-size: 14px; line-height: 1.5;">
+       Describe your own code.put all in one Don't explain
+    </p>
+   <div style="width: auto;background: black; padding: 10px; border-radius: 6px; font-size: 13px; color: white; margin-bottom: 15px;">
+    The results it not explain:
+      <pre><code>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Example Page&lt;/title&gt;
+&lt;style&gt; 
+body { 
+  background-color: #f2f2f2; 
+} 
+&lt;/style&gt;
+&lt;script&gt;
+function myFunction() {
+  alert("Hello World!");
+}
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;My First Web Page&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+    </div>
+    <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; font-size: 13px; color: #334155; margin-bottom: 15px;">
+      <strong>Version:</strong> 2.5 Pro<br>
+      <strong>Engine:</strong> Llama 3.3 70B & Vision
+    </div>
+    <div style="text-align: right;">
+      <button onclick="closeAboutModal()" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Close</button>
+    </div>
+  </div>
+</div>
+<!-- Sidebar Action Buttons -->
+<div style="margin-top: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(0,0,0,0.1);">
+  <button onclick="openAboutModal()" style="width: 100%; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+    ℹ️ <span>About App</span>
+  </button>
+  <button onclick="openFeedbackModal()" style="width: 100%; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+    💬 <span>Send Feedback</span>
+  </button>
+</div>
+<form action="https://api.web3forms.com/submit" method="POST" onsubmit="return handleCheckoutSubmit(event)">
+                    <input type="hidden" name="access_key" value="0333555b-f17b-4fa0-ae5b-0675529af72d">
+<!-- Feedback Modal Overlay -->
+<div id="feedbackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+    <h3 style="margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">💬 Send Feedback</h3>
+    <p style="color: #475569; font-size: 13px; margin-bottom: 10px;">
+      Found a bug or have a suggestion? Let us know your thoughts below!
+    </p>
+   <input type="name" name="name" placeholder="Your name" style="width: 100%; border-radius: 6px;">
+    <textarea type="text" name="feedback" id="feedbackText" placeholder="Type your feedback, bug report, or feature request here..." style="width: 100%; height: 110px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: none; outline: none; box-sizing: border-box;"></textarea>
+    <div style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" onclick="closeFeedbackModal()" style="width: 100%; background: #cbd5e1; color: #334155; border: none; padding: 8px 16px;">Cancel</button>
+      <button type="submit" onclick="submitFeedback()" style="width: 100%; background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Submit</button>
+    </form>
+    </div>
+  </div>
+</div>
  <button class="icon-btn" style="width:100%; background:#334155; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="createNewChatSession()">＋ New Chat</button>
  <button class="btn-reset" onclick="resetApp()">Reset App</button>
  
@@ -742,6 +809,67 @@
  "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",
  "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"
  ];
+// ==========================================
+// ABOUT & FEEDBACK MODAL CONTROLLERS
+// ==========================================
+window.openAboutModal = function() {
+    const modal = id("aboutModal");
+    if (modal) {
+        modal.style.display = "flex";
+        modal.style.overflowY = "auto";       // Enables vertical scrolling
+        modal.style.maxHeight = "100vh";      // Limits height to screen size
+    }
+}
+
+window.closeAboutModal = function() {
+  const modal = id("aboutModal");
+  if (modal) modal.style.display = "none";
+}
+
+window.openFeedbackModal = function() {
+    const modal = id("feedbackModal");
+    if (modal) {
+        modal.style.display = "flex";
+        modal.style.overflowY = "auto";       // Enables vertical scrolling
+        modal.style.maxHeight = "100vh";      // Limits height to screen size
+    }
+}
+
+window.closeFeedbackModal = function() {
+  const modal = id("feedbackModal");
+  if (modal) modal.style.display = "none";
+  const textEl = id("feedbackText");
+  if (textEl) textEl.value = "";
+}
+
+window.submitFeedback = async function() {
+  const feedbackInput = id("feedbackText");
+  if (!feedbackInput) return;
+  const content = feedbackInput.value.trim();
+
+  if (!content) {
+    alert("Please write something before submitting feedback.");
+    return;
+  }
+
+  try {
+    // Saves feedback to your Firebase Firestore database if initialized
+    if (db && firebase.firestore) {
+      await db.collection("app_feedback").add({
+        userId: currentUser ? currentUser.uid : "Anonymous",
+        userEmail: currentUser ? (currentUser.email || "No Email") : "Anonymous",
+        feedback: content,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    
+    alert("Thank you! Your feedback has been successfully submitted.");
+    closeFeedbackModal();
+  } catch (err) {
+    alert("Feedback sent locally, but failed to sync to database: " + err.message);
+    closeFeedbackModal();
+  }
+}
 
  // ==========================================
  // 2. ROBUST BLOB DOWNLOAD HELPER (CORS fix)
@@ -1752,11 +1880,11 @@
  systemPrompt = "You are a helpful text and information assistant. Answer the user's question directly in plain text.";
  } else {
  if (wantsAllInOne) {
- systemPrompt = "You are an expert developer. Combine everything into a single cohesive single-file solution.";
+ systemPrompt = "You are an expert developer. When asked to 'put all in one', combine code everything all in one even I send file. into a single cohesive single-file solution using internal tags.";
  } else if (currentAiMode === 'pro') {
- systemPrompt = "You are an elite expert software architect. Provide the best professional code version cleanly. Return the full code.";
+ systemPrompt = "You are an elite expert software architect. When asked for code, provide the best professional code version, clearly separating or structuring HTML, CSS, and JavaScript cleanly.It can do all the code very better then another AI even the style. But don't explain about code just tell a code. It always put code all in one. It can also know about information from Google clearly. Can answer the question by picture clearly and the best. when tell me a code don't explain or example. long answer but simple.";
  } else {
- systemPrompt = "You are a fast, concise assistant. Provide the code snippet requested.";
+ systemPrompt = "You are a fast, concise assistant. When asked for code, provide a short, normal, and effective code snippet including HTML, CSS, and JavaScript as requested. Short answer. It can also know about information from Google. Can answer the question by picture. don't explain. Better at answer the question. Bad at code.";
  }
  }
 
@@ -2015,7 +2143,7 @@
  splash.style.opacity = "0";
  setTimeout(() => splash.style.display = "none", 500);
  }
- }, 2500);
+ }, 3000);
  });
  </script>
 </body>
