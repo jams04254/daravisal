@@ -695,9 +695,7 @@
  </div>
  </div>
  </div>
-
- <!-- Application JavaScript Logic -->
- <script>
+  <script>
  const id = (eid) => document.getElementById(eid);
 
  // ==========================================
@@ -727,7 +725,8 @@
 
  const OWNER_EMAIL = "jams04254@gmail.com"; 
  const BG_API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
-const OPENROUTER_API_KEY = "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";
+ const OPENROUTER_API_KEY = "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";
+
  // State Variables
  let currentAiMode = 'normal';
  let currentUser = null;
@@ -776,7 +775,6 @@ const OPENROUTER_API_KEY = "sk-or-v1-b64ca4679b9b4c9801e75b0ab8de4be76f23b294621
  document.body.removeChild(link);
  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
  } catch (err) {
- // Fallback if CORS prevents fetching directly
  const link = document.createElement('a');
  link.href = urlOrBlob;
  link.download = filename;
@@ -956,7 +954,7 @@ const OPENROUTER_API_KEY = "sk-or-v1-b64ca4679b9b4c9801e75b0ab8de4be76f23b294621
 
  const inputField = id("userInput");
  if (inputField && !inputField.value) {
- inputField.placeholder = "Type 'remove background' or describe image...";
+ inputField.placeholder = "Type 'remove background' or ask question about image...";
  inputField.focus();
  }
  };
@@ -1023,7 +1021,7 @@ const OPENROUTER_API_KEY = "sk-or-v1-b64ca4679b9b4c9801e75b0ab8de4be76f23b294621
  id("filePreviewContainer").classList.remove("show");
  id("userInput").placeholder = "Type message, image prompt, or code...";
  }
- 
+
  // ==========================================
  // 6. VIDEO CALL & BG REMOVAL API ENGINE
  // ==========================================
@@ -1553,7 +1551,7 @@ const OPENROUTER_API_KEY = "sk-or-v1-b64ca4679b9b4c9801e75b0ab8de4be76f23b294621
  }
  currentAiMode = mode;
  }
- 
+
  // ==========================================
  // 8. INDEXEDDB CHAT STORAGE
  // ==========================================
@@ -1729,27 +1727,33 @@ const OPENROUTER_API_KEY = "sk-or-v1-b64ca4679b9b4c9801e75b0ab8de4be76f23b294621
  dynamicInjections += `\n[System Data - Location Context: Phnom Penh, Cambodia. Current season context: August 2026.]`;
  }
 
- const hasExplicitCodeWord = lowerText.includes("code");
+ const hasExplicitCodeWord = lowerText.includes("code") || fileData;
  const wantsAllInOne = lowerText.includes("put all in one") || lowerText.includes("all in one");
  const isInfoQuery = lowerText.includes("information") || lowerText.includes("who is") || lowerText.includes("what is") || lowerText.includes("search");
  const isDictionaryQuery = lowerText.startsWith("meaning of") || lowerText.includes("meaning of ");
  let systemPrompt = "";
 
  if (imageData) {
- systemPrompt = "You are an intelligent vision assistant capable of analyzing and translating images in all languages around the world accurately.";
+ systemPrompt = "You are an intelligent vision assistant capable of analyzing images in detail and accurately answering questions about them in any language.";
  } else if (isDictionaryQuery) {
  systemPrompt = "You are an authoritative dictionary assistant. Provide definition, part of speech, phonetic pronunciation, example sentence, and synonyms.";
  } else if (isInfoQuery) {
  systemPrompt = "You are a knowledgeable researcher. Provide factual, concise details.";
- } else if (!hasExplicitCodeWord && !fileData) {
+ } else if (fileData) {
+ if (currentAiMode === 'pro') {
+ systemPrompt = "You are an elite expert software architect. You are given an existing code file. Output the *complete* refactored, highly optimized, professional version of the entire code file implementing the user's request. Return the full code.";
+ } else {
+ systemPrompt = "You are an expert developer. You are given an existing code file. Output the *complete* file code, incorporating only the minor corrections or changes requested by the user, without omitting or summarizing any parts of the code. Return the full code.";
+ }
+ } else if (!hasExplicitCodeWord) {
  systemPrompt = "You are a helpful text and information assistant. Answer the user's question directly in plain text.";
  } else {
  if (wantsAllInOne) {
  systemPrompt = "You are an expert developer. Combine everything into a single cohesive single-file solution.";
  } else if (currentAiMode === 'pro') {
- systemPrompt = "You are an elite expert software architect. Provide the best professional code version cleanly. No explanations, just code all in one.";
+ systemPrompt = "You are an elite expert software architect. Provide the best professional code version cleanly. Return the full code.";
  } else {
- systemPrompt = "You are a fast, concise assistant. Provide a short, normal code snippet as requested. Short answer.";
+ systemPrompt = "You are a fast, concise assistant. Provide the code snippet requested.";
  }
  }
 
@@ -1841,7 +1845,7 @@ const OPENROUTER_API_KEY = "sk-or-v1-b64ca4679b9b4c9801e75b0ab8de4be76f23b294621
 
  if (!currentUser) { alert("Please log in first."); return; }
 
- // --- Check for Image / Video Generator Modes ---
+ // --- Check for Image Generator Modes ---
  if (currentAiMode === 'image-flux' || currentAiMode === 'image-sd') {
  const seed = Math.floor(Math.random() * 1000000);
  const modelName = currentAiMode === 'image-flux' ? 'flux' : 'turbo';
@@ -1863,34 +1867,6 @@ const OPENROUTER_API_KEY = "sk-or-v1-b64ca4679b9b4c9801e75b0ab8de4be76f23b294621
  renderChat();
  return;
  }
-
- if (currentAiMode === 'video-generator') {
- const userDisplay = `<div>🎬 ${userPrompt}</div>`;
- if (!chatsData[currentPersona]) chatsData[currentPersona] = [];
- chatsData[currentPersona].push({ sender: 'user', text: userDisplay });
-
- renderChat();
- const loadingIndex = chatsData[currentPersona].length;
- chatsData[currentPersona].push({ sender: 'bot', text: `<div style="font-style: italic; color: #888;">⏳ Rendering AI Video Clip...</div>` });
- renderChat();
-
- let videoBlob = await generateCanvasVideo(userPrompt);
- const videoUrl = URL.createObjectURL(videoBlob);
-
- const botDisplay = `
- <div>Generated AI Video Clip for: "${userPrompt}"</div>
- <div class="media-container">
- <video src="${videoUrl}" controls autoplay loop class="media-element"></video>
- <button class="download-btn" onclick="triggerDownload(window.lastVideoBlob || '${videoUrl}', 'generated-video-${Date.now()}.mp4', 'video/mp4')">⬇️ Download Video</button>
- </div>
- `;
- window.lastVideoBlob = videoBlob;
- chatsData[currentPersona][loadingIndex] = { sender: 'bot', text: botDisplay };
- saveData();
- renderChat();
- return;
- }
-
 
  // --- Normal Chat / Code / Vision Workflow ---
  const lowerText = userPrompt.toLowerCase();
