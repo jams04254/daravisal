@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Learn-Math App & Chat</title>
+ <style>
+ /* BASE STYLES */
+ body {
+ background-color: #00e5ff; font-family: Arial, sans-serif;
+ margin: 0; padding-bottom: 100px; display: flex;
+ flex-direction: column; align-items: center;
+ }
+
+ /* 1. TOP NAVBAR */
+ .top {
+ display: flex; justify-content: space-between; align-items: center;
+ background: white; width: 90%; max-width: 600px; padding: 12px 20px;
+ margin-top: 20px; border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+ box-sizing: border-box;
+ }
+ .top h2 { margin: 0; color: black; font-size: 18px; }
+ .nav-links { display: flex; gap: 10px; }
+ .nav-btn { background: none; border: none; font-size: 15px; color: #555; cursor: pointer; font-weight: bold; }
+ .nav-btn.active { color: #000; border-bottom: 2px solid black; }
+
+ /* Right Header Controls */
+ .header-controls { display: flex; align-items: center; gap: 10px; }
+ #authBtn {
+ background: #007bff; color: white; border: none; padding: 6px 12px;
+ border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 13px;
+ }
+
+ /* Notification Dropdown */
+ .notif-container { position: relative; display: inline-block; }
+ #notifBellBtn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 0; }
+ #notifBadge {
+ display: none; position: absolute; top: -5px; right: -8px;
+ background: red; color: white; border-radius: 50%; padding: 1px 5px;
+ font-size: 10px; font-weight: bold;
+ }
+ .notif-dropdown {
+ display: none; position: absolute; right: 0; top: 35px; background: white;
+ width: 220px; border: 1px solid #ccc; border-radius: 10px;
+ box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100; padding: 10px; text-align: left;
+ }
+
+ /* 2. PAGE CONTENT STYLES */
+ .content { width: 90%; max-width: 600px; margin-top: 20px; }
+ .page {
+ display: none; background: white; padding: 20px; border-radius: 20px;
+ box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center;
+ }
+ .page.active { display: block; }
+
+ /* Login Prompt Overlay */
+ .login-prompt {
+ background: #fff3cd; color: #856404; padding: 15px;
+ border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 15px;
+ }
+
+ /* Custom Auth Box */
+ .custom-login-box {
+ background: #e9ecef; padding: 20px; border-radius: 15px;
+ margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;
+ }
+ .auth-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 5px; }
+ .auth-tab-btn { background: #ddd; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 13px; color: #555; }
+ .auth-tab-btn.active { background: #007bff; color: white; }
+
+ /* 3. COMMENT SECTION */
+ textarea, input[type="text"], input[type="email"], input[type="password"] {
+ width: 100%; padding: 10px; border: 2px solid #ccc;
+ border-radius: 10px; font-size: 14px; box-sizing: border-box;
+ }
+ textarea { height: 80px; resize: vertical; }
+ .send-btn {
+ background: #28a745; color: white; border: none; padding: 10px 20px;
+ border-radius: 15px; cursor: pointer; font-weight: bold; margin-top: 10px;
+ }
+ .comments-list { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; text-align: left;}
+ .comment-card { background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 5px solid #000; }
+ 
+ .action-btns button {
+ background: none; border: 1px solid #ccc; padding: 5px 10px;
+ border-radius: 5px; cursor: pointer; font-size: 12px; margin-right: 5px; margin-top: 10px;
+ }
+ .action-btns .edit-btn:hover { background: #ffc107; color: black; border-color: #ffc107; }
+ .action-btns .delete-btn:hover { background: #dc3545; color: white; border-color: #dc3545; }
+
+ /* 4. SEARCH, FRIENDS & PRIVATE CHAT */
+ .user-result, .friend-item {
+ display: flex; justify-content: space-between; align-items: center;
+ background: #e9ecef; padding: 10px; border-radius: 10px; margin-top: 10px; text-align: left;
+ }
+ .btn-group { display: flex; gap: 5px; }
+ .chat-btn { background: #17a2b8; color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+ .add-friend-btn { background: #28a745; color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+ 
+ .chat-header {
+ display: flex; justify-content: space-between; align-items: center;
+ background: #000; color: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; font-weight: bold;
+ }
+ 
+ .chat-history {
+ height: 250px; overflow-y: auto; background: #f1f1f1; border-radius: 10px;
+ padding: 10px; display: flex; flex-direction: column; gap: 8px; text-align: left; margin-bottom: 10px;
+ }
+ .msg { max-width: 70%; padding: 8px 12px; border-radius: 15px; font-size: 14px; word-break: break-word; position: relative; }
+ .msg.me { background: #007bff; color: white; align-self: flex-end; }
+ .msg.them { background: #e2e3e5; color: black; align-self: flex-start; }
+ .delete-msg-btn {
+ background: none; border: none; color: #ffcccc; font-size: 11px; cursor: pointer;
+ margin-left: 8px; padding: 0; text-decoration: underline; display: inline-block;
+ }
+
+ /* 5. BOTTOM FLOATING BAR */
+ .down {
+ display: flex; justify-content: space-evenly; align-items: center;
+ background: white; width: 90%; max-width: 400px; height: 60px;
+ border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+ position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+ }
+ .down button { background: none; border: none; font-size: 24px; cursor: pointer; }
+ </style>
+</head>
+<body>
+
+ <!-- TOP NAVIGATION -->
+ <div class="top">
+ <h2>Learn-Math</h2>
+ <div class="nav-links">
+ <button class="nav-btn active" data-target="homePage">Home</button>
+ <button class="nav-btn" data-target="commentsPage">Board</button>
+ <button class="nav-btn" data-target="searchPage">Find/Friends</button>
+ </div>
+ <div class="header-controls">
+ <!-- NOTIFICATION BUTTON & DROPDOWN -->
+ <div class="notif-container">
+ <button id="notifBellBtn" title="Notifications">🔔</button>
+ <span id="notifBadge">0</span>
+ <div id="notifDropdown" class="notif-dropdown">
+ <h4 style="margin:0 0 8px 0; font-size:13px; border-bottom:1px solid #eee; padding-bottom:4px;">Notifications</h4>
+ <div id="notifList" style="max-height:140px; overflow-y:auto; font-size:12px; display:flex; flex-direction:column; gap:5px;">
+ <p style="color:#777; margin:0;">No new messages</p>
+ </div>
+ </div>
+ </div>
+ <button id="authBtn">Login</button>
+ </div>
+ </div>
+
+ <!-- MAIN CONTENT -->
+ <div class="content">
+ 
+ <!-- HOME PAGE -->
+ <div id="homePage" class="page active">
+ <h1>Hi <span id="welcomeName">Guest</span>!</h1>
+ <p>Welcome! Log in or register to comment and chat.</p>
+
+ <div id="authFormsContainer" class="custom-login-box">
+ <div class="auth-tabs">
+ <button id="showLoginTab" class="auth-tab-btn active">Login</button>
+ <button id="showRegisterTab" class="auth-tab-btn">Register</button>
+ </div>
+
+ <!-- Login Form -->
+ <div id="loginFormSection" style="display: flex; flex-direction: column; gap: 10px;">
+ <input type="email" id="loginEmailInput" placeholder="Email">
+ <input type="password" id="loginPasswordInput" placeholder="Password">
+ <button id="loginSubmitBtn" class="send-btn" style="margin:0;">Log In</button>
+ </div>
+
+ <!-- Register Form -->
+ <div id="registerFormSection" style="display: none; flex-direction: column; gap: 10px;">
+ <input type="text" id="regNameInput" placeholder="Full Name">
+ <input type="email" id="regEmailInput" placeholder="Email">
+ <input type="password" id="regPasswordInput" placeholder="Password (min 6 chars)">
+ <button id="registerSubmitBtn" class="send-btn" style="margin:0; background:#007bff;">Register</button>
+ </div>
+ </div>
+ </div>
+
+ <!-- PUBLIC COMMENTS PAGE -->
+ <div id="commentsPage" class="page">
+ <h2>Public Board</h2>
+ <div id="loginMessageBoard" class="login-prompt">🔒 You must log in to comment!</div>
+ 
+ <div id="commentFormArea" style="display: none; text-align: left;">
+ <textarea id="commentInput" placeholder="Write a comment (Max 100 words)..."></textarea>
+ <div style="display: flex; justify-content: space-between; align-items: center;">
+ <span id="wordCounter" style="font-size: 12px; color: #555;">0 / 100 words</span>
+ <button id="sendCommentBtn" class="send-btn">Post Comment</button>
+ </div>
+ </div>
+ <div id="commentsList" class="comments-list"></div>
+ </div>
+
+ <!-- SEARCH USERS & FRIENDS PAGE -->
+ <div id="searchPage" class="page">
+ <h2>Find Users & Friends</h2>
+ <div id="loginMessageSearch" class="login-prompt">🔒 You must log in to search and view friends!</div>
+ 
+ <div id="searchArea" style="display: none;">
+ <input type="text" id="searchInput" placeholder="Search by name...">
+ <button id="searchBtn" class="send-btn">Search Users</button>
+ <div id="searchResults" style="margin-top: 15px;"></div>
+
+ <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
+ 
+ <h3 style="text-align: left; font-size: 16px; margin-bottom: 10px;">👥 My Saved Friends</h3>
+ <div id="friendsList" style="text-align: left; max-height: 200px; overflow-y: auto;">
+ <p style="color: #777; font-size: 13px;">No friends added yet. Search above or reply to messages to add friends!</p>
+ </div>
+ </div>
+ </div>
+
+ <!-- PRIVATE CHAT PAGE -->
+ <div id="chatPage" class="page">
+ <div class="chat-header">
+ <span id="chattingWithName">Chat</span>
+ </div>
+ 
+ <div id="chatHistory" class="chat-history"></div>
+ 
+ <div style="display: flex; gap: 10px;">
+ <input type="text" id="privateMsgInput" placeholder="Type text message here...">
+ <button id="sendPrivateMsgBtn" class="send-btn" style="margin: 0;">Send</button>
+ </div>
+ </div>
+
+ </div>
+
+ <!-- BOTTOM FLOATING BAR -->
+ <div class="down">
+ <button class="nav-btn" data-target="homePage">🏠</button>
+ <button class="nav-btn" data-target="commentsPage">📝</button>
+ <button class="nav-btn" data-target="searchPage">🔍</button>
+ </div>
+
+ <!-- FIREBASE SCRIPTS -->
+ <script type="module">
+ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+ import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc, updateDoc, setDoc, getDocs, getDoc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+ const firebaseConfig = {
+ apiKey: "AIzaSyCpVxYlbs-3khAeJwsb1gDEqb18l-GmPEg",
+ authDomain: "kbpr-25886.firebaseapp.com",
+ projectId: "kbpr-25886",
+ storageBucket: "kbpr-25886.firebasestorage.app",
+ messagingSenderId: "794441587298",
+ appId: "1:794441587298:web:96774c7be4811ea9998f3b"
+ };
+
+ const app = initializeApp(firebaseConfig);
+ const db = getFirestore(app);
+ const auth = getAuth(app);
+
+ let currentUser = null; 
+ let currentChatUserId = null; 
+ let currentChatUserName = null;
+ let chatUnsubscribe = null;
+ let notifUnsubscribe = null;
+
+ // UI NAVIGATION
+ const navButtons = document.querySelectorAll('.nav-btn');
+ const pages = document.querySelectorAll('.page');
+
+ function showPage(pageId) {
+ pages.forEach(p => p.classList.remove('active'));
+ navButtons.forEach(b => b.classList.remove('active'));
+ document.getElementById(pageId).classList.add('active');
+ document.querySelectorAll(`[data-target="${pageId}"]`).forEach(b => b.classList.add('active'));
+ }
+
+ navButtons.forEach(btn => {
+ btn.addEventListener('click', () => showPage(btn.getAttribute('data-target')));
+ });
+
+ // NOTIFICATION TOGGLE
+ const notifBellBtn = document.getElementById('notifBellBtn');
+ const notifDropdown = document.getElementById('notifDropdown');
+ notifBellBtn.addEventListener('click', (e) => {
+ e.stopPropagation();
+ notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
+ });
+ window.addEventListener('click', () => { notifDropdown.style.display = 'none'; });
+
+ // AUTH TABS TOGGLE (Login vs Register)
+ const showLoginTab = document.getElementById('showLoginTab');
+ const showRegisterTab = document.getElementById('showRegisterTab');
+ const loginFormSection = document.getElementById('loginFormSection');
+ const registerFormSection = document.getElementById('registerFormSection');
+
+ showLoginTab.addEventListener('click', () => {
+ showLoginTab.classList.add('active');
+ showRegisterTab.classList.remove('active');
+ loginFormSection.style.display = 'flex';
+ registerFormSection.style.display = 'none';
+ });
+
+ showRegisterTab.addEventListener('click', () => {
+ showRegisterTab.classList.add('active');
+ showLoginTab.classList.remove('active');
+ registerFormSection.style.display = 'flex';
+ loginFormSection.style.display = 'none';
+ });
+
+ // FIREBASE AUTH STATE LISTENER
+ onAuthStateChanged(auth, async (user) => {
+ if (user) {
+ const userDoc = await getDoc(doc(db, "users", user.uid));
+ let name = user.email.split('@')[0];
+ if (userDoc.exists()) {
+ name = userDoc.data().name;
+ }
+ 
+ currentUser = { uid: user.uid, name: name, email: user.email };
+ updateUIAfterLogin(currentUser);
+ } else {
+ handleLogoutUI();
+ }
+ });
+
+ function updateUIAfterLogin(user) {
+ document.getElementById('authBtn').textContent = "Logout";
+ document.getElementById('authBtn').style.background = "#dc3545";
+ document.getElementById('welcomeName').textContent = user.name;
+ 
+ document.getElementById('authFormsContainer').style.display = 'none';
+ document.getElementById('loginMessageBoard').style.display = 'none';
+ document.getElementById('loginMessageSearch').style.display = 'none';
+ document.getElementById('commentFormArea').style.display = 'block';
+ document.getElementById('searchArea').style.display = 'block';
+
+ startNotificationListener(user.uid);
+ loadFriendsList();
+ }
+
+ function handleLogoutUI() {
+ currentUser = null;
+ if (notifUnsubscribe) notifUnsubscribe();
+ 
+ document.getElementById('authBtn').textContent = "Login";
+ document.getElementById('authBtn').style.background = "#007bff";
+ document.getElementById('welcomeName').textContent = "Guest";
+ document.getElementById('notifBadge').style.display = 'none';
+ 
+ document.getElementById('authFormsContainer').style.display = 'flex';
+ document.getElementById('loginMessageBoard').style.display = 'block';
+ document.getElementById('loginMessageSearch').style.display = 'block';
+ document.getElementById('commentFormArea').style.display = 'none';
+ document.getElementById('searchArea').style.display = 'none';
+ showPage('homePage');
+ }
+
+ // AUTHENTICATION ACTIONS
+ document.getElementById('authBtn').addEventListener('click', async () => {
+ if (currentUser) {
+ if (confirm("Are you sure you want to log out?")) {
+ await signOut(auth);
+ }
+ } else {
+ showPage('homePage');
+ document.getElementById('loginEmailInput').focus();
+ }
+ });
+
+ // REGISTER HANDLER (Name, Email, Password)
+ document.getElementById('registerSubmitBtn').addEventListener('click', async () => {
+ const name = document.getElementById('regNameInput').value.trim();
+ const email = document.getElementById('regEmailInput').value.trim();
+ const password = document.getElementById('regPasswordInput').value.trim();
+
+ if (!name || !email || !password) {
+ return alert("Please fill in all registration fields.");
+ }
+ if (password.length < 6) {
+ return alert("Password must be at least 6 characters long.");
+ }
+
+ try {
+ const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+ const user = userCredential.user;
+
+ await setDoc(doc(db, "users", user.uid), {
+ uid: user.uid,
+ name: name,
+ email: email
+ });
+
+ document.getElementById('regNameInput').value = '';
+ document.getElementById('regEmailInput').value = '';
+ document.getElementById('regPasswordInput').value = '';
+ alert("Registration successful!");
+ } catch (error) {
+ alert("Registration failed: " + error.message);
+ }
+ });
+
+ // LOGIN HANDLER (Email, Password)
+ document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
+ const email = document.getElementById('loginEmailInput').value.trim();
+ const password = document.getElementById('loginPasswordInput').value.trim();
+
+ if (!email || !password) {
+ return alert("Please enter both email and password.");
+ }
+
+ try {
+ await signInWithEmailAndPassword(auth, email, password);
+ document.getElementById('loginEmailInput').value = '';
+ document.getElementById('loginPasswordInput').value = '';
+ } catch (error) {
+ alert("Login failed: " + error.message);
+ }
+ });
+
+ // COMMENT SECTION
+ const commentInput = document.getElementById('commentInput');
+ const commentsList = document.getElementById('commentsList');
+ const wordCounter = document.getElementById('wordCounter');
+ 
+ commentInput.addEventListener('input', () => {
+ const words = commentInput.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+ wordCounter.textContent = `${words} / 100 words`;
+ wordCounter.style.color = words > 100 ? "red" : "#555";
+ });
+
+ document.getElementById('sendCommentBtn').addEventListener('click', async () => {
+ if (!currentUser) return;
+ const text = commentInput.value.trim();
+ const words = text.split(/\s+/).filter(w => w.length > 0).length;
+ if (words === 0 || words > 100) return alert("Comment must be between 1 and 100 words.");
+
+ await addDoc(collection(db, "comments"), {
+ text: text,
+ authorId: currentUser.uid,
+ authorName: currentUser.name,
+ createdAt: serverTimestamp()
+ });
+ commentInput.value = '';
+ wordCounter.textContent = '0 / 100 words';
+ });
+
+ onSnapshot(query(collection(db, "comments"), orderBy("createdAt", "desc")), (snapshot) => {
+ commentsList.innerHTML = '';
+ snapshot.forEach((docSnap) => {
+ const data = docSnap.data();
+ const div = document.createElement('div');
+ div.className = 'comment-card';
+ div.innerHTML = `
+ <strong style="color:#007bff;">${data.authorName}</strong>
+ <p style="margin: 5px 0; white-space: pre-wrap;">${data.text}</p>
+ `;
+ 
+ if (currentUser && currentUser.uid === data.authorId) {
+ const btnDiv = document.createElement('div');
+ btnDiv.className = 'action-btns';
+ 
+ const editBtn = document.createElement('button');
+ editBtn.className = 'edit-btn';
+ editBtn.textContent = 'Edit';
+ editBtn.onclick = () => {
+ const newText = prompt("Edit your comment:", data.text);
+ if (newText) {
+ const newWords = newText.trim().split(/\s+/).filter(w => w.length > 0).length;
+ if (newWords <= 100) {
+ updateDoc(doc(db, "comments", docSnap.id), { text: newText });
+ } else {
+ alert("Comment must be under 100 words.");
+ }
+ }
+ };
+
+ const delBtn = document.createElement('button');
+ delBtn.className = 'delete-btn';
+ delBtn.textContent = 'Delete';
+ delBtn.onclick = () => {
+ if (confirm("Delete this comment permanently?")) {
+ deleteDoc(doc(db, "comments", docSnap.id));
+ }
+ };
+
+ btnDiv.appendChild(editBtn);
+ btnDiv.appendChild(delBtn);
+ div.appendChild(btnDiv);
+ }
+ commentsList.appendChild(div);
+ });
+ });
+
+ // SEARCH USERS & ADD FRIEND (Saved to Device Storage / localStorage)
+ document.getElementById('searchBtn').addEventListener('click', async () => {
+ if (!currentUser) return;
+ const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+ const resultsDiv = document.getElementById('searchResults');
+ if (!searchTerm) return;
+ 
+ resultsDiv.innerHTML = 'Searching...';
+ const querySnapshot = await getDocs(query(collection(db, "users")));
+ 
+ resultsDiv.innerHTML = '';
+ let found = false;
+
+ querySnapshot.forEach((docSnap) => {
+ const user = docSnap.data();
+ if (user.uid !== currentUser.uid && user.name.toLowerCase().includes(searchTerm)) {
+ found = true;
+ const div = document.createElement('div');
+ div.className = 'user-result';
+ div.innerHTML = `<span>👤 <strong>${user.name}</strong></span>`;
+ 
+ const btnGroup = document.createElement('div');
+ btnGroup.className = 'btn-group';
+
+ const addBtn = document.createElement('button');
+ addBtn.className = 'add-friend-btn';
+ addBtn.textContent = 'Add Friend';
+ addBtn.onclick = () => {
+ const storageKey = 'mathAppFriends_' + currentUser.uid;
+ let friends = JSON.parse(localStorage.getItem(storageKey) || '[]');
+ 
+ if (!friends.some(f => f.friendId === user.uid)) {
+ friends.push({ friendId: user.uid, friendName: user.name });
+ localStorage.setItem(storageKey, JSON.stringify(friends));
+ loadFriendsList();
+ alert(`${user.name} added to your device storage friends list!`);
+ } else {
+ alert(`${user.name} is already in your friends list.`);
+ }
+ };
+
+ const chatBtn = document.createElement('button');
+ chatBtn.className = 'chat-btn';
+ chatBtn.textContent = 'Chat';
+ chatBtn.onclick = () => openChat(user.uid, user.name);
+ 
+ btnGroup.appendChild(addBtn);
+ btnGroup.appendChild(chatBtn);
+ div.appendChild(btnGroup);
+ resultsDiv.appendChild(div);
+ }
+ });
+
+ if (!found) resultsDiv.innerHTML = '<p>No users found matching that name.</p>';
+ });
+
+ // LOAD FRIENDS LIST FROM DEVICE STORAGE (localStorage)
+ function loadFriendsList() {
+ const friendsListDiv = document.getElementById('friendsList');
+ friendsListDiv.innerHTML = '';
+ 
+ const storageKey = 'mathAppFriends_' + currentUser.uid;
+ const friends = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+ if (friends.length === 0) {
+ friendsListDiv.innerHTML = '<p style="color: #777; font-size: 13px;">No friends added yet. Search above or reply to messages to add friends!</p>';
+ return;
+ }
+
+ friends.forEach(data => {
+ const item = document.createElement('div');
+ item.className = 'friend-item';
+ item.innerHTML = `👤 <strong>${data.friendName}</strong>`;
+
+ const btnGroup = document.createElement('div');
+ btnGroup.className = 'btn-group';
+
+ const chatBtn = document.createElement('button');
+ chatBtn.className = 'chat-btn';
+ chatBtn.textContent = 'Chat';
+ chatBtn.onclick = () => openChat(data.friendId, data.friendName);
+
+ const removeBtn = document.createElement('button');
+ removeBtn.className = 'add-friend-btn';
+ removeBtn.style.background = '#dc3545';
+ removeBtn.textContent = 'Remove';
+ removeBtn.onclick = async () => {
+ if (confirm(`Remove ${data.friendName} and delete all chat history with them?`)) {
+ const roomId = getChatRoomId(currentUser.uid, data.friendId);
+ const chatQuery = query(collection(db, "chats"), where("roomId", "==", roomId));
+ const chatSnapshot = await getDocs(chatQuery);
+ 
+ const deletePromises = [];
+ chatSnapshot.forEach((chatDoc) => {
+ deletePromises.push(deleteDoc(chatDoc.ref));
+ });
+ await Promise.all(deletePromises);
+
+ let updatedFriends = JSON.parse(localStorage.getItem(storageKey) || '[]');
+ updatedFriends = updatedFriends.filter(f => f.friendId !== data.friendId);
+ localStorage.setItem(storageKey, JSON.stringify(updatedFriends));
+ loadFriendsList();
+ }
+ };
+
+ btnGroup.appendChild(chatBtn);
+ btnGroup.appendChild(removeBtn);
+ item.appendChild(btnGroup);
+ friendsListDiv.appendChild(item);
+ });
+ }
+
+ // PRIVATE CHAT & MESSAGE DELETION
+ function getChatRoomId(uid1, uid2) {
+ return [uid1, uid2].sort().join('_'); 
+ }
+
+ function openChat(otherUserId, otherUserName) {
+ currentChatUserId = otherUserId;
+ currentChatUserName = otherUserName;
+ document.getElementById('chattingWithName').textContent = `Chatting with ${otherUserName}`;
+ showPage('chatPage');
+
+ const roomId = getChatRoomId(currentUser.uid, currentChatUserId);
+ const chatHistory = document.getElementById('chatHistory');
+ 
+ if (chatUnsubscribe) chatUnsubscribe();
+
+ const q = query(collection(db, "chats"), where("roomId", "==", roomId));
+ chatUnsubscribe = onSnapshot(q, (snapshot) => {
+ const msgs = [];
+ snapshot.forEach((docSnap) => {
+ const data = docSnap.data();
+ msgs.push({ id: docSnap.id, ...data });
+
+ if (data.receiverId === currentUser.uid && data.senderId === otherUserId && data.read === false) {
+ updateDoc(doc(db, "chats", docSnap.id), { read: true });
+ }
+ });
+ 
+ msgs.sort((a, b) => {
+ const t1 = a.timestamp ? a.timestamp.toMillis() : 0;
+ const t2 = b.timestamp ? b.timestamp.toMillis() : 0;
+ return t1 - t2;
+ });
+
+ chatHistory.innerHTML = '';
+ msgs.forEach(data => {
+ const msgDiv = document.createElement('div');
+ msgDiv.className = `msg ${data.senderId === currentUser.uid ? 'me' : 'them'}`;
+ msgDiv.textContent = data.text;
+
+ if (data.senderId === currentUser.uid) {
+ const delSpan = document.createElement('button');
+ delSpan.className = 'delete-msg-btn';
+ delSpan.textContent = 'Delete';
+ delSpan.onclick = async () => {
+ if (confirm("Delete this message?")) {
+ await deleteDoc(doc(db, "chats", data.id));
+ }
+ };
+ msgDiv.appendChild(delSpan);
+ }
+
+ chatHistory.appendChild(msgDiv);
+ });
+ chatHistory.scrollTop = chatHistory.scrollHeight;
+ });
+ }
+
+ // Send Private Message & Auto-Add Friend to Device Storage
+ document.getElementById('sendPrivateMsgBtn').addEventListener('click', async () => {
+ const input = document.getElementById('privateMsgInput');
+ const text = input.value.trim();
+ if (!text || !currentChatUserId) return;
+
+ const roomId = getChatRoomId(currentUser.uid, currentChatUserId);
+ 
+ await addDoc(collection(db, "chats"), {
+ roomId: roomId,
+ text: text,
+ senderId: currentUser.uid,
+ senderName: currentUser.name,
+ receiverId: currentChatUserId,
+ timestamp: serverTimestamp(),
+ read: false
+ });
+
+ const storageKey = 'mathAppFriends_' + currentUser.uid;
+ let friends = JSON.parse(localStorage.getItem(storageKey) || '[]');
+ if (!friends.some(f => f.friendId === currentChatUserId)) {
+ friends.push({ friendId: currentChatUserId, friendName: currentChatUserName });
+ localStorage.setItem(storageKey, JSON.stringify(friends));
+ loadFriendsList();
+ }
+
+ input.value = '';
+ });
+
+ // NOTIFICATION LISTENER
+ function startNotificationListener(userId) {
+ if (notifUnsubscribe) notifUnsubscribe();
+ 
+ const q = query(collection(db, "chats"), where("receiverId", "==", userId));
+ notifUnsubscribe = onSnapshot(q, (snapshot) => {
+ const notifList = document.getElementById('notifList');
+ notifList.innerHTML = '';
+ 
+ const sendersMap = {};
+ snapshot.forEach(docSnap => {
+ const data = docSnap.data();
+ if (data.read === false) {
+ sendersMap[data.senderId] = data;
+ }
+ });
+
+ const senders = Object.values(sendersMap);
+ const badge = document.getElementById('notifBadge');
+
+ if (senders.length > 0) {
+ badge.style.display = 'inline-block';
+ badge.textContent = senders.length;
+
+ senders.forEach(msg => {
+ const item = document.createElement('div');
+ item.style.padding = '6px';
+ item.style.background = '#f8f9fa';
+ item.style.borderRadius = '5px';
+ item.style.cursor = 'pointer';
+ item.style.borderLeft = '3px solid #007bff';
+ item.innerHTML = `<strong>${msg.senderName || 'User'}</strong>: ${msg.text.substring(0, 18)}...`;
+ item.onclick = () => {
+ notifDropdown.style.display = 'none';
+ openChat(msg.senderId, msg.senderName || 'Friend');
+ };
+ notifList.appendChild(item);
+ });
+ } else {
+ badge.style.display = 'none';
+ notifList.innerHTML = '<p style="color:#777; margin:0;">No new messages</p>';
+ }
+ });
+ }
+ </script>
+</body>
+</html>
