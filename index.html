@@ -1773,12 +1773,19 @@ function myFunction() {
  // ==========================================
  // 8. GROQ AI ENGINE (`const brain`) WITH OPENROUTER FALLBACK
  // ==========================================
- const OPENROUTER_API_KEY = "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";
+ var OPENROUTER_API_KEY = "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";
 
  const brain = async function(userText, fileData, fileName, imageData) {
  if (!navigator.onLine) {
  return "⚠️ Please turn on your internet connection to continue.";
  }
+
+ // Safe access to Groq keys (prevents 'Identifier already declared' JavaScript crash)
+ const groqKeysList = (typeof GROQ_API_KEYS !== 'undefined') ? GROQ_API_KEYS : [
+ "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",
+ "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",
+  "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"
+ ];
 
  let lowerText = userText.toLowerCase();
 
@@ -1860,13 +1867,13 @@ function myFunction() {
  // ----------------------------------------------------
  // 1. PRIMARY TRY: Groq API Keys
  // ----------------------------------------------------
- for (let i = 0; i < GROQ_API_KEYS.length; i++) {
+ for (let i = 0; i < groqKeysList.length; i++) {
  try {
  const res = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
  method: "POST",
  headers: {
  "content-type": "application/json",
- "Authorization": `Bearer ${GROQ_API_KEYS[i]}`
+ "Authorization": `Bearer ${groqKeysList[i]}`
  },
  body: JSON.stringify({
  model: apiModel,
@@ -1892,7 +1899,7 @@ function myFunction() {
  }
 
  // ----------------------------------------------------
- // 2. FALLBACK TRY: OpenRouter API (Runs if Groq fails)
+ // 2. FALLBACK TRY: OpenRouter API (Runs automatically if Groq fails)
  // ----------------------------------------------------
  if (!generatedContent && OPENROUTER_API_KEY) {
  try {
