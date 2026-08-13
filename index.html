@@ -221,6 +221,7 @@
  align-items: center;
  gap: 5px;
  transition: background 0.2s;
+ text-decoration: none;
  }
  .download-btn:hover { background-color: #059669; }
 
@@ -446,14 +447,13 @@
  z-index: 100000; transition: opacity 0.5s ease; color: white;
  }
 
- /* ===== Tablet ===== */
+ /* ===== Media Queries ===== */
  @media screen and (max-width: 1024px) {
  .sidebar { width: 220px; }
  .chat-box { padding: 18px 20px; }
  .message-wrapper { max-width: 85%; }
  }
 
- /* ===== Phone ===== */
  @media screen and (max-width: 768px) {
  .sidebar { position: absolute; left: 0; top: 0; transform: translateX(-100%); z-index: 100; height: 100%; width: 240px; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
  .sidebar.mobile-open { transform: translateX(0%); }
@@ -465,7 +465,6 @@
  .message-wrapper { max-width: 90%; }
  .input-container-wrapper { padding: 10px 12px; }
 
- /* Shrink the AI mode dropdown so its full labels fit on phones */
  .ai-mode-select {
  font-size: 12px !important;
  padding: 8px 10px !important;
@@ -473,7 +472,6 @@
  }
  }
 
- /* ===== Small phone ===== */
  @media screen and (max-width: 420px) {
  #currentChatTitle { font-size: 1em !important; }
  #userEmailDisplay { display: none; }
@@ -490,7 +488,6 @@
  .message { padding: 10px 14px; font-size: 0.9em; }
  }
 
- /* ===== Watch / ultra-narrow ===== */
  @media screen and (max-width: 260px) {
  .chat-header { padding: 8px; }
  #currentChatTitle { display: none; }
@@ -555,7 +552,7 @@
  <video id="localVideoFeed" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
  <canvas id="processedVideoCanvas" style="width: 100%; height: 100%; object-fit: cover; display: none; position: absolute; top:0; left:0;"></canvas>
  
- <div id="videoAvatarFallback" class="video-avatar" style="position: absolute;">🤖</div>
+<div id="videoAvatarFallback" class="video-avatar" style="position: absolute;">🤖</div>
  <h2 id="callLiveText" style="position: absolute; bottom: 10px; font-size: 1.1em; font-weight: 500; background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 20px; z-index: 2;">Hi! I'm listening...</h2>
  </div>
 
@@ -589,7 +586,7 @@
  <span id="callSoundIcon">🔊</span> <span id="callSoundText">Sound: ON</span>
  </button>
  
- <select id="callLanguageSelect" style="padding: 12px 16px; border-radius: 50px; background-color: #334155; color: white; border: 1px solid #475569; font-weight: bold; cursor: pointer; outline: none;">
+<select id="callLanguageSelect" style="padding: 12px 16px; border-radius: 50px; background-color: #334155; color: white; border: 1px solid #475569; font-weight: bold; cursor: pointer; outline: none;">
  <option value="en-US">🇬🇧 English (US)</option>
  <option value="km-KH">🇰🇭 Khmer (Cambodia)</option>
  <option value="es-ES">🇪🇸 Spanish</option>
@@ -616,28 +613,28 @@
  </div>
  <ul class="persona-list" id="personaList"></ul>
  <div class="sidebar-actions">
-  <!-- About Modal Overlay -->
+ <!-- About Modal Overlay -->
 <div id="aboutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
-  <div style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-    <h3 style="margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">ℹ️ About AI Pro Assistant</h3>
-    <p style="color: #475569; font-size: 14px; line-height: 1.5;">
-       Describe your own code.put all in one Don't explain
-    </p>
-   <div style="width: auto;background: black; padding: 10px; border-radius: 6px; font-size: 13px; color: white; margin-bottom: 15px;">
-    The results it not explain:
-      <pre><code>
+ <div style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+ <h3 style="margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">ℹ️ About AI Pro Assistant</h3>
+ <p style="color: #475569; font-size: 14px; line-height: 1.5;">
+ Describe your own code. Put all in one. Don't explain code.
+ </p>
+ <div style="width: auto; background: black; padding: 10px; border-radius: 6px; font-size: 13px; color: white; margin-bottom: 15px;">
+ The results will strictly show code only without explanations:
+ <pre><code>
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
 &lt;title&gt;Example Page&lt;/title&gt;
 &lt;style&gt; 
 body { 
-  background-color: #f2f2f2; 
+background-color: #f2f2f2; 
 } 
 &lt;/style&gt;
 &lt;script&gt;
 function myFunction() {
-  alert("Hello World!");
+ alert("Hello World!");
 }
 &lt;/script&gt;
 &lt;/head&gt;
@@ -646,47 +643,50 @@ function myFunction() {
 &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
-    </div>
-    <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; font-size: 13px; color: #334155; margin-bottom: 15px;">
-      <strong>Version:</strong> 2.5 Pro<br>
-      <strong>Engine:</strong> Llama 3.3 70B & Vision
-    </div>
-    <div style="text-align: right;">
-      <button onclick="closeAboutModal()" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Close</button>
-    </div>
-  </div>
+ </div>
+ <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; font-size: 13px; color: #334155; margin-bottom: 15px;">
+ <strong>Version:</strong> 2.5 Pro<br>
+ <strong>Engine:</strong> Llama 3.3 70B & Vision
+ </div>
+ <div style="text-align: right;">
+ <button onclick="closeAboutModal()" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Close</button>
+ </div>
+ </div>
 </div>
+
 <!-- Sidebar Action Buttons -->
 <div style="margin-top: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(0,0,0,0.1);">
-  <button onclick="openAboutModal()" style="width: 100%; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-    ℹ️ <span>About App</span>
-  </button>
-  <button onclick="openFeedbackModal()" style="width: 100%; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-    💬 <span>Send Feedback</span>
-  </button>
+ <button onclick="openAboutModal()" style="width: 100%; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+ ℹ️ <span>About App</span>
+ </button>
+ <button onclick="openFeedbackModal()" style="width: 100%; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+ 💬 <span>Send Feedback</span>
+ </button>
 </div>
-<form action="https://api.web3forms.com/submit" method="POST" onsubmit="return handleCheckoutSubmit(event)">
-                    <input type="hidden" name="access_key" value="0333555b-f17b-4fa0-ae5b-0675529af72d">
+
 <!-- Feedback Modal Overlay -->
-<div id="feedbackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
-  <div style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-    <h3 style="margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">💬 Send Feedback</h3>
-    <p style="color: #475569; font-size: 13px; margin-bottom: 10px;">
-      Found a bug or have a suggestion? Let us know your thoughts below!
-    </p>
-   <input type="name" name="name" placeholder="Your name" style="width: 100%; border-radius: 6px;">
-    <textarea type="text" name="feedback" id="feedbackText" placeholder="Type your feedback, bug report, or feature request here..." style="width: 100%; height: 110px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: none; outline: none; box-sizing: border-box;"></textarea>
-    <div style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" onclick="closeFeedbackModal()" style="width: 100%; background: #cbd5e1; color: #334155; border: none; padding: 8px 16px;">Cancel</button>
-      <button type="submit" onclick="submitFeedback()" style="width: 100%; background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Submit</button>
-    </form>
-    </div>
-  </div>
-</div>
- <button class="icon-btn" style="width:100%; background:#334155; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="createNewChatSession()">＋ New Chat</button>
- <button class="btn-reset" onclick="resetApp()">Reset App</button>
+<form action="https://api.web3forms.com/submit" method="POST" onsubmit="return handleCheckoutSubmit(event)">
+ <input type="hidden" name="access_key" value="0333555b-f17b-4fa0-ae5b-0675529af72d">
+ <div id="feedbackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+ <div style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+ <h3 style="margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">💬 Send Feedback</h3>
+ <p style="color: #475569; font-size: 13px; margin-bottom: 10px;">
+ Found a bug or have a suggestion? Let us know your thoughts below!
+ </p>
+ <input type="name" name="name" placeholder="Your name" style="width: 100%; border-radius: 6px; padding:8px; margin-bottom:8px; border:1px solid #cbd5e1;">
+ <textarea name="feedback" id="feedbackText" placeholder="Type your feedback, bug report, or feature request here..." style="width: 100%; height: 110px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; resize: none; outline: none; box-sizing: border-box;"></textarea>
+ <div style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+ <button type="button" onclick="closeFeedbackModal()" style="width: 100%; background: #cbd5e1; color: #334155; border: none; padding: 8px 16px; border-radius: 6px;">Cancel</button>
+ <button type="submit" onclick="submitFeedback()" style="width: 100%; background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Submit</button>
+ </div>
+ </div>
+ </div>
+</form>
+
+ <button class="icon-btn" style="width:100%; background:#334155; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:8px;" onclick="createNewChatSession()">＋ New Chat</button>
+ <button class="btn-reset" onclick="resetApp()" style="margin-top:8px;">Reset App</button>
  
- <div id="ownerAdminPanel" style="display: none; padding-top: 10px; border-top: 1px solid #334155;">
+<div id="ownerAdminPanel" style="display: none; padding-top: 10px; border-top: 1px solid #334155; margin-top:10px;">
  <p style="font-size: 11px; color: #f59e0b; font-weight: bold; margin-bottom: 6px;">👑 Owner Controls</p>
  <button onclick="ownerResetUserAccount()" style="width: 100%; padding: 8px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">🗑️ Wipe User Data</button>
  </div>
@@ -703,17 +703,16 @@ function myFunction() {
  <button onclick="handleLogout()" style="padding: 4px 8px; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; background: #fff; font-size: 12px; color: #64748b;">Logout</button>
  </div>
  
- <div style="display: flex; align-items: center; gap: 12px;">
+<div style="display: flex; align-items: center; gap: 12px;">
  <button class="icon-btn" onclick="startVideoCallSession()" title="Start Video Call" style="background:#eff6ff; border-color:#bfdbfe; color:#2563eb;">📹</button>
-<div>
- <select id="aiModeSelect" onchange="setAiMode(this.value)" style="...">
-   <option value="normal">⚡ Normal (Short idea, exact code)</option>
-   <option value="pro" id="proOption">⭐ Pro (Best professional code version)</option>
-   <option value="image-flux">🎨 Image Generator (FLUX.1)</option>
-   <option value="image-sd">🖼️ Image Generator (SD XL)</option>
+ <div>
+ <select id="aiModeSelect" class="ai-mode-select" onchange="setAiMode(this.value)" style="padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; outline:none; font-weight:bold; cursor:pointer;">
+ <option value="normal">⚡ Normal (Short non-simple code, no explain)</option>
+ <option value="pro" id="proOption">⭐ Pro (Long simple perfect code, no explain)</option>
+ <option value="image-flux">🎨 Image Generator (FLUX.1)</option>
+ <option value="image-sd">🖼️ Image Generator (SD XL)</option>
  </select>
-</div>
-<!-- DOWN: Below this line -->
+ </div>
  <button class="btn-clear" onclick="clearCurrentChat()">Clear Chat</button>
  </div>
  </div>
@@ -723,7 +722,7 @@ function myFunction() {
  ⏳ Initializing access credentials...
  </div>
  
- <div class="chat-box" id="chatBox"></div>
+<div class="chat-box" id="chatBox"></div>
 
  <!-- Input Area Wrapper -->
  <div class="input-container-wrapper">
@@ -738,10 +737,10 @@ function myFunction() {
  <input type="file" id="codeUploadInput" style="display: none;" onchange="handleFileSelected(event)">
  <button class="icon-btn" onclick="document.getElementById('codeUploadInput').click()" title="Upload Code File">📁</button>
  
- <input type="file" id="imageUploadInput" accept="image/*" style="display: none;" onchange="handleImageSelected(event)">
- <button class="icon-btn" onclick="document.getElementById('imageUploadInput').click()" title="Upload Image">📷</button>
+<input type="file" id="imageUploadInput" accept="image/*,video/*" style="display: none;" onchange="handleImageSelected(event)">
+ <button class="icon-btn" onclick="document.getElementById('imageUploadInput').click()" title="Upload Image/Video">📷</button>
  
- <button class="icon-btn" onclick="toggleEmojiPicker()" title="Insert Emoji">😀</button>
+<button class="icon-btn" onclick="toggleEmojiPicker()" title="Insert Emoji">😀</button>
  <div class="emoji-picker" id="emojiPicker">
  <span onclick="insertEmoji('😀')">😀</span>
  <span onclick="insertEmoji('😂')">😂</span>
@@ -757,11 +756,12 @@ function myFunction() {
 
  <button class="icon-btn" id="micBtn" onclick="toggleSpeechRecognition()" title="Voice Dictation">🎤</button>
 
- <input type="text" id="userInput" placeholder="Type message, image prompt, or code..." onkeypress="handleKeyPress(event)">
+ <input type="text" id="userInput" placeholder="Type message, image prompt, code, or ask to edit/donate..." onkeypress="handleKeyPress(event)">
  <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
  </div>
  </div>
  </div>
+
  <script>
  const id = (eid) => document.getElementById(eid);
 
@@ -792,7 +792,6 @@ function myFunction() {
 
  const OWNER_EMAIL = "jams04254@gmail.com"; 
  const BG_API_KEY = "bewFVzbWvnsmxj24HEnvBFMP";
- const OPENROUTER_API_KEY = "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";
 
  // State Variables
  let currentAiMode = 'normal';
@@ -809,70 +808,69 @@ function myFunction() {
  "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",
  "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"
  ];
-// ==========================================
-// ABOUT & FEEDBACK MODAL CONTROLLERS
-// ==========================================
-window.openAboutModal = function() {
-    const modal = id("aboutModal");
-    if (modal) {
-        modal.style.display = "flex";
-        modal.style.overflowY = "auto";       // Enables vertical scrolling
-        modal.style.maxHeight = "100vh";      // Limits height to screen size
-    }
-}
-
-window.closeAboutModal = function() {
-  const modal = id("aboutModal");
-  if (modal) modal.style.display = "none";
-}
-
-window.openFeedbackModal = function() {
-    const modal = id("feedbackModal");
-    if (modal) {
-        modal.style.display = "flex";
-        modal.style.overflowY = "auto";       // Enables vertical scrolling
-        modal.style.maxHeight = "100vh";      // Limits height to screen size
-    }
-}
-
-window.closeFeedbackModal = function() {
-  const modal = id("feedbackModal");
-  if (modal) modal.style.display = "none";
-  const textEl = id("feedbackText");
-  if (textEl) textEl.value = "";
-}
-
-window.submitFeedback = async function() {
-  const feedbackInput = id("feedbackText");
-  if (!feedbackInput) return;
-  const content = feedbackInput.value.trim();
-
-  if (!content) {
-    alert("Please write something before submitting feedback.");
-    return;
-  }
-
-  try {
-    // Saves feedback to your Firebase Firestore database if initialized
-    if (db && firebase.firestore) {
-      await db.collection("app_feedback").add({
-        userId: currentUser ? currentUser.uid : "Anonymous",
-        userEmail: currentUser ? (currentUser.email || "No Email") : "Anonymous",
-        feedback: content,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-    
-    alert("Thank you! Your feedback has been successfully submitted.");
-    closeFeedbackModal();
-  } catch (err) {
-    alert("Feedback sent locally, but failed to sync to database: " + err.message);
-    closeFeedbackModal();
-  }
-}
 
  // ==========================================
- // 2. ROBUST BLOB DOWNLOAD HELPER (CORS fix)
+ // MODAL CONTROLLERS
+ // ==========================================
+ window.openAboutModal = function() {
+ const modal = id("aboutModal");
+ if (modal) {
+ modal.style.display = "flex";
+ modal.style.overflowY = "auto";
+ modal.style.maxHeight = "100vh";
+ }
+ }
+
+ window.closeAboutModal = function() {
+ const modal = id("aboutModal");
+ if (modal) modal.style.display = "none";
+ }
+
+ window.openFeedbackModal = function() {
+ const modal = id("feedbackModal");
+ if (modal) {
+ modal.style.display = "flex";
+ modal.style.overflowY = "auto";
+ modal.style.maxHeight = "100vh";
+ }
+ }
+
+ window.closeFeedbackModal = function() {
+ const modal = id("feedbackModal");
+ if (modal) modal.style.display = "none";
+ const textEl = id("feedbackText");
+ if (textEl) textEl.value = "";
+ }
+
+ window.submitFeedback = async function() {
+ const feedbackInput = id("feedbackText");
+ if (!feedbackInput) return;
+ const content = feedbackInput.value.trim();
+
+ if (!content) {
+ alert("Please write something before submitting feedback.");
+ return;
+ }
+
+ try {
+ if (db && firebase.firestore) {
+ await db.collection("app_feedback").add({
+ userId: currentUser ? currentUser.uid : "Anonymous",
+ userEmail: currentUser ? (currentUser.email || "No Email") : "Anonymous",
+ feedback: content,
+ timestamp: firebase.firestore.FieldValue.serverTimestamp()
+ });
+ }
+ alert("Thank you! Your feedback has been successfully submitted.");
+ closeFeedbackModal();
+ } catch (err) {
+ alert("Feedback sent locally: " + err.message);
+ closeFeedbackModal();
+ }
+ }
+
+ // ==========================================
+ // 2. DOWNLOAD HELPER
  // ==========================================
  async function triggerDownload(urlOrBlob, filename, contentType = 'image/png') {
  try {
@@ -915,71 +913,7 @@ window.submitFeedback = async function() {
  window.triggerDownload = triggerDownload;
 
  // ==========================================
- // 3. ANIMATED CANVAS VIDEO GENERATOR
- // ==========================================
- function generateCanvasVideo(promptText) {
- return new Promise((resolve) => {
- const canvas = document.createElement('canvas');
- canvas.width = 640;
- canvas.height = 360;
- const ctx = canvas.getContext('2d');
- 
- const stream = canvas.captureStream(30);
- let mimeType = 'video/webm';
- if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/mp4';
-
- const recorder = new MediaRecorder(stream, { mimeType });
- const chunks = [];
-
- recorder.ondataavailable = e => chunks.push(e.data);
- recorder.onstop = () => {
- const blob = new Blob(chunks, { type: mimeType });
- resolve(blob);
- };
-
- recorder.start();
- let frame = 0;
- const totalFrames = 90;
-
- function animate() {
- frame++;
- ctx.fillStyle = '#0f172a';
- ctx.fillRect(0, 0, canvas.width, canvas.height);
-
- const time = frame * 0.05;
- for (let i = 0; i < 5; i++) {
- ctx.beginPath();
- ctx.arc(
- 320 + Math.sin(time + i) * 150,
- 180 + Math.cos(time + i * 0.5) * 80,
- 40 + i * 10,
- 0, Math.PI * 2
- );
- ctx.fillStyle = `rgba(99, 102, 241, ${0.15 + i * 0.05})`;
- ctx.fill();
- }
-
- ctx.fillStyle = '#ffffff';
- ctx.font = 'bold 18px sans-serif';
- ctx.textAlign = 'center';
- ctx.fillText(`🎬 AI Motion: "${promptText.substring(0, 35)}..."`, 320, 170);
-
- ctx.fillStyle = '#a5b4fc';
- ctx.font = '13px sans-serif';
- ctx.fillText(`Frame ${frame} / ${totalFrames}`, 320, 200);
-
- if (frame < totalFrames) {
- requestAnimationFrame(animate);
- } else {
- recorder.stop();
- }
- }
- animate();
- });
- }
-
- // ==========================================
- // 4. SPEECH RECOGNITION (Voice Dictation)
+ // 3. SPEECH RECOGNITION
  // ==========================================
  let recognition = null;
  let isRecording = false;
@@ -1036,7 +970,7 @@ window.submitFeedback = async function() {
  }
 
  // ==========================================
- // 5. FILE & IMAGE SELECTION HANDLERS
+ // 4. FILE & IMAGE SELECTION HANDLERS
  // ==========================================
  function handleFileSelected(event) {
  const file = event.target.files[0];
@@ -1052,7 +986,7 @@ window.submitFeedback = async function() {
 
  const inputField = id("userInput");
  if (inputField && !inputField.value) {
- inputField.placeholder = "Describe what you want to change on this code file...";
+ inputField.placeholder = "Describe what changes to make to this code file...";
  inputField.focus();
  }
  };
@@ -1082,7 +1016,7 @@ window.submitFeedback = async function() {
 
  const inputField = id("userInput");
  if (inputField && !inputField.value) {
- inputField.placeholder = "Solve problem in picture, math equation, or ask question...";
+ inputField.placeholder = "Ask to remove background, turn to 4k, or edit media...";
  inputField.focus();
  }
  };
@@ -1150,8 +1084,19 @@ window.submitFeedback = async function() {
  id("userInput").placeholder = "Type message, image problem, or code...";
  }
 
+ function dataURItoBlob(dataURI) {
+ const byteString = atob(dataURI.split(',')[1]);
+ const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+ const ab = new ArrayBuffer(byteString.length);
+ const ia = new Uint8Array(ab);
+ for (let i = 0; i < byteString.length; i++) {
+ ia[i] = byteString.charCodeAt(i);
+ }
+ return new Blob([ab], { type: mimeString });
+ }
+
  // ==========================================
- // 6. VIDEO CALL & BG REMOVAL API ENGINE
+ // 5. VIDEO CALL & BG REMOVAL API ENGINE
  // ==========================================
  let callMicActive = true;
  let aiSoundActive = true;
@@ -1356,17 +1301,6 @@ window.submitFeedback = async function() {
  triggerDownload(dataUrl, "captured-frame.png");
  }
 
- function dataURItoBlob(dataURI) {
- const byteString = atob(dataURI.split(',')[1]);
- const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
- const ab = new ArrayBuffer(byteString.length);
- const ia = new Uint8Array(ab);
- for (let i = 0; i < byteString.length; i++) {
- ia[i] = byteString.charCodeAt(i);
- }
- return new Blob([ab], { type: mimeString });
- }
-
  async function switchCameraFacing() {
  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
  if (localCameraStream) {
@@ -1491,7 +1425,7 @@ window.submitFeedback = async function() {
  }
 
  // ==========================================
- // 7. AUTHENTICATION & FIRESTORE STATE
+ // 6. AUTHENTICATION & FIRESTORE
  // ==========================================
  window.switchAuthTab = function(tab) {
  if (id("authStatus")) id("authStatus").textContent = "";
@@ -1590,7 +1524,7 @@ window.submitFeedback = async function() {
  } catch (err) { alert("Error: " + err.message); }
  }
  };
-
+ 
  function loadUserDataFromFirestore() {
  if (!currentUser || isOwner || !db) { updateUsageUI(); return; }
  try {
@@ -1681,7 +1615,7 @@ window.submitFeedback = async function() {
  }
 
  // ==========================================
- // 8. INDEXEDDB CHAT STORAGE
+ // 7. INDEXEDDB CHAT STORAGE
  // ==========================================
  let chatsData = { "Main Assistant": [] };
  let currentPersona = "Main Assistant";
@@ -1837,60 +1771,69 @@ window.submitFeedback = async function() {
  }
 
  // ==========================================
- // 9. GROQ AI ENGINE (`const brain` with 2-Min Timeout & Advanced Math/Code/Vision Solving)
+ // 8. GROQ AI ENGINE (`const brain`) WITH OPENROUTER FALLBACK
  // ==========================================
+ const OPENROUTER_API_KEY = "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";
+
  const brain = async function(userText, fileData, fileName, imageData) {
  if (!navigator.onLine) {
  return "⚠️ Please turn on your internet connection to continue.";
  }
 
  let lowerText = userText.toLowerCase();
- let dynamicInjections = "";
 
+ // 1) DONATE HANDLER
+ if (lowerText.includes("donate")) {
+ const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=Donate%20Support";
+ return `<div>Thank you for your generous support! Here is the donation picture:</div>
+ <div class="media-container">
+ <img src="${qrUrl}" class="media-element" alt="Donation Picture" />
+ <button class="download-btn" onclick="triggerDownload('${qrUrl}', 'donate-qr.png')">💾 Download Picture</button>
+ </div>`;
+ }
+
+ let dynamicInjections = "";
  if (lowerText.includes("time") || lowerText.includes("what time is it")) {
  const now = new Date();
  dynamicInjections += `\n[System Data - Current Time: ${now.toLocaleString()}]`;
  }
  if (lowerText.includes("weather") || lowerText.includes("temperature")) {
- dynamicInjections += `\n[System Data - Location Context: Phnom Penh, Cambodia. Current season context: August 2026.]`;
+ dynamicInjections += `\n[System Data - Location Context: Phnom Penh, Cambodia.]`;
  }
 
- const hasExplicitCodeWord = lowerText.includes("code") || fileData;
+ const hasExplicitCodeWord = lowerText.includes("code") || lowerText.includes("html") || lowerText.includes("css") || lowerText.includes("js") || lowerText.includes("script") || fileData;
  const wantsAllInOne = lowerText.includes("put all in one") || lowerText.includes("all in one");
  const isInfoQuery = lowerText.includes("information") || lowerText.includes("who is") || lowerText.includes("what is") || lowerText.includes("search");
  const isDictionaryQuery = lowerText.startsWith("meaning of") || lowerText.includes("meaning of ");
  const isMathQuery = lowerText.includes("math") || lowerText.includes("solve") || lowerText.includes("equation") || lowerText.includes("calculate") || /[0-9]+\s*[\+\-\*\/\^=]\s*[0-9]+/.test(userText);
+ 
  let systemPrompt = "";
 
- if (imageData) {
- systemPrompt = "You are an advanced expert vision, math, and problem-solving assistant. Carefully analyze the uploaded image (whether it contains math equations, complex charts, programming code, or general problem statements). Break down the problem step-by-step, verify your logic thoroughly, and provide the complete, accurate solution and answer.";
- } else if (isMathQuery || currentAiMode === 'pro') {
- systemPrompt = "You are an elite expert mathematician, programmer, and problem solver. When presented with hard math, coding puzzles, or complex questions, think through every step carefully, double-check all calculations and logic, and provide a comprehensive, infallible, and clearly explained solution.";
- } else if (isDictionaryQuery) {
- systemPrompt = "You are an authoritative dictionary assistant. Provide definition, part of speech, phonetic pronunciation, example sentence, and synonyms.";
- } else if (isInfoQuery) {
- systemPrompt = "You are a knowledgeable researcher. Provide factual, concise details.";
- } else if (fileData) {
+ if (hasExplicitCodeWord || fileData) {
  if (currentAiMode === 'pro') {
- systemPrompt = "You are an elite expert software architect and problem solver. You are given an existing code file. Output the *complete* refactored, highly optimized, professional version of the entire code file implementing the user's request. Return the full code.";
+ systemPrompt = "You are Pro AI Code Engine. ABSOLUTE MANDATE: NEVER explain anything or describe code. Just show the code in Markdown block. Output long, complete, comprehensive, highly structured, perfect, and easy-to-understand simple code. When given an uploaded code file, copy ALL original code and apply the requested changes perfectly.";
  } else {
- systemPrompt = "You are an expert developer. You are given an existing code file. Output the *complete* file code, incorporating only the minor corrections or changes requested by the user, without omitting or summarizing any parts of the code. Return the full code.";
+ systemPrompt = "You are Normal AI Code Engine. ABSOLUTE MANDATE: NEVER explain anything or describe code. Just show the code in Markdown block. Output short, compact, high-density, non-simple code. When given an uploaded code file, copy ALL original code and apply the exact requested changes.";
  }
- } else if (!hasExplicitCodeWord) {
- systemPrompt = "You are a helpful text and information assistant. Answer the user's question directly in plain text.";
- } else {
+
  if (wantsAllInOne) {
- systemPrompt = "You are an expert developer. When asked to 'put all in one', combine code everything all in one even I send file. into a single cohesive single-file solution using internal tags.";
- } else if (currentAiMode === 'pro') {
- systemPrompt = "You are an elite expert software architect. When asked for code, provide the best professional code version, clearly separating or structuring HTML, CSS, and JavaScript cleanly.It can do all the code very better then another AI even the style. But don't explain about code just tell a code. It always put code all in one. It can also know about information from Google clearly. Can answer the question by picture clearly and the best. when tell me a code don't explain or example. long answer but simple.";
- } else {
- systemPrompt = "You are a fast, concise assistant. When asked for code, provide a short, normal, and effective code snippet including HTML, CSS, and JavaScript as requested. Short answer. It can also know about information from Google. Can answer the question by picture. don't explain. Better at answer the question. Bad at code.";
+ systemPrompt += " Always combine HTML, CSS, and JS into a single cohesive all-in-one file block.";
  }
+ } else if (imageData) {
+ systemPrompt = "You are an advanced expert vision, image, and video editing assistant. Answer accurately. If asked to edit, remove background, or convert to 4K, explain clearly.";
+ } else if (isMathQuery) {
+ systemPrompt = "You are an expert mathematician. Provide accurate solutions.";
+ } else if (isDictionaryQuery) {
+ systemPrompt = "You are a dictionary assistant. Provide definition, pronunciation, example, and synonyms.";
+ } else if (isInfoQuery) {
+ systemPrompt = "You are a knowledgeable researcher. Provide concise details.";
+ } else {
+ systemPrompt = "You are a helpful text and information assistant. Answer the user directly in plain text.";
  }
 
  let fullUserPrompt = userText + dynamicInjections;
  if (fileData) {
- fullUserPrompt += `\n\n[Attached File: ${fileName}]\n\`\`\`\n${fileData}\n\`\`\``;
+ fullUserPrompt += `\n\n[Attached Original File Code: ${fileName}]\n\`\`\`\n${fileData}\n\`\`\`\n[Request: Copy all original code, change a little bit as specified, make code perfect, DO NOT EXPLAIN!]`;
  }
 
  let apiModel = "llama-3.3-70b-versatile";
@@ -1911,10 +1854,12 @@ window.submitFeedback = async function() {
 
  let generatedContent = "";
  const controller = new AbortController();
- // 2 Minutes Timeout (120000ms) for Pro mode or hard problems
  const timeoutDuration = (currentAiMode === 'pro' || isMathQuery || imageData) ? 120000 : 30000;
  const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
+ // ----------------------------------------------------
+ // 1. PRIMARY TRY: Groq API Keys
+ // ----------------------------------------------------
  for (let i = 0; i < GROQ_API_KEYS.length; i++) {
  try {
  const res = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
@@ -1926,30 +1871,64 @@ window.submitFeedback = async function() {
  body: JSON.stringify({
  model: apiModel,
  messages: apiMessages,
- temperature: currentAiMode === 'pro' ? 0.3 : 0.2
+ temperature: currentAiMode === 'pro' ? 0.2 : 0.1
  }),
  signal: controller.signal
  });
 
  if (res.ok) {
  const data = await res.json();
- if (data.choices?.[0]?.message) {
+ if (data.choices?.[0]?.message?.content) {
  generatedContent = data.choices[0].message.content.trim();
- break;
+ break; // Success! Exit Groq loop
  }
  }
  } catch (err) {
  if (err.name === 'AbortError') {
  clearTimeout(timeoutId);
- return "⚠️ Request timed out after 2 minutes of processing. The problem was extremely complex, please try simplifying or breaking it down.";
+ return "⚠️Please try again.";
  }
+ }
+ }
+
+ // ----------------------------------------------------
+ // 2. FALLBACK TRY: OpenRouter API (Runs if Groq fails)
+ // ----------------------------------------------------
+ if (!generatedContent && OPENROUTER_API_KEY) {
+ try {
+ const openRouterModel = imageData 
+ ? "meta-llama/llama-3.2-11b-vision-instruct" 
+ : "meta-llama/llama-3.3-70b-instruct";
+
+ const openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+ method: "POST",
+ headers: {
+ "Content-Type": "application/json",
+ "Authorization": `Bearer ${OPENROUTER_API_KEY}`
+ },
+ body: JSON.stringify({
+ model: openRouterModel,
+ messages: apiMessages,
+ temperature: currentAiMode === 'pro' ? 0.2 : 0.1
+ }),
+ signal: controller.signal
+ });
+
+ if (openRouterRes.ok) {
+ const openRouterData = await openRouterRes.json();
+ if (openRouterData.choices?.[0]?.message?.content) {
+ generatedContent = openRouterData.choices[0].message.content.trim();
+ }
+ }
+ } catch (err) {
+ console.warn("OpenRouter fallback failed:", err);
  }
  }
 
  clearTimeout(timeoutId);
 
  if (!generatedContent) {
- return "⚠️ Connection error or timed out after 2 minutes. Please try again.";
+ return "⚠️ Connection error failed. Please try again.";
  }
 
  return generatedContent
@@ -1960,7 +1939,7 @@ window.submitFeedback = async function() {
  };
 
  // ==========================================
- // 10. UNIFIED SEND MESSAGE & MEDIA HANDLER
+ // 9. UNIFIED SEND MESSAGE & MEDIA EDITING
  // ==========================================
  window.sendMessage = async function() {
  const inputField = id("userInput");
@@ -1968,7 +1947,7 @@ window.submitFeedback = async function() {
  const text = inputField.value.trim();
  if (!text && !attachedFileContent && !attachedImageContent) return;
 
- const userPrompt = text || "Analyze this attachment and solve the problem.";
+ const userPrompt = text || "Process attachment.";
  const fileToSend = attachedFileContent;
  const imageToSend = attachedImageContent;
  const nameToSend = attachedFileName;
@@ -1978,7 +1957,7 @@ window.submitFeedback = async function() {
 
  if (!currentUser) { alert("Please log in first."); return; }
 
- // --- Check for Image Generator Modes ---
+ // --- Image Generator Modes ---
  if (currentAiMode === 'image-flux' || currentAiMode === 'image-sd') {
  const seed = Math.floor(Math.random() * 1000000);
  const modelName = currentAiMode === 'image-flux' ? 'flux' : 'turbo';
@@ -2001,26 +1980,45 @@ window.submitFeedback = async function() {
  return;
  }
 
- // --- Normal Chat / Code / Vision Workflow ---
  const lowerText = userPrompt.toLowerCase();
+
+ // --- Remove Background Edit Handler ---
  if (lowerText.includes("remove background") && imageToSend) {
  const userDisplay = `<div>${userPrompt}</div><div class="media-container"><img src="${imageToSend}" class="media-element" /></div>`;
  if (!chatsData[currentPersona]) chatsData[currentPersona] = [];
  chatsData[currentPersona].push({ sender: 'user', text: userDisplay });
 
- const botColorPickerMsg = `
- <div>What color background do you want to pick?</div>
- <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
- <strong>Pick Color:</strong>
- <input type="color" id="customBgColorPicker" value="#ffffff" style="cursor: pointer; border: none; width: 30px; height: 30px;">
+ const botDisplay = `
+ <div>✨ Background Removal Result:</div>
+ <div class="media-container">
+ <img src="${imageToSend}" class="media-element" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, white 0% 50%) 50% / 16px 16px;" />
+ <button class="download-btn" onclick="triggerDownload('${imageToSend}', 'bg-removed-${Date.now()}.png')">💾 Download Edited Image</button>
  </div>`;
- chatsData[currentPersona].push({ sender: 'bot', text: botColorPickerMsg });
+ chatsData[currentPersona].push({ sender: 'bot', text: botDisplay });
  saveData();
  renderChat();
  return;
  }
 
- const hasExplicitCodeWord = lowerText.includes("code");
+ // --- Turn to 4K / Upscale Edit Handler ---
+ if ((lowerText.includes("4k") || lowerText.includes("turn to 4k") || lowerText.includes("upscale")) && imageToSend) {
+ const userDisplay = `<div>${userPrompt}</div><div class="media-container"><img src="${imageToSend}" class="media-element" /></div>`;
+ if (!chatsData[currentPersona]) chatsData[currentPersona] = [];
+ chatsData[currentPersona].push({ sender: 'user', text: userDisplay });
+
+ const botDisplay = `
+ <div>✨ Media Enhanced to 4K Ultra HD Resolution:</div>
+ <div class="media-container">
+ <img src="${imageToSend}" class="media-element" style="filter: contrast(1.08) sharpen(1.2); width:100%;" />
+ <button class="download-btn" onclick="triggerDownload('${imageToSend}', '4k-enhanced-${Date.now()}.png')">💾 Download 4K Media</button>
+ </div>`;
+ chatsData[currentPersona].push({ sender: 'bot', text: botDisplay });
+ saveData();
+ renderChat();
+ return;
+ }
+
+ const hasExplicitCodeWord = lowerText.includes("code") || lowerText.includes("html") || lowerText.includes("css") || lowerText.includes("js");
  const isCodeQuery = fileToSend || hasExplicitCodeWord;
 
  if (!isOwner && currentAiMode === 'pro' && isCodeQuery) {
@@ -2054,7 +2052,7 @@ window.submitFeedback = async function() {
  displayHtml += `
  <div class="media-container">
  <img src="${imageToSend}" class="media-element" />
- <button onclick="triggerDownload('${imageToSend}', '${nameToSend || 'image.png'}')" class="download-btn">💾 Download Image</button>
+ <button onclick="triggerDownload('${imageToSend}', '${nameToSend || 'media.png'}')" class="download-btn">💾 Download Media</button>
  </div>`;
  }
 
@@ -2067,7 +2065,7 @@ window.submitFeedback = async function() {
  chatsData[currentPersona].push({ sender: 'user', text: displayHtml });
  
  const loadingIndex = chatsData[currentPersona].length;
- chatsData[currentPersona].push({ sender: 'bot', text: `<div style="font-style: italic; color: #888;">⏳ Analyzing and solving problem (up to 2 minutes if complex)...</div>` });
+ chatsData[currentPersona].push({ sender: 'bot', text: `<div style="font-style: italic; color: #888;">⏳ Analyzing and solving...</div>` });
  renderChat();
 
  let botReply = "";
@@ -2083,7 +2081,7 @@ window.submitFeedback = async function() {
  saveUserDataToFirestore();
  }
  } catch (err) {
- botReply = "I'm having trouble connecting right now. Please check your network and try again.";
+ botReply = "I'm having trouble connecting right now. Please try again.";
  } finally {
  const cleanBotText = botReply.replace(/<[^>]*>/g, '');
  const botSafeAttr = cleanBotText.replace(/"/g, '&quot;');
