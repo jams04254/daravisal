@@ -16,6 +16,8 @@
       --card-bg: #ffffff;
       --border-color: #e2e8f0;
       --danger: #ff4d4f;
+      --success: #2ecc71;
+      --warning: #f1c40f;
     }
 
     * {
@@ -52,7 +54,7 @@
       font-size: 20px;
       font-weight: 700;
       color: #ffffff;
-      margin-bottom: 32px;
+      margin-bottom: 12px;
       padding-left: 8px;
     }
 
@@ -66,6 +68,30 @@
       justify-content: center;
       font-size: 18px;
     }
+
+    /* Server Status Indicator */
+    .server-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 8px 24px 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 24px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--warning);
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
+      transition: background-color 0.3s;
+    }
+
+    .status-dot.online { background-color: var(--success); box-shadow: 0 0 8px rgba(46, 204, 113, 0.6); }
+    .status-dot.offline { background-color: var(--danger); box-shadow: 0 0 8px rgba(255, 77, 79, 0.6); }
 
     .nav-menu {
       list-style: none;
@@ -152,8 +178,14 @@
       padding: 0 32px;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
     .search-box {
-      width: 360px;
+      width: 260px;
       position: relative;
     }
 
@@ -179,6 +211,47 @@
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-muted);
+    }
+
+    /* Server URL Config */
+    .server-config {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .server-config label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .server-config input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 13px;
+      width: 180px;
+      color: var(--text-main);
+    }
+    
+    .server-config button {
+      background: var(--sidebar-bg);
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .server-config button:hover {
+      background: var(--sidebar-hover);
     }
 
     .header-actions {
@@ -343,6 +416,12 @@
         <div class="brand-icon">☁️</div>
         <span>pCloud</span>
       </div>
+      
+      <!-- New Server Status Indicator -->
+      <div class="server-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Checking Connection...</span>
+      </div>
 
       <ul class="nav-menu">
         <li class="nav-item active">📁 My Drive</li>
@@ -364,9 +443,18 @@
 
   <div class="main-content">
     <div class="header">
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" id="searchInput" placeholder="Search files..." oninput="filterFiles()">
+      <div class="header-left">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search files..." oninput="filterFiles()">
+        </div>
+
+        <!-- Dynamic Server URL Configuration -->
+        <div class="server-config">
+          <label for="serverUrlInput">API:</label>
+          <input type="text" id="serverUrlInput" value="http://192.168.8.20:8080" placeholder="e.g., http://localhost:8080">
+          <button onclick="updateServerUrl()">Connect</button>
+        </div>
       </div>
 
       <div class="header-actions">
@@ -385,34 +473,89 @@
 
       <h2 class="section-title">All Files</h2>
 
-      <div class="file-grid" id="fileGrid"></div>
+      <div class="file-grid" id="fileGrid">
+        <div class="empty-state">Checking server connection...</div>
+      </div>
     </div>
   </div>
 
   <script>
-    let localFiles = JSON.parse(localStorage.getItem('pcloud_files') || '[]');
-
-    function saveAndRender() {
-      try {
-        localStorage.setItem('pcloud_files', JSON.stringify(localFiles));
-      } catch (e) {
-        alert('Browser storage limit reached for local demo mode.');
-      }
-      renderFiles(localFiles);
-      updateStorageMeter();
-    }
-
-    function updateStorageMeter() {
-      const totalBytes = localFiles.reduce((sum, f) => sum + (f.sizeBytes || 0), 0);
-      const usedMB = (totalBytes / (1024 * 1024)).toFixed(2);
-      const totalGB = 10;
-      const totalMB = totalGB * 1024;
-      const percent = Math.min(((usedMB / totalMB) * 100), 100).toFixed(1);
+    let SERVER_URL = document.getElementById('serverUrlInput').value;
+    let localFiles = [];
+    
+    // Check server status
+    async function checkServerStatus() {
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
       
-      document.getElementById('storageFill').style.width = `${percent}%`;
-      document.getElementById('storageText').innerText = `${usedMB} MB / ${totalGB} GB`;
+      statusDot.className = 'status-dot'; // Resets to yellow warning color
+      statusText.innerText = 'Connecting...';
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 second timeout
+        
+        // A simple fetch to see if backend responds
+        const response = await fetch(`${SERVER_URL}/api/files`, { 
+          method: 'GET',
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          statusDot.className = 'status-dot online';
+          statusText.innerText = 'Server Online';
+          return true;
+        } else {
+          throw new Error('Server returned an error');
+        }
+      } catch (error) {
+        statusDot.className = 'status-dot offline';
+        statusText.innerText = 'Server Offline';
+        return false;
+      }
     }
 
+    // Triggered when user clicks "Connect" next to the URL input
+    async function updateServerUrl() {
+      SERVER_URL = document.getElementById('serverUrlInput').value.trim();
+      // Remove trailing slash if user added one
+      if (SERVER_URL.endsWith('/')) {
+        SERVER_URL = SERVER_URL.slice(0, -1);
+      }
+      await loadFiles();
+    }
+
+    // Fetch and display file listings
+    async function loadFiles() {
+      const isOnline = await checkServerStatus();
+      const grid = document.getElementById('fileGrid');
+
+      if (!isOnline) {
+        grid.innerHTML = `
+          <div class="empty-state" style="color: var(--danger);">
+            <strong>Connection Failed.</strong><br><br>
+            Cannot reach backend at: <code>${SERVER_URL}</code><br>
+            If using GitHub Pages, ensure your server is using HTTPS (e.g., via ngrok)<br>
+            and CORS is enabled in your Node.js code.
+          </div>`;
+        return;
+      }
+
+      try {
+        const response = await fetch(`${SERVER_URL}/api/files`);
+        const data = await response.json();
+        localFiles = data.files || [];
+        updateStorageMeter(parseFloat(data.totalUsedMB || 0));
+        renderFiles(localFiles);
+      } catch (error) {
+        console.error('Error connecting to backend:', error);
+      }
+    }
+
+    // Render cards
     function renderFiles(files) {
       const grid = document.getElementById('fileGrid');
       grid.innerHTML = '';
@@ -422,65 +565,98 @@
         return;
       }
 
-      files.forEach((file, index) => {
+      files.forEach(file => {
         const icon = getFileIcon(file.name);
         const card = document.createElement('div');
         card.className = 'file-card';
         card.innerHTML = `
           <div class="file-icon">${icon}</div>
           <div class="file-name" title="${file.name}">${file.name}</div>
-          <div class="file-meta">${file.sizeFormatted} • ${file.date}</div>
+          <div class="file-meta">${file.size || 'Unknown size'} • ${file.date || 'Unknown date'}</div>
           <div class="file-actions">
-            <a href="${file.dataUrl}" download="${file.name}" class="btn-action">Download</a>
-            <button onclick="deleteFile(${index})" class="btn-action delete">Delete</button>
+            <a href="${SERVER_URL}/download/${encodeURIComponent(file.name)}" download class="btn-action">Download</a>
+            <button onclick="deleteFile('${file.name}')" class="btn-action delete">Delete</button>
           </div>
         `;
         grid.appendChild(card);
       });
     }
 
-    function uploadFile(fileObj = null) {
+    // Storage calculation (Target limit: 10 GB)
+    function updateStorageMeter(usedMB) {
+      const totalGB = 10;
+      const totalMB = totalGB * 1024;
+      const percent = Math.min(((usedMB / totalMB) * 100), 100).toFixed(1);
+      
+      document.getElementById('storageFill').style.width = `${percent}%`;
+      document.getElementById('storageText').innerText = `${usedMB} MB / ${totalGB} GB`;
+    }
+
+    // File Upload Handler
+    async function uploadFile(fileObj = null) {
       const input = document.getElementById('fileInput');
       const file = fileObj || input.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const newFile = {
-          name: file.name,
-          sizeBytes: file.size,
-          sizeFormatted: formatBytes(file.size),
-          date: new Date().toLocaleDateString(),
-          dataUrl: e.target.result
-        };
+      const isOnline = await checkServerStatus();
+      if (!isOnline) {
+        alert('Cannot upload. Server is currently offline.');
+        return;
+      }
 
-        localFiles.push(newFile);
-        input.value = '';
-        saveAndRender();
-      };
-      reader.readAsDataURL(file);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch(`${SERVER_URL}/api/upload`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (res.ok) {
+          input.value = '';
+          loadFiles();
+        } else {
+          alert('Upload failed.');
+        }
+      } catch (err) {
+        alert(`Could not send upload request to backend server at ${SERVER_URL}`);
+      }
     }
 
-    function deleteFile(index) {
-      if (!confirm(`Are you sure you want to delete "${localFiles[index].name}"?`)) return;
-      localFiles.splice(index, 1);
-      saveAndRender();
+    // Delete File Handler
+    async function deleteFile(filename) {
+      if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
+
+      const isOnline = await checkServerStatus();
+      if (!isOnline) {
+        alert('Cannot delete. Server is currently offline.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${SERVER_URL}/api/files/${encodeURIComponent(filename)}`, {
+          method: 'DELETE'
+        });
+
+        if (res.ok) {
+          loadFiles();
+        } else {
+          alert('Delete failed.');
+        }
+      } catch (err) {
+        alert('Could not communicate with backend server.');
+      }
     }
 
+    // Search Filter
     function filterFiles() {
       const query = document.getElementById('searchInput').value.toLowerCase();
       const filtered = localFiles.filter(f => f.name.toLowerCase().includes(query));
       renderFiles(filtered);
     }
 
-    function formatBytes(bytes) {
-      if (bytes === 0) return '0 Bytes';
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
+    // File Type Helper
     function getFileIcon(filename) {
       const ext = filename.split('.').pop().toLowerCase();
       if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) return '🖼️';
@@ -492,21 +668,25 @@
       return '📄';
     }
 
-    // Drag and Drop
+    // Drag and Drop Events
     const dropZone = document.getElementById('dropZone');
-    ['dragenter', 'dragover'].forEach(evt => {
-      dropZone.addEventListener(evt, (e) => { e.preventDefault(); dropZone.style.background = '#d0e4ff'; });
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.style.background = '#d0e4ff'; }, false);
     });
-    ['dragleave', 'drop'].forEach(evt => {
-      dropZone.addEventListener(evt, (e) => { e.preventDefault(); dropZone.style.background = '#f0f7ff'; });
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.style.background = '#f0f7ff'; }, false);
     });
     dropZone.addEventListener('drop', (e) => {
       const files = e.dataTransfer.files;
       if (files.length > 0) uploadFile(files[0]);
     });
 
-    // Initialize
-    saveAndRender();
+    // Initialize on load
+    loadFiles();
+    
+    // Check server status every 15 seconds passively
+    setInterval(checkServerStatus, 15000);
   </script>
 </body>
-</html>
+  </html>
+            
