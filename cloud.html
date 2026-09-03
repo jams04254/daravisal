@@ -1,74 +1,513 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All-in-One Digital Clock</title>
-    
-    <!-- CSS for styling the clock -->
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #121212; /* Dark theme background */
-            color: #00ffcc; /* Neon text color */
-            font-family: 'Courier New', Courier, monospace;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pCloud - Secure Cloud Storage</title>
+  <style>
+    :root {
+      --primary: #1890ff;
+      --primary-hover: #40a9ff;
+      --bg-main: #f4f7fc;
+      --sidebar-bg: #111c24;
+      --sidebar-hover: #1e2d3b;
+      --text-main: #2c3e50;
+      --text-muted: #8c9ba5;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --danger: #ff4d4f;
+    }
 
-        .clock-container {
-            background: #1e1e1e;
-            padding: 2rem 4rem;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
-            text-align: center;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-        #time {
-            font-size: 4rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin: 0;
-        }
+    body {
+      display: flex;
+      height: 100vh;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      overflow: hidden;
+    }
 
-        #date {
-            font-size: 1.2rem;
-            color: #888;
-            margin-top: 10px;
-        }
-    </style>
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background-color: var(--sidebar-bg);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 16px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 32px;
+      padding-left: 8px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .nav-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background-color: var(--sidebar-hover);
+      color: #ffffff;
+    }
+
+    .nav-item.active {
+      border-left: 4px solid var(--primary);
+    }
+
+    /* Storage Indicator Card */
+    .storage-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .storage-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .storage-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .storage-bar-fill {
+      height: 100%;
+      width: 0%;
+      background-color: var(--primary);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .storage-text {
+      font-size: 13px;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Main Area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Header */
+    .header {
+      height: 70px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+    }
+
+    .search-box {
+      width: 360px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background-color: #f8fafc;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      background-color: #ffffff;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-upload {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .btn-upload:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .user-profile {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    /* Content Area */
+    .content {
+      padding: 32px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    /* Drag and Drop Zone */
+    .drop-zone {
+      border: 2px dashed var(--primary);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      background: #f0f7ff;
+      color: var(--primary);
+      margin-bottom: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .drop-zone:hover {
+      background: #e6f0fa;
+    }
+
+    /* File Grid */
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .file-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .file-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .file-icon {
+      font-size: 42px;
+      margin-bottom: 12px;
+    }
+
+    .file-name {
+      font-size: 14px;
+      font-weight: 600;
+      width: 100%;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+
+    .file-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .file-actions {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 6px 0;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-main);
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #f8fafc;
+    }
+
+    .btn-action.delete {
+      color: var(--danger);
+      border-color: #ffa39e;
+    }
+
+    .btn-action.delete:hover {
+      background: #fff1f0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+  </style>
 </head>
 <body>
 
-    <!-- HTML structure for the clock -->
-    <div class="clock-container">
-        <p id="time">00:00:00</p>
-        <p id="date">Loading date...</p>
+  <div class="sidebar">
+    <div>
+      <div class="brand">
+        <div class="brand-icon">☁️</div>
+        <span>pCloud</span>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item active">📁 My Drive</li>
+        <li class="nav-item">⭐ Favorites</li>
+        <li class="nav-item">👥 Shared</li>
+        <li class="nav-item">🕒 Recent Files</li>
+        <li class="nav-item">🗑️ Trash</li>
+      </ul>
     </div>
 
-    <!-- JavaScript for the clock logic -->
-    <script>
-        function updateClock() {
-            const now = new Date();
+    <div class="storage-card">
+      <div class="storage-title">Storage Space</div>
+      <div class="storage-bar-bg">
+        <div class="storage-bar-fill" id="storageFill"></div>
+      </div>
+      <div class="storage-text" id="storageText">0 MB / 10 GB</div>
+    </div>
+  </div>
 
-            // Format Time (forces 2 digits, e.g., 09 instead of 9)
-            let hours = String(now.getHours()).padStart(2, '0');
-            let minutes = String(now.getMinutes()).padStart(2, '0');
-            let seconds = String(now.getSeconds()).padStart(2, '0');
-            
-            // Inject time into the HTML
-            document.getElementById('time').textContent = `${hours}:${minutes}:${seconds}`;
+  <div class="main-content">
+    <div class="header">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search files..." oninput="filterFiles()">
+      </div>
 
-            // Format and inject Date
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('date').textContent = now.toLocaleDateString(undefined, options);
-        }
+      <div class="header-actions">
+        <label class="btn-upload">
+          <span>⬆️ Upload File</span>
+          <input type="file" id="fileInput" hidden onchange="uploadFile()">
+        </label>
+        <div class="user-profile">U</div>
+      </div>
+    </div>
 
-        // Run immediately to avoid 1-second delay, then update every 1000ms
-        updateClock();
-        setInterval(updateClock, 1000);
-    </script>
+    <div class="content">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        📁 Drag & Drop files here or click to browse
+      </div>
+
+      <h2 class="section-title">All Files</h2>
+
+      <div class="file-grid" id="fileGrid"></div>
+    </div>
+  </div>
+
+  <script>
+    let localFiles = JSON.parse(localStorage.getItem('pcloud_files') || '[]');
+
+    function saveAndRender() {
+      try {
+        localStorage.setItem('pcloud_files', JSON.stringify(localFiles));
+      } catch (e) {
+        alert('Browser storage limit reached for local demo mode.');
+      }
+      renderFiles(localFiles);
+      updateStorageMeter();
+    }
+
+    function updateStorageMeter() {
+      const totalBytes = localFiles.reduce((sum, f) => sum + (f.sizeBytes || 0), 0);
+      const usedMB = (totalBytes / (1024 * 1024)).toFixed(2);
+      const totalGB = 10;
+      const totalMB = totalGB * 1024;
+      const percent = Math.min(((usedMB / totalMB) * 100), 100).toFixed(1);
+      
+      document.getElementById('storageFill').style.width = `${percent}%`;
+      document.getElementById('storageText').innerText = `${usedMB} MB / ${totalGB} GB`;
+    }
+
+    function renderFiles(files) {
+      const grid = document.getElementById('fileGrid');
+      grid.innerHTML = '';
+
+      if (files.length === 0) {
+        grid.innerHTML = `<div class="empty-state">No files uploaded yet. Drag or select a file to get started.</div>`;
+        return;
+      }
+
+      files.forEach((file, index) => {
+        const icon = getFileIcon(file.name);
+        const card = document.createElement('div');
+        card.className = 'file-card';
+        card.innerHTML = `
+          <div class="file-icon">${icon}</div>
+          <div class="file-name" title="${file.name}">${file.name}</div>
+          <div class="file-meta">${file.sizeFormatted} • ${file.date}</div>
+          <div class="file-actions">
+            <a href="${file.dataUrl}" download="${file.name}" class="btn-action">Download</a>
+            <button onclick="deleteFile(${index})" class="btn-action delete">Delete</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function uploadFile(fileObj = null) {
+      const input = document.getElementById('fileInput');
+      const file = fileObj || input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const newFile = {
+          name: file.name,
+          sizeBytes: file.size,
+          sizeFormatted: formatBytes(file.size),
+          date: new Date().toLocaleDateString(),
+          dataUrl: e.target.result
+        };
+
+        localFiles.push(newFile);
+        input.value = '';
+        saveAndRender();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function deleteFile(index) {
+      if (!confirm(`Are you sure you want to delete "${localFiles[index].name}"?`)) return;
+      localFiles.splice(index, 1);
+      saveAndRender();
+    }
+
+    function filterFiles() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = localFiles.filter(f => f.name.toLowerCase().includes(query));
+      renderFiles(filtered);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function getFileIcon(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) return '🖼️';
+      if (['mp4', 'mkv', 'mov', 'avi'].includes(ext)) return '🎥';
+      if (['mp3', 'wav', 'flac'].includes(ext)) return '🎵';
+      if (['pdf'].includes(ext)) return '📕';
+      if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return '📦';
+      if (['txt', 'md', 'doc', 'docx'].includes(ext)) return '📝';
+      return '📄';
+    }
+
+    // Drag and Drop
+    const dropZone = document.getElementById('dropZone');
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropZone.addEventListener(evt, (e) => { e.preventDefault(); dropZone.style.background = '#d0e4ff'; });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dropZone.addEventListener(evt, (e) => { e.preventDefault(); dropZone.style.background = '#f0f7ff'; });
+    });
+    dropZone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length > 0) uploadFile(files[0]);
+    });
+
+    // Initialize
+    saveAndRender();
+  </script>
 </body>
-</html>
+    </html>
+    
